@@ -4,19 +4,27 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FileText, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { StatusBadge } from '@/components/shared/StatusBadge';
+import { PageHeader }    from '@/components/admin/shared/PageHeader';
+import { StatusBadge }   from '@/components/shared/StatusBadge';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useQuotes }     from '@/hooks/useQuotes';
-import { useAuthStore }  from '@/stores/auth.store';
 import { pesewasToGHS }  from '@/lib/utils/format';
 import { formatDate }    from '@/lib/utils/date';
 import { cn }            from '@/lib/utils/cn';
 import type { QuoteStatus } from '@/lib/dto';
 
-const STATUS_MAP: Record<QuoteStatus, 'default' | 'success' | 'warning' | 'danger' | 'info' | 'muted'> = {
+const STATUS_TABS: { label: string; value: QuoteStatus | undefined }[] = [
+  { label: 'All',      value: undefined },
+  { label: 'Draft',    value: 'draft' },
+  { label: 'Sent',     value: 'sent' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+  { label: 'Expired',  value: 'expired' },
+];
+
+const STATUS_VARIANT: Record<QuoteStatus, 'default' | 'success' | 'warning' | 'danger' | 'info' | 'muted'> = {
   draft:    'muted',
   sent:     'info',
   approved: 'success',
@@ -24,26 +32,33 @@ const STATUS_MAP: Record<QuoteStatus, 'default' | 'success' | 'warning' | 'dange
   expired:  'muted',
 };
 
-export default function PortalQuotesPage() {
-  const user = useAuthStore((s) => s.user);
-  const [page, setPage] = useState(1);
+export default function AdminQuotesPage() {
+  const [status, setStatus] = useState<QuoteStatus | undefined>(undefined);
+  const [page,   setPage]   = useState(1);
 
-  const { data, isLoading } = useQuotes({
-    customerId: user?.id,
-    page,
-    limit: 10,
-  });
+  const { data, isLoading } = useQuotes({ status, page, limit: 20 });
 
   const quotes     = data?.data       ?? [];
   const totalPages = data?.totalPages ?? 1;
+  const total      = data?.total      ?? 0;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold lg:text-3xl">My Quotes</h1>
-        <p className="mt-1 text-muted-foreground">
-          Review and approve repair quotes from our technicians
-        </p>
+      <PageHeader title="Quotes" description={total + " total quotes"} />
+
+      <div className="flex flex-wrap gap-2">
+        {STATUS_TABS.map(({ label, value }) => (
+          <button key={label}
+            onClick={() => { setStatus(value); setPage(1); }}
+            className={cn(
+              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+              status === value
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
+            )}>
+            {label}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -51,29 +66,21 @@ export default function PortalQuotesPage() {
       ) : quotes.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}
-          title="No quotes yet"
-          description="Quotes will appear here after your vehicle has been diagnosed."
+          title="No quotes found"
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {quotes.map((quote) => (
-            <Link key={quote.id} href={"/portal/quotes/" + quote.id}>
+            <Link key={quote.id} href={"/admin/quotes/" + quote.id}>
               <Card className="cursor-pointer transition-all hover:border-primary/40">
                 <CardContent className="flex items-center justify-between gap-4 p-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-sm font-medium">
-                        {quote.quote_number}
-                      </span>
+                      <span className="font-mono text-sm font-medium">{quote.quote_number}</span>
                       <StatusBadge
                         label={quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
-                        variant={STATUS_MAP[quote.status]}
+                        variant={STATUS_VARIANT[quote.status]}
                       />
-                      {quote.status === 'sent' && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          Action Required
-                        </span>
-                      )}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
                       <span>Total: {pesewasToGHS(quote.total_pesewas)}</span>

@@ -2,39 +2,42 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Wrench, ChevronRight, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Wrench, Plus, ChevronRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input }  from '@/components/ui/input';
+import { PageHeader }    from '@/components/admin/shared/PageHeader';
 import { JobStatusBadge } from '@/components/shared/StatusBadge';
 import { SectionLoader }  from '@/components/shared/LoadingSpinner';
 import { EmptyState }     from '@/components/shared/EmptyState';
 import { Pagination }     from '@/components/shared/Pagination';
-import { useJobs }        from '@/hooks/useJobs';
-import { useAuthStore }   from '@/stores/auth.store';
+import { useAdminJobs }   from '@/hooks/useAdminJobs';
 import { formatDate }     from '@/lib/utils/date';
 import { cn }             from '@/lib/utils/cn';
-import type { JobStatus } from '@/lib/dto';
+import type { JobStatus, JobPriority } from '@/lib/dto';
 
-const STATUS_FILTERS: { label: string; value: JobStatus | undefined }[] = [
-  { label: 'All',          value: undefined },
-  { label: 'Active',       value: 'in_progress' },
-  { label: 'Diagnosing',   value: 'diagnosing' },
-  { label: 'Quote Sent',   value: 'quote_sent' },
-  { label: 'Ready',        value: 'ready_for_pickup' },
-  { label: 'Completed',    value: 'completed' },
+const STATUS_TABS: { label: string; value: JobStatus | undefined }[] = [
+  { label: 'All',        value: undefined },
+  { label: 'Intake',     value: 'intake' },
+  { label: 'Diagnosing', value: 'diagnosing' },
+  { label: 'Quote Sent', value: 'quote_sent' },
+  { label: 'In Progress',value: 'in_progress' },
+  { label: 'QC Check',   value: 'quality_check' },
+  { label: 'Ready',      value: 'ready_for_pickup' },
+  { label: 'Completed',  value: 'completed' },
 ];
 
-export default function PortalJobsPage() {
-  const user   = useAuthStore((s) => s.user);
+const PRIORITY_COLOR: Record<JobPriority, string> = {
+  low:    'text-gray-400',
+  normal: 'text-blue-400',
+  high:   'text-amber-400',
+  urgent: 'text-red-400',
+};
+
+export default function AdminJobsPage() {
   const [status, setStatus] = useState<JobStatus | undefined>(undefined);
   const [page,   setPage]   = useState(1);
 
-  const { data, isLoading } = useJobs({
-    page,
-    limit: 10,
-    status,
-  });
+  const { data, isLoading } = useAdminJobs({ status, page, limit: 20 });
 
   const jobs       = data?.data       ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -42,23 +45,21 @@ export default function PortalJobsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold lg:text-3xl">My Jobs</h1>
-          <p className="mt-1 text-muted-foreground">
-            {total} job{total !== 1 ? 's' : ''} total
-          </p>
-        </div>
-        <Link href="/booking">
-          <Button className="gap-1.5">
-            <Wrench className="h-4 w-4" /> Book New Service
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Jobs"
+        description={total + " total jobs"}
+        action={
+          <Link href="/admin/jobs/create">
+            <Button className="gap-1.5">
+              <Plus className="h-4 w-4" /> Create Job
+            </Button>
+          </Link>
+        }
+      />
 
-      {/* Status filters */}
+      {/* Status tabs */}
       <div className="flex flex-wrap gap-2">
-        {STATUS_FILTERS.map(({ label, value }) => (
+        {STATUS_TABS.map(({ label, value }) => (
           <button key={label}
             onClick={() => { setStatus(value); setPage(1); }}
             className={cn(
@@ -78,25 +79,30 @@ export default function PortalJobsPage() {
         <EmptyState
           icon={<Wrench className="h-6 w-6" />}
           title="No jobs found"
-          description="You have no repair jobs matching this filter."
-          action={{ label: 'Book a Service', onClick: () => window.location.href = '/booking' }}
+          description="No jobs match the current filter."
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {jobs.map((job) => (
-            <Link key={job.id} href={"/portal/jobs/" + job.id}>
+            <Link key={job.id} href={"/admin/jobs/" + job.id}>
               <Card className="cursor-pointer transition-all hover:border-primary/40">
                 <CardContent className="flex items-center justify-between gap-4 p-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{job.title}</p>
+                      <span className="font-medium">{job.title}</span>
                       <JobStatusBadge status={job.status} />
+                      <span className={cn(
+                        'text-xs font-medium capitalize',
+                        PRIORITY_COLOR[job.priority],
+                      )}>
+                        {job.priority}
+                      </span>
                     </div>
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
                       <span className="font-mono">{job.job_number}</span>
-                      <span>{formatDate(job.created_at)}</span>
+                      <span>Created: {formatDate(job.created_at)}</span>
                       {job.estimated_completion_at && (
-                        <span>Est. done: {formatDate(job.estimated_completion_at)}</span>
+                        <span>Est: {formatDate(job.estimated_completion_at)}</span>
                       )}
                     </div>
                   </div>
