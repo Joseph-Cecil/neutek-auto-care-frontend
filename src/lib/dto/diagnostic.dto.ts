@@ -1,9 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Diagnostic DTOs
-// NOTE: Swagger says required field is 'findings' — WRONG
-//       Correct required field is 'summary'
-// ─────────────────────────────────────────────────────────────
-
 export interface DiagnosticReport {
   id: string;
   job_id: string;
@@ -26,14 +20,13 @@ export interface DiagnosticPhoto {
 
 export interface CreateDiagnosticRequest {
   jobId: string;
-  summary: string;              // required, max 2000 chars
+  summary: string;
   findings?: string;
   recommendations?: string;
 }
 
-/** NOTE: one photo per call — Swagger says array (wrong) */
 export interface AddDiagnosticPhotoRequest {
-  url: string;        // publicUrl from presign
-  key: string;        // key from presign
+  url: string;
+  key: string;
   caption?: string;
 }

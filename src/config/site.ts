@@ -12,9 +12,4 @@ export const siteConfig = {
     twitter:  'https://twitter.com/neutekautocare',
     facebook: 'https://facebook.com/neutekautocare',
   },
-  brandColors: {
-    darkBlue:     '#0A1628',
-    electricBlue: '#0066FF',
-    sky:          '#3B9EFF',
-  },
 } as const;

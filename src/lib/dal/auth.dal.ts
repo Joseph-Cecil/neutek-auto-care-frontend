@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Auth DAL
-// ─────────────────────────────────────────────────────────────
 import apiClient from '@/lib/api/client';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import type {
@@ -10,27 +7,20 @@ import type {
 } from '@/lib/dto';
 
 export const authDal = {
-  login: (body: LoginRequest) =>
+  login:          (body: LoginRequest) =>
     apiClient.post<ApiResponse<LoginData>>(ENDPOINTS.AUTH.LOGIN, body),
-
-  register: (body: RegisterRequest) =>
+  register:       (body: RegisterRequest) =>
     apiClient.post<ApiResponse<LoginData>>(ENDPOINTS.AUTH.REGISTER, body),
-
-  logout: () =>
+  logout:         () =>
     apiClient.post<ApiResponse<null>>(ENDPOINTS.AUTH.LOGOUT),
-
-  refresh: () =>
+  refresh:        () =>
     apiClient.post<ApiResponse<RefreshData>>(ENDPOINTS.AUTH.REFRESH),
-
-  me: () =>
+  me:             () =>
     apiClient.get<ApiResponse<UserProfile>>(ENDPOINTS.AUTH.ME),
-
   forgotPassword: (body: ForgotPasswordRequest) =>
     apiClient.post<ApiResponse<null>>(ENDPOINTS.AUTH.FORGOT_PASSWORD, body),
-
-  resetPassword: (body: ResetPasswordRequest) =>
+  resetPassword:  (body: ResetPasswordRequest) =>
     apiClient.post<ApiResponse<null>>(ENDPOINTS.AUTH.RESET_PASSWORD, body),
-
   changePassword: (body: ChangePasswordRequest) =>
     apiClient.post<ApiResponse<null>>(ENDPOINTS.AUTH.CHANGE_PASSWORD, body),
 };

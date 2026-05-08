@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Analytics DTOs
-// Money fields: integer pesewas — divide by 100 for GHS display
-// ─────────────────────────────────────────────────────────────
 import type { JobStatus, RevenueGranularity } from './enums.dto';
 
 export interface DashboardStats {
@@ -44,7 +40,7 @@ export interface TechnicianPerformance {
 }
 
 export interface RevenueParams {
-  granularity?: RevenueGranularity;   // NOTE: Swagger says 'groupBy' — WRONG
-  from?: string;                       // YYYY-MM-DD
-  to?: string;                         // YYYY-MM-DD
+  granularity?: RevenueGranularity;
+  from?: string;
+  to?: string;
 }

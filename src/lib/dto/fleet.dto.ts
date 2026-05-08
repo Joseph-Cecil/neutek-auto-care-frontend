@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Fleet DTOs
-// NOTE: Swagger misses outstanding_balance_pesewas & is_active
-// ─────────────────────────────────────────────────────────────
-
 export interface FleetAccount {
   id: string;
   company_name: string;
@@ -11,8 +6,8 @@ export interface FleetAccount {
   phone: string;
   address: string | null;
   credit_limit_pesewas: number;
-  outstanding_balance_pesewas: number;  // Swagger omits — present in API
-  is_active: boolean;                   // Swagger omits — present in API
+  outstanding_balance_pesewas: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -41,13 +36,12 @@ export interface MaintenanceSchedule {
 export interface CreateFleetAccountRequest {
   companyName: string;
   contactName: string;
-  phone: string;                    // 9–20 chars
+  phone: string;
   email?: string;
   address?: string;
-  creditLimitPesewas?: number;      // default 0
+  creditLimitPesewas?: number;
 }
 
-/** NOTE: Swagger only shows vehicleId — actual body has more fields */
 export interface AddFleetVehicleRequest {
   vehicleId: string;
   driverName?: string;

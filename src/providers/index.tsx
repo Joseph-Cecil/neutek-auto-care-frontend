@@ -3,13 +3,9 @@
 import { type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { QueryProvider } from './QueryProvider';
-import { AuthProvider } from './AuthProvider';
+import { AuthProvider }  from './AuthProvider';
 
-interface ProvidersProps {
-  children: ReactNode;
-}
-
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
       <AuthProvider>

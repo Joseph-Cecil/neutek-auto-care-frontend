@@ -1,11 +1,8 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Payment DTOs
-// ─────────────────────────────────────────────────────────────
 import type { PaymentStatus, PaymentMethod } from './enums.dto';
 
 export interface Payment {
   id: string;
-  payment_reference: string;            // e.g. 'PAY-20240115-000001'
+  payment_reference: string;
   invoice_id: string;
   customer_id: string;
   amount_pesewas: number;
@@ -18,9 +15,8 @@ export interface Payment {
   updated_at: string;
 }
 
-/** Returned inside data.data by POST /payments/initialize */
 export interface PaystackInitResult {
-  authorization_url: string;   // redirect user here — NOT in an iframe
+  authorization_url: string;
   access_code: string;
   reference: string;
 }
@@ -32,7 +28,7 @@ export interface InitializePaymentRequest {
 
 export interface RecordPaymentRequest {
   invoiceId: string;
-  amountPesewas: number;    // integer, min 1
+  amountPesewas: number;
   method: PaymentMethod;
   gatewayReference?: string;
 }

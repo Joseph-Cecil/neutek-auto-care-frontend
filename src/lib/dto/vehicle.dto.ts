@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Vehicle DTOs
-// ─────────────────────────────────────────────────────────────
-
 export interface Vehicle {
   id: string;
   customer_id: string;
@@ -22,9 +18,9 @@ export interface CreateVehicleRequest {
   customerId: string;
   make: string;
   model: string;
-  year: number;             // integer 1900–(current year + 1)
+  year: number;
   licensePlate: string;
-  vin?: string;             // exactly 17 chars if provided
+  vin?: string;
   color?: string;
   mileage?: number;
   notes?: string;

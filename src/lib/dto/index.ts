@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — DTO barrel export
-// ─────────────────────────────────────────────────────────────
 export * from './enums.dto';
 export * from './api.dto';
 export * from './auth.dto';

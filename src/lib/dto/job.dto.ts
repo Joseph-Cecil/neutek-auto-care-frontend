@@ -1,11 +1,8 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Job DTOs
-// ─────────────────────────────────────────────────────────────
 import type { JobStatus, JobPriority } from './enums.dto';
 
 export interface Job {
   id: string;
-  job_number: string;                       // e.g. 'JOB-20240115-000042'
+  job_number: string;
   booking_id: string | null;
   customer_id: string;
   vehicle_id: string;
@@ -44,24 +41,24 @@ export interface JobService {
 
 export interface CreateJobRequest {
   bookingId?: string;
-  customerId: string;                       // required
-  vehicleId: string;                        // required
+  customerId: string;
+  vehicleId: string;
   assignedTechnicianId?: string;
-  priority?: JobPriority;                   // default: 'normal'
-  title: string;                            // max 300 chars
+  priority?: JobPriority;
+  title: string;
   description?: string;
   intakeNotes?: string;
-  estimatedCompletionAt?: string;           // ISO 8601
+  estimatedCompletionAt?: string;
   serviceIds?: string[];
 }
 
 export interface UpdateJobRequest {
-  assignedTechnicianId?: string | null;     // null clears assignment
+  assignedTechnicianId?: string | null;
   priority?: JobPriority;
   title?: string;
   description?: string;
   completionNotes?: string;
-  estimatedCompletionAt?: string | null;    // null clears
+  estimatedCompletionAt?: string | null;
 }
 
 export interface TransitionJobRequest {

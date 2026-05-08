@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Tracking DTOs (public + WebSocket)
-// ─────────────────────────────────────────────────────────────
 import type { JobStatus } from './enums.dto';
 
 export interface TrackingHistoryEntry {

@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Notification DTOs
-// NOTE: text content is in 'body' field, NOT 'message'
-// ─────────────────────────────────────────────────────────────
 import type { NotificationChannel } from './enums.dto';
 
 export interface Notification {
@@ -10,7 +6,7 @@ export interface Notification {
   customer_id: string | null;
   channel: NotificationChannel;
   title: string;
-  body: string;                         // NOTE: 'body' not 'message'
+  body: string;
   data: Record<string, unknown> | null;
   is_read: boolean;
   sent_at: string | null;

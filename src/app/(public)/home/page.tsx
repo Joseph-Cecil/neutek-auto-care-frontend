@@ -1,13 +1,25 @@
-/**
- * Landing page — full marketing page.
- * Sections are built in script 02 (Public Pages).
- */
+'use client';
+
+import { HeroSection }         from '@/components/public/home/HeroSection';
+import { WhyChooseUs }         from '@/components/public/home/WhyChooseUs';
+import { ServicesPreview }     from '@/components/public/home/ServicesPreview';
+import { HowItWorks }          from '@/components/public/home/HowItWorks';
+import { TrackingCTA }         from '@/components/public/home/TrackingCTA';
+import { BrandsSection }       from '@/components/public/home/BrandsSection';
+import { TestimonialsSection }  from '@/components/public/home/TestimonialsSection';
+import { FinalCTA }            from '@/components/public/home/FinalCTA';
+
 export default function HomePage() {
   return (
-    <div>
-      <p className="p-8 text-center text-muted-foreground">
-        Landing page sections coming in script 02...
-      </p>
-    </div>
+    <>
+      <HeroSection />
+      <WhyChooseUs />
+      <ServicesPreview />
+      <HowItWorks />
+      <TrackingCTA />
+      <BrandsSection />
+      <TestimonialsSection />
+      <FinalCTA />
+    </>
   );
 }

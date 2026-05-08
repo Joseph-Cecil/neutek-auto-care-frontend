@@ -1,25 +1,15 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — UI Store (Zustand)
-// ─────────────────────────────────────────────────────────────
 import { create } from 'zustand';
 
 interface UIState {
-  // Sidebar
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  toggleSidebar: () => void;
-
-  // Mobile sidebar
-  mobileSidebarOpen: boolean;
+  sidebarOpen:          boolean;
+  mobileSidebarOpen:    boolean;
+  globalLoading:        boolean;
+  commandOpen:          boolean;
+  setSidebarOpen:       (open: boolean) => void;
+  toggleSidebar:        () => void;
   setMobileSidebarOpen: (open: boolean) => void;
-
-  // Global loading overlay
-  globalLoading: boolean;
-  setGlobalLoading: (loading: boolean) => void;
-
-  // Command palette
-  commandOpen: boolean;
-  setCommandOpen: (open: boolean) => void;
+  setGlobalLoading:     (loading: boolean) => void;
+  setCommandOpen:       (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()((set) => ({

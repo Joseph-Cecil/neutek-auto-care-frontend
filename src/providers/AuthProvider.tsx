@@ -1,20 +1,10 @@
 'use client';
 
-// ─────────────────────────────────────────────────────────────
-// Silent token refresh on app load
-// Calls POST /auth/refresh using the HttpOnly cookie.
-// On success: store new access token in Zustand.
-// On failure: clear auth state (user is logged out).
-// ─────────────────────────────────────────────────────────────
 import { useEffect, type ReactNode } from 'react';
 import { authDal } from '@/lib/dal/auth.dal';
 import { useAuthStore } from '@/stores/auth.store';
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const { setAuth, clearAuth, setLoading } = useAuthStore();
 
   useEffect(() => {
@@ -22,19 +12,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     async function silentRefresh() {
       try {
-        // POST /auth/refresh — browser auto-sends HttpOnly cookie
-        const res = await authDal.refresh();
-        if (cancelled) return;
-
-        const { accessToken } = res.data.data;
-
-        // Also fetch the user profile
+        const res   = await authDal.refresh();
         const meRes = await authDal.me();
         if (cancelled) return;
 
-        const user = meRes.data.data;
+        const { accessToken } = res.data.data;
+        const user            = meRes.data.data;
 
-        // Store in Zustand — map UserProfile to AuthUser shape
         setAuth(accessToken, {
           id:         user.id,
           email:      user.email,
@@ -44,13 +28,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           avatar_url: user.avatar_url,
         });
       } catch {
-        if (!cancelled) {
-          clearAuth();
-        }
+        if (!cancelled) clearAuth();
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 

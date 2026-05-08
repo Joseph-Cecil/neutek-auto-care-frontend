@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Invoice DTOs
-// Money fields: integer pesewas
-// ─────────────────────────────────────────────────────────────
 import type { InvoiceStatus } from './enums.dto';
 
 export interface InvoiceLineItem {
@@ -16,7 +12,7 @@ export interface InvoiceLineItem {
 
 export interface Invoice {
   id: string;
-  invoice_number: string;     // e.g. 'INV-20240115-000007'
+  invoice_number: string;
   job_id: string;
   customer_id: string;
   quote_id: string | null;
@@ -46,7 +42,7 @@ export interface CreateInvoiceRequest {
   lineItems: CreateInvoiceLineItemRequest[];
   taxPercent?: number;
   discountPercent?: number;
-  dueDays?: number;           // default 0
+  dueDays?: number;
   notes?: string;
 }
 

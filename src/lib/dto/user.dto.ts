@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — User DTOs
-// Fields are snake_case as returned by GET /users/me, /users/:id
-// ─────────────────────────────────────────────────────────────
 import type { UserRole } from './enums.dto';
 
 export interface UserProfile {
@@ -12,7 +8,7 @@ export interface UserProfile {
   phone: string | null;
   role: UserRole;
   avatar_url: string | null;
-  email_verified: boolean;    // NOTE: Swagger shows 'is_verified' — that is wrong
+  email_verified: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -24,9 +20,7 @@ export interface UpdateProfileRequest {
   phone?: string;
 }
 
-export interface UpdateAvatarRequest {
-  avatarUrl: string;  // publicUrl from presign response
-}
+export interface UpdateAvatarRequest { avatarUrl: string; }
 
 export interface ListUsersParams {
   page?: number;

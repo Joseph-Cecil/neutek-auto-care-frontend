@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Quote DTOs
-// Money fields: integer pesewas
-// ─────────────────────────────────────────────────────────────
 import type { QuoteStatus } from './enums.dto';
 
 export interface QuoteLineItem {
@@ -16,7 +12,7 @@ export interface QuoteLineItem {
 
 export interface Quote {
   id: string;
-  quote_number: string;         // e.g. 'QT-20240115-000007'
+  quote_number: string;
   job_id: string;
   customer_id: string;
   subtotal_pesewas: number;
@@ -32,23 +28,21 @@ export interface Quote {
 
 export interface CreateQuoteLineItemRequest {
   serviceId?: string;
-  description: string;          // max 500 chars
-  quantity?: number;            // default 1
-  unitPricePesewas: number;     // integer, min 0
+  description: string;
+  quantity?: number;
+  unitPricePesewas: number;
 }
 
 export interface CreateQuoteRequest {
   jobId: string;
   lineItems: CreateQuoteLineItemRequest[];
-  taxPercent?: number;          // 0–100, default 0
-  discountPercent?: number;     // 0–100, default 0
-  validDays?: number;           // default 7
+  taxPercent?: number;
+  discountPercent?: number;
+  validDays?: number;
   notes?: string;
 }
 
-export interface RejectQuoteRequest {
-  reason?: string;
-}
+export interface RejectQuoteRequest { reason?: string; }
 
 export interface ListQuotesParams {
   page?: number;

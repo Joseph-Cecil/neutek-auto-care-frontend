@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// Neutek Auto Care — Blog DTOs
-// ─────────────────────────────────────────────────────────────
 import type { BlogStatus } from './enums.dto';
 
 export interface BlogCategory {
@@ -17,7 +14,7 @@ export interface BlogPost {
   title: string;
   slug: string;
   excerpt: string | null;
-  content: string;          // Markdown or HTML
+  content: string;
   status: BlogStatus;
   cover_image_url: string | null;
   published_at: string | null;
@@ -28,11 +25,11 @@ export interface BlogPost {
 
 export interface CreateBlogPostRequest {
   categoryId: string;
-  title: string;            // max 500 chars
+  title: string;
   content: string;
-  slug?: string;            // auto-generated if omitted
-  excerpt?: string;         // max 500 chars
-  status?: BlogStatus;      // default 'draft'
+  slug?: string;
+  excerpt?: string;
+  status?: BlogStatus;
   coverImageUrl?: string;
 }
 
@@ -41,7 +38,7 @@ export type UpdateBlogPostRequest = Partial<CreateBlogPostRequest>;
 export interface ListBlogPostsParams {
   page?: number;
   limit?: number;
-  status?: BlogStatus;      // public always uses 'published'
+  status?: BlogStatus;
   categoryId?: string;
   search?: string;
 }
