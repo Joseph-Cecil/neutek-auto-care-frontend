@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Zap } from 'lucide-react';
@@ -12,13 +13,21 @@ import { Input }  from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormRootError } from '@/components/shared/ErrorAlert';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { useLogin } from '@/hooks/useAuth';
+import { LoadingSpinner, PageLoader } from '@/components/shared/LoadingSpinner';
+import { useLogin, useCurrentUser } from '@/hooks/useAuth';
 import { applyServerErrors } from '@/lib/utils/errors';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const { isAuthenticated, isLoading, user } = useCurrentUser();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace(user?.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const form = useForm<LoginFormData>({
     resolver:      zodResolver(loginSchema),
@@ -26,6 +35,8 @@ export default function LoginPage() {
   });
 
   const { mutate: login, isPending } = useLogin();
+
+  if (isLoading || isAuthenticated) return <PageLoader />;
 
   const onSubmit = (data: LoginFormData) => {
     login(data, {

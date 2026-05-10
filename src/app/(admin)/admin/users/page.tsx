@@ -14,6 +14,7 @@ import { StatusBadge }   from '@/components/shared/StatusBadge';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useAdminUsers, useAdminDeleteUser } from '@/hooks/useAdminUsers';
 import { fullName } from '@/lib/utils/format';
@@ -33,7 +34,7 @@ export default function AdminUsersPage() {
   const [page,     setPage]     = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data, isLoading } = useAdminUsers({
+  const { data, isLoading, error } = useAdminUsers({
     search: search || undefined,
     role,
     page,
@@ -77,6 +78,8 @@ export default function AdminUsersPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load users. Please refresh the page." />
       ) : users.length === 0 ? (
         <EmptyState
           icon={<Shield className="h-6 w-6" />}

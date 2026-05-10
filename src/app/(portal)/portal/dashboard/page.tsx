@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { JobStatusBadge } from '@/components/shared/StatusBadge';
 import { SectionLoader }  from '@/components/shared/LoadingSpinner';
+import { ErrorAlert }     from '@/components/shared/ErrorAlert';
 import { useAuthStore }    from '@/stores/auth.store';
 import { jobDal }          from '@/lib/dal/job.dal';
 import { notificationDal } from '@/lib/dal/notification.dal';
@@ -16,7 +17,7 @@ import { timeAgo, fullName } from '@/lib/utils/format';
 export default function PortalDashboardPage() {
   const user = useAuthStore((s) => s.user);
 
-  const { data: jobsData, isLoading: jobsLoading } = useQuery({
+  const { data: jobsData, isLoading: jobsLoading, error: jobsError } = useQuery({
     queryKey: queryKeys.jobs.list({ status: 'in_progress', page: 1 }),
     queryFn:  async () => { const res = await jobDal.list({ status: 'in_progress', limit: 5 }); return res.data; },
     enabled:  !!user,
@@ -74,6 +75,8 @@ export default function PortalDashboardPage() {
           <CardContent>
             {jobsLoading ? (
               <SectionLoader className="py-8" />
+            ) : jobsError ? (
+              <ErrorAlert message="Failed to load active jobs." className="text-xs" />
             ) : activeJobs.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <CheckCircle2 className="h-8 w-8 text-green-500" />

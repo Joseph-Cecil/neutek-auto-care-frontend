@@ -4,8 +4,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { customerDal } from '@/lib/dal/customer.dal';
 import { queryKeys }   from '@/lib/api/queryKeys';
-import { getErrorMessage } from '@/lib/utils/errors';
+import { getErrorMessage, isStatus } from '@/lib/utils/errors';
+import { useAuthStore } from '@/stores/auth.store';
 import type { CreateCustomerRequest, UpdateCustomerRequest, ListCustomersParams } from '@/lib/dto';
+
+export function useMyCustomer() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return useQuery({
+    queryKey: queryKeys.customers.me,
+    queryFn:  async () => {
+      try {
+        const res = await customerDal.getMe();
+        return res.data.data;
+      } catch (err) {
+        if (isStatus(err, 404)) return null;
+        throw err;
+      }
+    },
+    enabled: isAuthenticated,
+  });
+}
 
 export function useCustomers(params?: ListCustomersParams) {
   return useQuery({

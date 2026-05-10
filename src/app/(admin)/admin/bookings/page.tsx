@@ -11,6 +11,7 @@ import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
 import { Pagination }    from '@/components/shared/Pagination';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { useAdminBookings, useCancelBooking } from '@/hooks/useAdminBookings';
 import { formatDateTime } from '@/lib/utils/date';
 import { fullName }       from '@/lib/utils/format';
@@ -38,7 +39,7 @@ export default function AdminBookingsPage() {
   const [page,     setPage]     = useState(1);
   const [cancelId, setCancelId] = useState<string | null>(null);
 
-  const { data, isLoading } = useAdminBookings({ status, page, limit: 20 });
+  const { data, isLoading, error } = useAdminBookings({ status, page, limit: 20 });
   const { mutate: cancelBooking, isPending: cancelling } = useCancelBooking();
 
   const bookings   = data?.data       ?? [];
@@ -70,6 +71,8 @@ export default function AdminBookingsPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load bookings. Please refresh the page." />
       ) : bookings.length === 0 ? (
         <EmptyState
           icon={<Calendar className="h-6 w-6" />}

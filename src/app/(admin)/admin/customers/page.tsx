@@ -19,6 +19,7 @@ import { SearchInput }   from '@/components/admin/shared/SearchInput';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import {
   useCustomers, useCreateCustomer,
@@ -108,7 +109,7 @@ export default function AdminCustomersPage() {
   const [editCust, setEditCust] = useState<Customer | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data, isLoading } = useCustomers({ search: search || undefined, page, limit: 20 });
+  const { data, isLoading, error } = useCustomers({ search: search || undefined, page, limit: 20 });
   const { mutate: createCustomer, isPending: creating } = useCreateCustomer();
   const { mutate: updateCustomer, isPending: updating } = useUpdateCustomer();
   const { mutate: deleteCustomer, isPending: deleting } = useDeleteCustomer();
@@ -137,6 +138,8 @@ export default function AdminCustomersPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load customers. Please refresh the page." />
       ) : customers.length === 0 ? (
         <EmptyState
           icon={<Users className="h-6 w-6" />}

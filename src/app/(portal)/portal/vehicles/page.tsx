@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Car, Plus, Pencil, Trash2, AlertCircle } from 'lucide-react';
+import { Car, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input }  from '@/components/ui/input';
@@ -16,12 +16,13 @@ import {
 } from '@/components/ui/form';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
   useCustomerVehicles, useCreateVehicle,
   useUpdateVehicle, useDeleteVehicle,
 } from '@/hooks/useVehicles';
-import { useAuthStore } from '@/stores/auth.store';
+import { useMyCustomer } from '@/hooks/useCustomers';
 import { vehicleSchema, type VehicleFormData } from '@/lib/validations/vehicle.schema';
 import { APP_CONSTANTS } from '@/config/constants';
 import type { Vehicle } from '@/lib/dto';
@@ -148,10 +149,11 @@ function VehicleForm({
 }
 
 export default function PortalVehiclesPage() {
-  const user       = useAuthStore((s) => s.user);
-  const customerId = user?.id ?? '';
+  const { data: customer, isLoading: customerLoading } = useMyCustomer();
+  const customerId = customer?.id ?? '';
 
-  const { data: vehicles, isLoading } = useCustomerVehicles(customerId);
+  const { data: vehicles, isLoading: vehiclesLoading, error } = useCustomerVehicles(customerId);
+  const isLoading = customerLoading || vehiclesLoading;
   const { mutate: createVehicle, isPending: creating } = useCreateVehicle(customerId);
   const { mutate: updateVehicle, isPending: updating } = useUpdateVehicle(customerId);
   const { mutate: deleteVehicle, isPending: deleting } = useDeleteVehicle(customerId);
@@ -182,13 +184,17 @@ export default function PortalVehiclesPage() {
           <h1 className="text-2xl font-bold lg:text-3xl">My Vehicles</h1>
           <p className="mt-1 text-muted-foreground">Manage your registered vehicles</p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="gap-1.5">
+        <Button onClick={() => setShowAdd(true)} disabled={!customer} className="gap-1.5">
           <Plus className="h-4 w-4" /> Add Vehicle
         </Button>
       </div>
 
       {isLoading ? (
         <SectionLoader />
+      ) : !customer ? (
+        <ErrorAlert message="Your account doesn't have a customer profile yet. Please contact support or complete a booking to set up your profile." />
+      ) : error ? (
+        <ErrorAlert message="Failed to load your vehicles. Please refresh the page." />
       ) : !vehicles || vehicles.length === 0 ? (
         <EmptyState
           icon={<Car className="h-6 w-6" />}

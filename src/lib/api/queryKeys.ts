@@ -17,6 +17,7 @@ export const queryKeys = {
   },
   customers: {
     all:    ['customers'] as const,
+    me:     ['customers', 'me'] as const,
     list:   (p?: { search?: string; page?: number }) =>
               ['customers', 'list', p] as const,
     detail: (id: string) => ['customers', id] as const,

@@ -7,6 +7,7 @@ export interface AuthUser {
   lastName: string;
   role: UserRole;
   avatar_url: string | null;
+  email_verified?: boolean;
 }
 
 export interface LoginData {

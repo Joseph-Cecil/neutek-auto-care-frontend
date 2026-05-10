@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge }   from '@/components/shared/StatusBadge';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useInvoices }   from '@/hooks/useInvoices';
 import { useAuthStore }  from '@/stores/auth.store';
@@ -27,7 +28,7 @@ export default function PortalInvoicesPage() {
   const user = useAuthStore((s) => s.user);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useInvoices({
+  const { data, isLoading, error } = useInvoices({
     customerId: user?.id,
     page,
     limit: 10,
@@ -45,6 +46,8 @@ export default function PortalInvoicesPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load your invoices. Please refresh the page." />
       ) : invoices.length === 0 ? (
         <EmptyState
           icon={<Receipt className="h-6 w-6" />}

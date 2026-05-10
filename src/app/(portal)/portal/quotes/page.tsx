@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useQuotes }     from '@/hooks/useQuotes';
 import { useAuthStore }  from '@/stores/auth.store';
@@ -28,7 +29,7 @@ export default function PortalQuotesPage() {
   const user = useAuthStore((s) => s.user);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useQuotes({
+  const { data, isLoading, error } = useQuotes({
     customerId: user?.id,
     page,
     limit: 10,
@@ -48,6 +49,8 @@ export default function PortalQuotesPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load your quotes. Please refresh the page." />
       ) : quotes.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}

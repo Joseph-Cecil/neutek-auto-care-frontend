@@ -8,6 +8,7 @@ import { PageHeader }    from '@/components/admin/shared/PageHeader';
 import { StatusBadge }   from '@/components/shared/StatusBadge';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useQuotes }     from '@/hooks/useQuotes';
 import { pesewasToGHS }  from '@/lib/utils/format';
@@ -36,7 +37,7 @@ export default function AdminQuotesPage() {
   const [status, setStatus] = useState<QuoteStatus | undefined>(undefined);
   const [page,   setPage]   = useState(1);
 
-  const { data, isLoading } = useQuotes({ status, page, limit: 20 });
+  const { data, isLoading, error } = useQuotes({ status, page, limit: 20 });
 
   const quotes     = data?.data       ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -63,6 +64,8 @@ export default function AdminQuotesPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load quotes. Please refresh the page." />
       ) : quotes.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}

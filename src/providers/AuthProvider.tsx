@@ -20,12 +20,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const user            = meRes.data.data;
 
         setAuth(accessToken, {
-          id:         user.id,
-          email:      user.email,
-          firstName:  user.first_name,
-          lastName:   user.last_name,
-          role:       user.role,
-          avatar_url: user.avatar_url,
+          id:            user.id,
+          email:         user.email,
+          firstName:     user.first_name,
+          lastName:      user.last_name,
+          role:          user.role,
+          avatar_url:    user.avatar_url,
+          email_verified: user.email_verified,
         });
       } catch {
         if (!cancelled) clearAuth();

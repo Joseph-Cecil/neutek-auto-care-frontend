@@ -8,6 +8,7 @@ import { PageHeader }    from '@/components/admin/shared/PageHeader';
 import { StatusBadge }   from '@/components/shared/StatusBadge';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useInvoices }   from '@/hooks/useInvoices';
 import { pesewasToGHS }  from '@/lib/utils/format';
@@ -38,7 +39,7 @@ export default function AdminInvoicesPage() {
   const [status, setStatus] = useState<InvoiceStatus | undefined>(undefined);
   const [page,   setPage]   = useState(1);
 
-  const { data, isLoading } = useInvoices({ status, page, limit: 20 });
+  const { data, isLoading, error } = useInvoices({ status, page, limit: 20 });
 
   const invoices   = data?.data       ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -65,6 +66,8 @@ export default function AdminInvoicesPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load invoices. Please refresh the page." />
       ) : invoices.length === 0 ? (
         <EmptyState icon={<Receipt className="h-6 w-6" />} title="No invoices found" />
       ) : (

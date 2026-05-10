@@ -23,6 +23,7 @@ import { PageHeader }    from '@/components/admin/shared/PageHeader';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import {
   useAdminServices, useAdminServiceCategories,
   useAdminCreateService, useAdminUpdateService, useAdminDeleteService,
@@ -44,7 +45,7 @@ export default function AdminServicesPage() {
   const [editSvc,  setEditSvc]  = useState<Service | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: servicesData, isLoading } = useAdminServices({ limit: 100 });
+  const { data: servicesData, isLoading, error } = useAdminServices({ limit: 100 });
   const { data: categories }              = useAdminServiceCategories();
   const { mutate: createService, isPending: creating } = useAdminCreateService();
   const { mutate: updateService, isPending: updating } = useAdminUpdateService();
@@ -148,6 +149,8 @@ export default function AdminServicesPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load services. Please refresh the page." />
       ) : services.length === 0 ? (
         <EmptyState
           icon={<Package className="h-6 w-6" />}

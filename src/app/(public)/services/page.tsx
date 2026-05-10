@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Clock, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
+import { ErrorAlert } from '@/components/shared/ErrorAlert';
 import { useServices, useServiceCategories } from '@/hooks/useServices';
 import { pesewasToGHS, formatDuration } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
@@ -13,7 +14,7 @@ export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
 
   const { data: categories } = useServiceCategories();
-  const { data, isLoading }  = useServices({
+  const { data, isLoading, error }  = useServices({
     categoryId: selectedCategory,
     active:     true,
     limit:      50,
@@ -66,6 +67,8 @@ export default function ServicesPage() {
       {/* Services grid */}
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load services. Please refresh the page." className="max-w-lg mx-auto" />
       ) : services.length === 0 ? (
         <div className="py-16 text-center text-white/40">No services found</div>
       ) : (

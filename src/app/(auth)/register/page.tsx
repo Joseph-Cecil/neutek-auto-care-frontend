@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Zap } from 'lucide-react';
@@ -12,15 +13,23 @@ import { Input }  from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormRootError } from '@/components/shared/ErrorAlert';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { LoadingSpinner, PageLoader } from '@/components/shared/LoadingSpinner';
 import { PasswordStrength } from '@/components/auth/PasswordStrength';
-import { useRegister } from '@/hooks/useAuth';
+import { useRegister, useCurrentUser } from '@/hooks/useAuth';
 import { applyServerErrors } from '@/lib/utils/errors';
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth.schema';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm,  setShowConfirm]  = useState(false);
+  const router = useRouter();
+  const { isAuthenticated, isLoading, user } = useCurrentUser();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace(user?.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const form = useForm<RegisterFormData>({
     resolver:      zodResolver(registerSchema),
@@ -29,6 +38,8 @@ export default function RegisterPage() {
 
   const { mutate: register, isPending } = useRegister();
   const password = form.watch('password');
+
+  if (isLoading || isAuthenticated) return <PageLoader />;
 
   const onSubmit = (data: RegisterFormData) => {
     register(

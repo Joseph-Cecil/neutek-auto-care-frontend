@@ -9,6 +9,7 @@ import { Input }  from '@/components/ui/input';
 import { JobStatusBadge } from '@/components/shared/StatusBadge';
 import { SectionLoader }  from '@/components/shared/LoadingSpinner';
 import { EmptyState }     from '@/components/shared/EmptyState';
+import { ErrorAlert }     from '@/components/shared/ErrorAlert';
 import { Pagination }     from '@/components/shared/Pagination';
 import { useJobs }        from '@/hooks/useJobs';
 import { useAuthStore }   from '@/stores/auth.store';
@@ -30,7 +31,7 @@ export default function PortalJobsPage() {
   const [status, setStatus] = useState<JobStatus | undefined>(undefined);
   const [page,   setPage]   = useState(1);
 
-  const { data, isLoading } = useJobs({
+  const { data, isLoading, error } = useJobs({
     page,
     limit: 10,
     status,
@@ -74,6 +75,8 @@ export default function PortalJobsPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load your jobs. Please refresh the page." />
       ) : jobs.length === 0 ? (
         <EmptyState
           icon={<Wrench className="h-6 w-6" />}

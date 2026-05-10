@@ -6,7 +6,8 @@ import { Search, Calendar, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
-import { Pagination } from '@/components/shared/Pagination';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
+import { Pagination }    from '@/components/shared/Pagination';
 import { useBlogPosts, useBlogCategories } from '@/hooks/useTracking';
 import { formatDate } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
@@ -18,7 +19,7 @@ export default function BlogPage() {
   const [inputValue, setInputValue] = useState('');
 
   const { data: categories } = useBlogCategories();
-  const { data, isLoading }  = useBlogPosts({ categoryId: category, search, page });
+  const { data, isLoading, error }  = useBlogPosts({ categoryId: category, search, page });
 
   const posts      = data?.data       ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -77,7 +78,9 @@ export default function BlogPage() {
       )}
 
       {/* Posts */}
-      {isLoading ? <SectionLoader /> : posts.length === 0 ? (
+      {isLoading ? <SectionLoader /> : error ? (
+        <ErrorAlert message="Failed to load articles. Please refresh the page." className="max-w-lg mx-auto" />
+      ) : posts.length === 0 ? (
         <div className="py-16 text-center text-white/40">No articles found</div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

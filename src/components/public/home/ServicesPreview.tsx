@@ -8,7 +8,7 @@ import { useServices } from '@/hooks/useServices';
 import { pesewasToGHS, formatDuration } from '@/lib/utils/format';
 
 export function ServicesPreview() {
-  const { data, isLoading } = useServices({ active: true, limit: 6 });
+  const { data, isLoading, error } = useServices({ active: true, limit: 6 });
   const services = data?.data ?? [];
 
   return (
@@ -29,6 +29,8 @@ export function ServicesPreview() {
 
         {isLoading ? (
           <SectionLoader />
+        ) : error ? (
+          <p className="py-8 text-center text-white/50">Could not load services. Please try again later.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (

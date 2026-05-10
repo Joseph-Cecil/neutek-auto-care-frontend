@@ -4,8 +4,9 @@ import { Bell, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { Pagination } from '@/components/shared/Pagination';
+import { EmptyState }  from '@/components/shared/EmptyState';
+import { ErrorAlert }  from '@/components/shared/ErrorAlert';
+import { Pagination }  from '@/components/shared/Pagination';
 import {
   useNotifications,
   useMarkNotificationRead,
@@ -18,7 +19,7 @@ import { useState } from 'react';
 export default function PortalNotificationsPage() {
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useNotifications({ page, limit: 20 });
+  const { data, isLoading, error } = useNotifications({ page, limit: 20 });
   const { mutate: markRead, isPending: markingOne } = useMarkNotificationRead();
   const { mutate: markAll,  isPending: markingAll }  = useMarkAllNotificationsRead();
 
@@ -53,6 +54,8 @@ export default function PortalNotificationsPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load notifications. Please refresh the page." />
       ) : notifications.length === 0 ? (
         <EmptyState
           icon={<Bell className="h-6 w-6" />}

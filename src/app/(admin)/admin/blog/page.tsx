@@ -11,6 +11,7 @@ import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
 import { Pagination }    from '@/components/shared/Pagination';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { useAdminBlogPosts, useDeleteBlogPost } from '@/hooks/useBlog';
 import { formatDate }  from '@/lib/utils/date';
 import { cn }          from '@/lib/utils/cn';
@@ -34,7 +35,7 @@ export default function AdminBlogPage() {
   const [page,     setPage]     = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data, isLoading } = useAdminBlogPosts({ status, page, limit: 15 });
+  const { data, isLoading, error } = useAdminBlogPosts({ status, page, limit: 15 });
   const { mutate: deletePost, isPending: deleting } = useDeleteBlogPost();
 
   const posts      = data?.data       ?? [];
@@ -72,6 +73,8 @@ export default function AdminBlogPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load blog posts. Please refresh the page." />
       ) : posts.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="h-6 w-6" />}

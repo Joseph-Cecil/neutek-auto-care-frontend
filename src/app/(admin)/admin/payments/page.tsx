@@ -23,6 +23,7 @@ import { PageHeader }    from '@/components/admin/shared/PageHeader';
 import { StatusBadge }   from '@/components/shared/StatusBadge';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useAdminPayments, useRecordPayment } from '@/hooks/useAdminPayments';
 import { pesewasToGHS, ghsToPesewas } from '@/lib/utils/format';
@@ -48,7 +49,7 @@ export default function AdminPaymentsPage() {
   const [page,       setPage]       = useState(1);
   const [showRecord, setShowRecord] = useState(false);
 
-  const { data, isLoading } = useAdminPayments({ page, limit: 20 });
+  const { data, isLoading, error } = useAdminPayments({ page, limit: 20 });
   const { mutate: recordPayment, isPending: recording } = useRecordPayment();
 
   const payments   = data?.data       ?? [];
@@ -86,6 +87,8 @@ export default function AdminPaymentsPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load payments. Please refresh the page." />
       ) : payments.length === 0 ? (
         <EmptyState
           icon={<CreditCard className="h-6 w-6" />}

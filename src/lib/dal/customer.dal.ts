@@ -10,6 +10,8 @@ export const customerDal = {
     apiClient.get<PaginatedResponse<Customer>>(ENDPOINTS.CUSTOMERS.LIST, { params }),
   create:  (body: CreateCustomerRequest) =>
     apiClient.post<ApiResponse<Customer>>(ENDPOINTS.CUSTOMERS.CREATE, body),
+  getMe:   () =>
+    apiClient.get<ApiResponse<Customer>>(ENDPOINTS.CUSTOMERS.ME),
   getById: (id: string) =>
     apiClient.get<ApiResponse<Customer>>(ENDPOINTS.CUSTOMERS.BY_ID(id)),
   update:  (id: string, body: UpdateCustomerRequest) =>

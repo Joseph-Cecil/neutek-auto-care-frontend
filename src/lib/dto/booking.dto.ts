@@ -5,13 +5,17 @@ export interface Booking {
   booking_number: string;
   customer_id: string | null;
   vehicle_id: string | null;
-  guest_name: string | null;
-  guest_email: string | null;
-  guest_phone: string | null;
+  walk_in_name: string | null;        // ✅ was guest_name
+  walk_in_phone: string | null;       // ✅ was guest_phone
+  walk_in_vehicle_info: Record<string, unknown> | null; // ✅ new
   service_ids: string[];
   scheduled_at: string;
+  estimated_duration_minutes: number | null; // ✅ new
   notes: string | null;
   status: BookingStatus;
+  confirmed_at: string | null;        // ✅ new
+  cancelled_at: string | null;        // ✅ new
+  cancellation_reason: string | null; // ✅ new
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -20,9 +24,9 @@ export interface Booking {
 export interface CreateBookingRequest {
   customerId?: string;
   vehicleId?: string;
-  guestName?: string;
-  guestEmail?: string;
-  guestPhone?: string;
+  walkInName?: string;        // ✅ was guestName
+  walkInPhone?: string;       // ✅ was guestPhone
+  walkInVehicleInfo?: Record<string, unknown>; // ✅ new
   serviceIds: string[];
   scheduledAt: string;
   notes?: string;

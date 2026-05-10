@@ -30,7 +30,7 @@ export function useLogin() {
     mutationFn: (data: LoginRequest) => authDal.login(data),
     onSuccess: (res) => {
       const { accessToken, user } = res.data.data;
-      setAuth(accessToken, user);
+      setAuth(accessToken, { ...user, email_verified: user.email_verified ?? false });
       qc.setQueryData(queryKeys.auth.me, user);
       toast.success('Welcome back, ' + user.firstName + '!');
       router.push(user.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard');
@@ -49,7 +49,7 @@ export function useRegister() {
     mutationFn: (data: RegisterRequest) => authDal.register(data),
     onSuccess: (res) => {
       const { accessToken, user } = res.data.data;
-      setAuth(accessToken, user);
+      setAuth(accessToken, { ...user, email_verified: user.email_verified ?? false });
       toast.success('Account created! Welcome to Neutek Auto Care.');
       router.push('/portal/dashboard');
     },

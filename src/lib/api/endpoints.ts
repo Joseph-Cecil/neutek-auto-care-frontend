@@ -18,6 +18,7 @@ export const ENDPOINTS = {
   CUSTOMERS: {
     LIST:   '/customers',
     CREATE: '/customers',
+    ME:     '/customers/me',
     BY_ID:  (id: string) => `/customers/${id}`,
   },
   VEHICLES: {

@@ -19,6 +19,7 @@ import {
 import { PageHeader }    from '@/components/admin/shared/PageHeader';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState }    from '@/components/shared/EmptyState';
+import { ErrorAlert }    from '@/components/shared/ErrorAlert';
 import { Pagination }    from '@/components/shared/Pagination';
 import { useFleetAccounts, useCreateFleetAccount } from '@/hooks/useFleet';
 import { pesewasToGHS, ghsToPesewas, formatPhone } from '@/lib/utils/format';
@@ -37,7 +38,7 @@ export default function AdminFleetPage() {
   const [page,    setPage]    = useState(1);
   const [showAdd, setShowAdd] = useState(false);
 
-  const { data, isLoading } = useFleetAccounts({ page, limit: 20 });
+  const { data, isLoading, error } = useFleetAccounts({ page, limit: 20 });
   const { mutate: createAccount, isPending: creating } = useCreateFleetAccount();
 
   const accounts   = data?.data       ?? [];
@@ -80,6 +81,8 @@ export default function AdminFleetPage() {
 
       {isLoading ? (
         <SectionLoader />
+      ) : error ? (
+        <ErrorAlert message="Failed to load fleet accounts. Please refresh the page." />
       ) : accounts.length === 0 ? (
         <EmptyState
           icon={<Building2 className="h-6 w-6" />}
