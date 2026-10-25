@@ -12,4 +12,6 @@ export const invoiceDal = {
     apiClient.post<ApiResponse<Invoice>>(ENDPOINTS.INVOICES.CREATE, body),
   getById: (id: string) =>
     apiClient.get<ApiResponse<Invoice>>(ENDPOINTS.INVOICES.BY_ID(id)),
+  send: (id: string) =>
+    apiClient.post<ApiResponse<Invoice>>(ENDPOINTS.INVOICES.SEND(id)),
 };

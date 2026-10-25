@@ -53,11 +53,13 @@ export const ENDPOINTS = {
     BY_ID:   (id: string) => `/quotes/${id}`,
     APPROVE: (id: string) => `/quotes/${id}/approve`,
     REJECT:  (id: string) => `/quotes/${id}/reject`,
+    SEND:    (id: string) => `/quotes/${id}/send`,
   },
   INVOICES: {
     LIST:   '/invoices',
     CREATE: '/invoices',
     BY_ID:  (id: string) => `/invoices/${id}`,
+    SEND:   (id: string) => `/invoices/${id}/send`,
   },
   PAYMENTS: {
     LIST:       '/payments',

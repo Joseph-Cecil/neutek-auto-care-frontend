@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { invoiceDal } from '@/lib/dal/invoice.dal';
 import { paymentDal } from '@/lib/dal/payment.dal';
@@ -29,11 +29,25 @@ export function useInvoice(id: string) {
   });
 }
 
+export function useSendInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => invoiceDal.send(id),
+    onSuccess: (_res, id) => {
+      toast.success('Invoice sent to the customer');
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all });
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
 export function useInitializePayment() {
   return useMutation({
     mutationFn: (body: InitializePaymentRequest) => paymentDal.initialize(body),
     onSuccess: (res) => {
-      const url = res.data.data?.data?.authorization_url;
+      const payload = res.data.data as { authorizationUrl?: string; authorization_url?: string } | undefined;
+      const url = payload?.authorizationUrl ?? payload?.authorization_url;
       if (url) {
         window.location.href = url;
       } else {
