@@ -5,7 +5,7 @@
     "scripts": {
         "analyze": "ANALYZE=true next build",
         "start": "next start -p 3001",
-        "lint": "next lint",
+        "lint": "eslint .",
         "format": "prettier --write .",
         "lint:fix": "next lint --fix",
         "format:check": "prettier --check .",
