@@ -8,6 +8,7 @@ import { authDal } from '@/lib/dal/auth.dal';
 import { useAuthStore } from '@/stores/auth.store';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { getErrorMessage, applyServerErrors } from '@/lib/utils/errors';
+import { homeForRole } from '@/lib/utils/permissions';
 import type {
   LoginRequest, RegisterRequest,
   ForgotPasswordRequest, ResetPasswordRequest,
@@ -33,7 +34,7 @@ export function useLogin() {
       setAuth(accessToken, { ...user, email_verified: user.email_verified ?? false });
       qc.setQueryData(queryKeys.auth.me, user);
       toast.success('Welcome back, ' + user.firstName + '!');
-      router.push(user.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard');
+      router.push(homeForRole(user.role));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

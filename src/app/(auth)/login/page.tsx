@@ -17,6 +17,7 @@ import { LoadingSpinner, PageLoader } from '@/components/shared/LoadingSpinner';
 import { useLogin, useCurrentUser } from '@/hooks/useAuth';
 import { applyServerErrors } from '@/lib/utils/errors';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
+import { homeForRole } from '@/lib/utils/permissions';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +26,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace(user?.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard');
+      router.replace(user ? homeForRole(user.role) : '/admin/dashboard');
     }
   }, [isLoading, isAuthenticated, user, router]);
 

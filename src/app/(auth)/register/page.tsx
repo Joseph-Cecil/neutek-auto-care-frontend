@@ -18,6 +18,7 @@ import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { useRegister, useCurrentUser } from '@/hooks/useAuth';
 import { applyServerErrors } from '@/lib/utils/errors';
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth.schema';
+import { homeForRole } from '@/lib/utils/permissions';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +28,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace(user?.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard');
+      router.replace(user ? homeForRole(user.role) : '/portal/dashboard');
     }
   }, [isLoading, isAuthenticated, user, router]);
 

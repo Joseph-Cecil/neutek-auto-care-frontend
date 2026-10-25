@@ -7,6 +7,7 @@ import { Menu, X, Zap, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth.store';
 import { cn } from '@/lib/utils/cn';
+import { homeForRole } from '@/lib/utils/permissions';
 
 const NAV_LINKS = [
   { href: '/home',     label: 'Home' },
@@ -22,7 +23,7 @@ export function PublicNavbar() {
   const user          = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const portalHref = user?.role === 'customer' ? '/portal/dashboard' : '/admin/dashboard';
+  const portalHref = user ? homeForRole(user.role) : '/portal/dashboard';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0A1628]/95 backdrop-blur-md">

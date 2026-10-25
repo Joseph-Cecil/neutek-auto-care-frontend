@@ -8,6 +8,7 @@ export interface Notification {
   title: string;
   body: string;
   data: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
   is_read: boolean;
   sent_at: string | null;
   created_at: string;

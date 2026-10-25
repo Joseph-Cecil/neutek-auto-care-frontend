@@ -1,10 +1,12 @@
 import apiClient from '@/lib/api/client';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import type {
-  ApiResponse, Vehicle, CreateVehicleRequest, UpdateVehicleRequest,
+  ApiResponse, PaginatedResponse, Vehicle, CreateVehicleRequest, UpdateVehicleRequest, ListVehiclesParams,
 } from '@/lib/dto';
 
 export const vehicleDal = {
+  list:           (params?: ListVehiclesParams) =>
+    apiClient.get<PaginatedResponse<Vehicle>>(ENDPOINTS.VEHICLES.LIST, { params }),
   listByCustomer: (customerId: string) =>
     apiClient.get<ApiResponse<Vehicle[]>>(ENDPOINTS.VEHICLES.BY_CUSTOMER(customerId)),
   getById:        (id: string) =>

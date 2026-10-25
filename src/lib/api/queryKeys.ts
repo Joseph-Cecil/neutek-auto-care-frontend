@@ -24,6 +24,8 @@ export const queryKeys = {
   },
   vehicles: {
     all:        ['vehicles'] as const,
+    list:       (p?: { search?: string; customerId?: string; page?: number }) =>
+                  ['vehicles', 'list', p] as const,
     byCustomer: (customerId: string) =>
                   ['vehicles', 'customer', customerId] as const,
     detail:     (id: string) => ['vehicles', id] as const,
@@ -41,6 +43,7 @@ export const queryKeys = {
     all:    ['bookings'] as const,
     list:   (p?: { status?: BookingStatus; customerId?: string; page?: number }) =>
               ['bookings', 'list', p] as const,
+    pendingCount: ['bookings', 'count', 'pending'] as const,
     detail: (id: string) => ['bookings', id] as const,
   },
   jobs: {
@@ -48,6 +51,7 @@ export const queryKeys = {
     list:    (p?: {
                status?: JobStatus; customerId?: string; vehicleId?: string;
                technicianId?: string; priority?: JobPriority; page?: number;
+               search?: string;
              }) => ['jobs', 'list', p] as const,
     detail:  (id: string) => ['jobs', id] as const,
     history: (id: string) => ['jobs', id, 'history'] as const,

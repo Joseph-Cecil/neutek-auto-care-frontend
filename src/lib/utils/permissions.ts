@@ -24,6 +24,20 @@ export function canAccessAdmin(role: UserRole): boolean {
   return isAdmin(role) || role === 'technician';
 }
 
+export function homeForRole(role: UserRole): string {
+  if (role === 'customer') return '/portal/dashboard';
+  if (role === 'technician') return '/admin/jobs';
+  return '/admin/dashboard';
+}
+
+const TECHNICIAN_ADMIN_PREFIXES = ['/admin/bookings', '/admin/jobs'];
+
+export function technicianCanOpen(pathname: string): boolean {
+  return TECHNICIAN_ADMIN_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 export function canManageUsers(role: UserRole):   boolean { return isAdmin(role); }
 export function canManageFinance(role: UserRole): boolean { return isAdmin(role); }
 export function canManageJobs(role: UserRole): boolean {

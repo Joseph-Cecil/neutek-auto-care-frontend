@@ -27,3 +27,10 @@ export interface CreateVehicleRequest {
 }
 
 export type UpdateVehicleRequest = Partial<Omit<CreateVehicleRequest, 'customerId'>>;
+
+export interface ListVehiclesParams {
+  page?: number;
+  limit?: number;
+  customerId?: string;
+  search?: string;
+}
