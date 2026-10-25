@@ -12,6 +12,7 @@ export interface TrackingUpdate {
   jobNumber: string;
   status: JobStatus;
   title: string;
+  vehicleInfo?: string;
   updatedAt: string;
   history: TrackingHistoryEntry[];
   estimatedCompletionAt: string | null;

@@ -1,149 +1,115 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { Suspense, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { CheckCircle2, Calendar, User, Wrench, ChevronRight, ChevronLeft } from 'lucide-react';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { TopProgress } from '@/components/ui/top-progress';
 import { useServices } from '@/hooks/useServices';
 import { useCreateBooking } from '@/hooks/useBooking';
 import { useMyCustomer } from '@/hooks/useCustomers';
+import { useCustomerVehicles } from '@/hooks/useVehicles';
 import { useAuthStore } from '@/stores/auth.store';
-import { pesewasToGHS, formatDuration } from '@/lib/utils/format';
-import { cn } from '@/lib/utils/cn';
+import { formatDuration, ghsAmount } from '@/lib/utils/format';
 import type { Booking } from '@/lib/dto';
 
-const STEPS = ['Select Services', 'Date & Time', 'Your Details', 'Confirm'];
-
-const guestSchema = z.object({
-  walkInName: z.string().max(200).optional(),
-  walkInPhone: z.string().max(20).optional(),
-  scheduledAt: z.string().min(1, 'Please select a date and time'),
-  notes: z.string().max(500).optional(),
+const STEPS = ['Services', 'Date and time', 'Your details', 'Confirm'];
+const SLOTS = Array.from({ length: 20 }, (_, index) => {
+  const minutes = 8 * 60 + index * 30;
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 });
-type GuestFormData = z.infer<typeof guestSchema>;
+
+function todayStamp() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
 
 function BookingContent() {
-  const searchParams = useSearchParams();
-  const preselected = searchParams.get('service');
+  const preselected = useSearchParams().get('service');
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isAuthLoading = useAuthStore((s) => s.isLoading);
-  const { data: customer, isLoading: customerLoading } = useMyCustomer();
+  const customer = useMyCustomer();
+  const vehicles = useCustomerVehicles(customer.data?.id ?? '');
+  const services = useServices({ active: true, limit: 100 });
+  const create = useCreateBooking();
 
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<string[]>(preselected ? [preselected] : []);
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [car, setCar] = useState('');
+  const [vehicleId, setVehicleId] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
   const [booking, setBooking] = useState<Booking | null>(null);
 
-  const { data: servicesData, isLoading: servicesLoading } = useServices({
-    active: true,
-    limit: 100,
-  });
-  const { mutate: createBooking, isPending } = useCreateBooking();
-  const services = servicesData?.data ?? [];
+  const rows = services.data?.data ?? [];
+  const chosen = rows.filter((service) => selected.includes(service.id));
+  const total = chosen.reduce((sum, service) => sum + service.base_price_pesewas, 0);
+  const signedIn = Boolean(isAuthenticated && customer.data);
+  const slots = useMemo(() => {
+    if (date !== todayStamp()) return SLOTS;
+    const earliest = Date.now() + 2 * 60 * 60 * 1000;
+    return SLOTS.filter((slot) => new Date(`${date}T${slot}`).getTime() >= earliest);
+  }, [date]);
 
-  const form = useForm<GuestFormData>({
-    resolver: zodResolver(guestSchema),
-    defaultValues: { walkInName: '', walkInPhone: '', scheduledAt: '', notes: '' },
-  });
-
-  const toggleService = (id: string) => {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
+  const toggle = (id: string) => {
+    setSelected((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   };
 
-  const getMinDateTime = () => {
-    const d = new Date();
-    d.setHours(d.getHours() + 2);
-    return d.toISOString().slice(0, 16);
-  };
-
-  const selectedServices = services.filter((s) => selected.includes(s.id));
-  const totalPesewas = selectedServices.reduce((acc, s) => acc + s.base_price_pesewas, 0);
-
-  const onSubmit = (data: GuestFormData) => {
-    if (!(isAuthenticated && customer)) {
-      let hasError = false;
-      if (!data.walkInName?.trim()) {
-        form.setError('walkInName', { message: 'Name is required' });
-        hasError = true;
-      }
-      if (!data.walkInPhone?.trim() || data.walkInPhone.trim().length < 9) {
-        form.setError('walkInPhone', { message: 'Valid phone required' });
-        hasError = true;
-      }
-      if (hasError) {
-        setStep(2);
-        return;
+  const next = () => {
+    const nextErrors: string[] = [];
+    if (step === 0 && selected.length === 0) nextErrors.push('Choose at least one service.');
+    if (step === 1) {
+      if (!date) nextErrors.push('Choose a date.');
+      if (!time) nextErrors.push('Choose a time.');
+      if (date && time && new Date(`${date}T${time}`).getTime() < Date.now() + 2 * 60 * 60 * 1000) {
+        nextErrors.push('The earliest time is two hours from now.');
       }
     }
+    if (step === 2 && !signedIn) {
+      if (!name.trim()) nextErrors.push('Enter your name.');
+      if (phone.trim().length < 9) nextErrors.push('Enter a phone number.');
+    }
+    setErrors(nextErrors);
+    if (nextErrors.length === 0) setStep((value) => value + 1);
+  };
 
-    const payload =
-      isAuthenticated && customer
-        ? {
-            customerId: customer.id,
-            serviceIds: selected,
-            scheduledAt: data.scheduledAt,
-            notes: data.notes || undefined,
-          }
-        : {
-            walkInName: data.walkInName!.trim(),
-            walkInPhone: data.walkInPhone!.trim(),
-            serviceIds: selected,
-            scheduledAt: data.scheduledAt,
-            notes: data.notes || undefined,
-          };
-
-    createBooking(payload, {
-      onSuccess: (res) => {
-        setBooking(res.data.data);
-        setStep(4);
-      },
+  const confirm = () => {
+    const scheduledAt = `${date}T${time}`;
+    const payload = signedIn && customer.data
+      ? {
+          customerId: customer.data.id,
+          vehicleId: vehicleId || undefined,
+          serviceIds: selected,
+          scheduledAt,
+        }
+      : {
+          walkInName: name.trim(),
+          walkInPhone: phone.trim(),
+          walkInVehicleInfo: car.trim() ? { description: car.trim() } : undefined,
+          serviceIds: selected,
+          scheduledAt,
+        };
+    create.mutate(payload, {
+      onSuccess: (res) => setBooking(res.data.data),
     });
   };
 
-  // Success screen
-  if (step === 4 && booking) {
+  if (booking) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="max-w-md text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
-            <CheckCircle2 className="h-10 w-10 text-green-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-white">Booking Confirmed!</h2>
-          <p className="mt-2 text-white/60">Your appointment has been scheduled.</p>
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="text-sm text-white/40">Booking Number</p>
-            <p className="text-primary mt-1 font-mono text-xl font-bold">
-              {booking.booking_number}
-            </p>
-          </div>
-          <p className="mt-4 text-sm text-white/40">
-            Save this number to track your repair status.
-          </p>
-          <div className="mt-6 flex flex-col gap-2">
-            <Button onClick={() => (window.location.href = '/tracking')} className="w-full">
-              Track My Car
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => (window.location.href = '/')}
-              className="w-full border-white/20 text-white hover:bg-white/10"
-            >
-              Back to Home
-            </Button>
+      <div className="card">
+        <div className="empty">
+          <div className="ic" style={{ background: 'var(--bg-success)', color: 'var(--text-success)' }}>✓</div>
+          <h2>You are booked in</h2>
+          <p className="muted">Your booking number is <b>{booking.booking_number}</b>. We will call to confirm.</p>
+          <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+            <button type="button" className="btn" onClick={() => { setBooking(null); setStep(0); setSelected([]); }}>Book another</button>
+            <Link href="/tracking" className="btn primary">Track your car</Link>
           </div>
         </div>
       </div>
@@ -151,350 +117,147 @@ function BookingContent() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 lg:px-8">
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl font-bold text-white lg:text-4xl">Book a Service</h1>
-        <p className="mt-2 text-white/50">Schedule your appointment in minutes</p>
-      </div>
-
-      {/* Step indicator */}
-      <div className="mb-8 flex items-center justify-between">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex flex-1 items-center">
-            <div
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors',
-                i < step
-                  ? 'bg-primary text-white'
-                  : i === step
-                    ? 'border-primary text-primary border-2 bg-transparent'
-                    : 'border border-white/20 bg-transparent text-white/30',
-              )}
-            >
-              {i < step ? '✓' : i + 1}
-            </div>
-            <span
-              className={cn(
-                'ml-2 hidden text-xs sm:block',
-                i === step ? 'font-medium text-white' : 'text-white/30',
-              )}
-            >
-              {label}
-            </span>
-            {i < STEPS.length - 1 && (
-              <div className={cn('mx-2 h-px flex-1', i < step ? 'bg-primary' : 'bg-white/10')} />
-            )}
-          </div>
+    <div className="card stack s">
+      <TopProgress active={services.isLoading || create.isPending} />
+      <div className="row" role="list" aria-label="Steps">
+        {STEPS.map((label, index) => (
+          <span key={label} role="listitem" className={index === step ? 'pill brand' : 'pill'}>
+            {index + 1}. {label}
+          </span>
         ))}
       </div>
-
-      {/* Step 0: Select Services */}
-      {step === 0 && (
-        <div className="space-y-4">
-          <p className="text-sm text-white/60">Select one or more services:</p>
-          {servicesLoading ? (
-            <SectionLoader />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {services.map((service) => {
-                const isSelected = selected.includes(service.id);
-                return (
-                  <button
-                    key={service.id}
-                    type="button"
-                    onClick={() => toggleService(service.id)}
-                    className={cn(
-                      'rounded-xl border p-4 text-left transition-all',
-                      isSelected
-                        ? 'border-primary bg-primary/10 text-white'
-                        : 'border-white/10 bg-white/5 text-white/70 hover:border-white/30',
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{service.name}</p>
-                        <p className="mt-0.5 text-xs text-white/40">
-                          {formatDuration(service.estimated_duration_minutes)}
-                        </p>
-                      </div>
-                      <p className="text-primary shrink-0 text-sm font-bold">
-                        {pesewasToGHS(service.base_price_pesewas)}
-                      </p>
-                    </div>
-                    {isSelected && (
-                      <div className="text-primary mt-2 text-xs font-medium">✓ Selected</div>
-                    )}
-                  </button>
-                );
-              })}
+      {errors.length > 0 ? (
+        <div className="errsum" role="alert">
+          <b>Fix these fields</b>
+          <ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul>
+        </div>
+      ) : null}
+      {create.isError ? <div className="banner" role="alert">The booking was not saved. Check the details and try again.</div> : null}
+      {step === 0 ? (
+        <>
+          <h2>Choose services</h2>
+          {services.isError && !services.data ? <div className="banner" role="alert">Could not load services.</div> : null}
+          {services.isLoading ? <p className="muted">Loading services.</p> : null}
+          {!services.isLoading && rows.length === 0 && !services.isError ? <p className="muted">No services are available to book.</p> : null}
+          <div className="stack s">
+            {rows.map((service) => {
+              const on = selected.includes(service.id);
+              return (
+                <button key={service.id} type="button" className={on ? 'chk on' : 'chk'} aria-pressed={on} onClick={() => toggle(service.id)}>
+                  <span>
+                    <span className="b" style={{ display: 'block' }}>{service.name}</span>
+                    <span className="faint sm">{formatDuration(service.estimated_duration_minutes)}</span>
+                  </span>
+                  <span className="b" style={{ marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>GHS {ghsAmount(service.base_price_pesewas)}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="row sb">
+            <span className="muted">Running total</span>
+            <span className="b" style={{ fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>GHS {ghsAmount(total)}</span>
+          </div>
+        </>
+      ) : null}
+      {step === 1 ? (
+        <>
+          <h2>Date and time</h2>
+          <p className="muted sm">The earliest time is two hours from now.</p>
+          <div className="grid g2">
+            <div className="field">
+              <label htmlFor="bk-date">Date</label>
+              <input id="bk-date" className="input" type="date" min={todayStamp()} value={date} onChange={(event) => { setDate(event.target.value); setTime(''); }} />
             </div>
-          )}
-
-          {selected.length > 0 && (
-            <div className="border-primary/20 bg-primary/5 rounded-xl border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-white/60">{selected.length} service(s) selected</p>
-                <p className="text-primary font-bold">{pesewasToGHS(totalPesewas)}</p>
+            <div className="field">
+              <label htmlFor="bk-time">Time</label>
+              <select id="bk-time" className="input" value={time} onChange={(event) => setTime(event.target.value)}>
+                <option value="">Choose a time</option>
+                {slots.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
+              </select>
+            </div>
+          </div>
+          {date === todayStamp() && slots.length === 0 ? <p className="hint">No slots are left today. Choose a later date.</p> : null}
+        </>
+      ) : null}
+      {step === 2 ? (
+        <>
+          <h2>Your details</h2>
+          {signedIn && user ? (
+            <>
+              <div className="banner info">Signed in as {user.firstName} {user.lastName}, so we already have your name and phone.</div>
+              <div className="field">
+                <label htmlFor="bk-veh">Vehicle</label>
+                <select id="bk-veh" className="input" value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>
+                  <option value="">No vehicle on file</option>
+                  {(vehicles.data ?? []).map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>{vehicle.year} {vehicle.make} {vehicle.model} · {vehicle.license_plate}</option>
+                  ))}
+                </select>
               </div>
-            </div>
-          )}
-
-          <Button
-            onClick={() => setStep(1)}
-            disabled={selected.length === 0}
-            className="w-full gap-1.5"
-          >
-            Continue <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Step 1: Date & Time */}
-      {step === 1 && (
-        <div className="space-y-4">
-          <Card className="border-white/10 bg-white/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-white">
-                <Calendar className="text-primary h-5 w-5" /> Choose Date & Time
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <FormField
-                  control={form.control}
-                  name="scheduledAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white/70">Preferred Date & Time</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          min={getMinDateTime()}
-                          className="focus:border-primary border-white/20 bg-white/10 text-white"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem className="mt-4">
-                      <FormLabel className="text-white/70">Notes (optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Any additional information..."
-                          className="focus:border-primary border-white/20 bg-white/10 text-white placeholder:text-white/30"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </Form>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setStep(0)}
-              className="gap-1.5 border-white/20 text-white hover:bg-white/10"
-            >
-              <ChevronLeft className="h-4 w-4" /> Back
-            </Button>
-            <Button
-              onClick={async () => {
-                const valid = await form.trigger('scheduledAt');
-                if (valid) setStep(2);
-              }}
-              className="flex-1 gap-1.5"
-            >
-              Continue <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 2: Customer Details */}
-      {step === 2 && (
-        <div className="space-y-4">
-          {isAuthLoading || (isAuthenticated && customerLoading) ? (
-            <SectionLoader />
-          ) : isAuthenticated && customer ? (
-            <Card className="border-white/10 bg-white/5">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/20 text-primary flex h-10 w-10 items-center justify-center rounded-full font-bold">
-                    {user?.firstName?.[0]}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">
-                      {user?.firstName} {user?.lastName}
-                    </p>
-                    <p className="text-sm text-white/50">{user?.email}</p>
-                  </div>
-                </div>
-                <p className="mt-3 text-xs text-white/40">Booking as your registered account</p>
-              </CardContent>
-            </Card>
+            </>
           ) : (
-            <Card className="border-white/10 bg-white/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base text-white">
-                  <User className="text-primary h-5 w-5" /> Your Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="walkInName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white/70">Full Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Jane Doe"
-                              className="focus:border-primary border-white/20 bg-white/10 text-white placeholder:text-white/30"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="walkInPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white/70">Phone Number</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="tel"
-                              placeholder="0XX XXX XXXX"
-                              className="focus:border-primary border-white/20 bg-white/10 text-white placeholder:text-white/30"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </Form>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setStep(1)}
-              className="gap-1.5 border-white/20 text-white hover:bg-white/10"
-            >
-              <ChevronLeft className="h-4 w-4" /> Back
-            </Button>
-            <Button
-              disabled={isAuthLoading || (isAuthenticated && customerLoading)}
-              onClick={async () => {
-                if (!(isAuthenticated && customer)) {
-                  let hasError = false;
-                  const vals = form.getValues();
-                  if (!vals.walkInName?.trim()) {
-                    form.setError('walkInName', { message: 'Name is required' });
-                    hasError = true;
-                  }
-                  if (!vals.walkInPhone?.trim() || vals.walkInPhone.trim().length < 9) {
-                    form.setError('walkInPhone', {
-                      message: 'Valid phone required (min 9 digits)',
-                    });
-                    hasError = true;
-                  }
-                  if (hasError) return;
-                }
-                setStep(3);
-              }}
-              className="flex-1 gap-1.5"
-            >
-              Continue <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Confirm */}
-      {step === 3 && (
-        <div className="space-y-4">
-          <Card className="border-white/10 bg-white/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-white">
-                <Wrench className="text-primary h-5 w-5" /> Booking Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="mb-2 text-xs tracking-wide text-white/40 uppercase">Services</p>
-                {selectedServices.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between border-b border-white/5 py-1.5 last:border-0"
-                  >
-                    <span className="text-sm text-white/80">{s.name}</span>
-                    <span className="text-sm font-medium text-white">
-                      {pesewasToGHS(s.base_price_pesewas)}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-sm font-semibold text-white">Total (estimate)</span>
-                  <span className="text-primary font-bold">{pesewasToGHS(totalPesewas)}</span>
+            <>
+              <div className="grid g2">
+                <div className="field">
+                  <label htmlFor="bk-name">Full name</label>
+                  <input id="bk-name" className="input" value={name} onChange={(event) => setName(event.target.value)} placeholder="Yaw Boateng" />
+                </div>
+                <div className="field">
+                  <label htmlFor="bk-phone">Phone</label>
+                  <input id="bk-phone" className="input" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="055 200 1190" />
                 </div>
               </div>
-              <div className="border-t border-white/10 pt-3">
-                <p className="mb-1 text-xs tracking-wide text-white/40 uppercase">Scheduled</p>
-                <p className="text-sm text-white">
-                  {new Date(form.getValues('scheduledAt')).toLocaleString()}
-                </p>
+              <div className="field">
+                <label htmlFor="bk-car">Car</label>
+                <input id="bk-car" className="input" value={car} onChange={(event) => setCar(event.target.value)} placeholder="2014 Nissan Sentra" />
+                <span className="hint">Optional, but it helps us prepare.</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setStep(2)}
-              className="gap-1.5 border-white/20 text-white hover:bg-white/10"
-            >
-              <ChevronLeft className="h-4 w-4" /> Back
-            </Button>
-            <Button onClick={form.handleSubmit(onSubmit)} disabled={isPending} className="flex-1">
-              {isPending ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Confirming...
-                </>
-              ) : (
-                'Confirm Booking'
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </>
+      ) : null}
+      {step === 3 ? (
+        <>
+          <h2>Confirm</h2>
+          <dl className="kv">
+            <dt>Services</dt>
+            <dd>
+              {chosen.map((service) => (
+                <div key={service.id} className="row sb"><span>{service.name}</span><span className="num">GHS {ghsAmount(service.base_price_pesewas)}</span></div>
+              ))}
+            </dd>
+            <dt>Total (GHS)</dt>
+            <dd className="b">{ghsAmount(total)}</dd>
+            <dt>When</dt>
+            <dd>{date} {time}</dd>
+            <dt>Who</dt>
+            <dd>{signedIn && user ? `${user.firstName} ${user.lastName}` : name}</dd>
+          </dl>
+        </>
+      ) : null}
+      <div className="row end" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
+        {step > 0 ? <button type="button" className="btn" onClick={() => setStep((value) => value - 1)}>Back</button> : null}
+        {step < 3 ? <button type="button" className="btn primary" onClick={next}>Continue</button> : null}
+        {step === 3 ? (
+          <button type="button" className={create.isPending ? 'btn primary nt-loading' : 'btn primary'} data-variant="primary" disabled={create.isPending} onClick={confirm}>
+            Confirm booking
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<SectionLoader />}>
-      <BookingContent />
-    </Suspense>
+    <div className="pubwrap">
+      <section className="sec" style={{ maxWidth: 760, margin: '0 auto' }}>
+        <h1 style={{ fontSize: 32 }}>Book service</h1>
+        <p className="muted" style={{ margin: '8px 0 24px' }}>Four quick steps. We will confirm by phone.</p>
+        <Suspense fallback={<p className="muted">Loading the form.</p>}>
+          <BookingContent />
+        </Suspense>
+      </section>
+    </div>
   );
 }

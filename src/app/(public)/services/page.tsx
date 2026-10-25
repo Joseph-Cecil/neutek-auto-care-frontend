@@ -1,111 +1,71 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { Clock, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { SectionLoader } from '@/components/shared/LoadingSpinner';
-import { ErrorAlert } from '@/components/shared/ErrorAlert';
+import { TopProgress } from '@/components/ui/top-progress';
 import { useServices, useServiceCategories } from '@/hooks/useServices';
-import { pesewasToGHS, formatDuration } from '@/lib/utils/format';
-import { cn } from '@/lib/utils/cn';
+import { formatDuration, ghsAmount } from '@/lib/utils/format';
 
 export default function ServicesPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
-
-  const { data: categories } = useServiceCategories();
-  const { data, isLoading, error }  = useServices({
-    categoryId: selectedCategory,
-    active:     true,
-    limit:      50,
-  });
-
-  const services = data?.data ?? [];
+  const categories = useServiceCategories();
+  const services = useServices({ active: true, limit: 100 });
+  const rows = services.data?.data ?? [];
+  const groups = (categories.data ?? [])
+    .map((category) => ({
+      category,
+      items: rows.filter((service) => service.category_id === category.id),
+    }))
+    .filter((group) => group.items.length > 0);
+  const ungrouped = rows.filter((service) => !groups.some((group) => group.items.includes(service)));
+  const failed = (services.isError && !services.data) || (categories.isError && !categories.data);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
-      {/* Header */}
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold text-white lg:text-5xl">Our Services</h1>
-        <p className="mt-4 text-white/50 max-w-xl mx-auto">
-          Professional automotive care for every make and model.
-          Transparent pricing, certified technicians.
+    <div className="pubwrap">
+      <TopProgress active={services.isLoading || categories.isLoading} />
+      <section className="sec">
+        <h1 style={{ fontSize: 36 }}>Services</h1>
+        <p className="muted" style={{ margin: '8px 0 32px' }}>
+          Fixed prices for routine work. Anything else is quoted before we start.
         </p>
-      </div>
-
-      {/* Category filters */}
-      {categories && categories.length > 0 && (
-        <div className="mb-8 flex flex-wrap gap-2 justify-center">
-          <button
-            onClick={() => setSelectedCategory(undefined)}
-            className={cn(
-              'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
-              !selectedCategory
-                ? 'border-primary bg-primary text-white'
-                : 'border-white/20 text-white/60 hover:border-primary/50 hover:text-white',
-            )}
-          >
-            All Services
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={cn(
-                'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
-                selectedCategory === cat.id
-                  ? 'border-primary bg-primary text-white'
-                  : 'border-white/20 text-white/60 hover:border-primary/50 hover:text-white',
-              )}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Services grid */}
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load services. Please refresh the page." className="max-w-lg mx-auto" />
-      ) : services.length === 0 ? (
-        <div className="py-16 text-center text-white/40">No services found</div>
-      ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
-            <div key={service.id}
-              className="group flex flex-col rounded-2xl border border-white/10 bg-white/5 p-6 transition-all hover:border-primary/40 hover:bg-white/8">
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-white">{service.name}</h3>
-                {service.description && (
-                  <p className="mt-2 text-sm text-white/50 leading-relaxed line-clamp-3">
-                    {service.description}
-                  </p>
-                )}
+        {failed ? (
+          <div className="banner" role="alert">Could not load services. Refresh the page and try again.</div>
+        ) : services.isLoading ? (
+          <p className="muted">Loading services.</p>
+        ) : rows.length === 0 ? (
+          <div className="card"><div className="empty"><h2>No services yet</h2><p className="muted">The catalogue is empty.</p></div></div>
+        ) : (
+          <div className="stack">
+            {groups.map((group) => (
+              <div key={group.category.id} className="stack s">
+                <h2>{group.category.name}</h2>
+                {group.items.map((service) => (
+                  <div key={service.id} className="pcard">
+                    <div style={{ maxWidth: '52ch' }}>
+                      <div className="b">{service.name}</div>
+                      {service.description ? <div className="muted sm">{service.description}</div> : null}
+                    </div>
+                    <div className="row">
+                      <span className="pill">{formatDuration(service.estimated_duration_minutes)}</span>
+                      <span className="b" style={{ fontVariantNumeric: 'tabular-nums' }}>GHS {ghsAmount(service.base_price_pesewas)}</span>
+                      <Link href={`/booking?service=${service.id}`} className="btn sm">Book</Link>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="mt-4 flex items-end justify-between">
-                <div>
-                  <p className="text-xl font-bold text-primary">
-                    {pesewasToGHS(service.base_price_pesewas)}
-                  </p>
-                  <p className="text-xs text-white/40">Starting price</p>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-white/40">
-                  <Clock className="h-3.5 w-3.5" />
-                  {formatDuration(service.estimated_duration_minutes)}
-                </div>
+            ))}
+            {ungrouped.length > 0 ? (
+              <div className="stack s">
+                <h2>Other</h2>
+                {ungrouped.map((service) => (
+                  <div key={service.id} className="pcard">
+                    <div className="b">{service.name}</div>
+                    <Link href={`/booking?service=${service.id}`} className="btn sm">Book</Link>
+                  </div>
+                ))}
               </div>
-              <Link href={"/booking?service=" + service.id} className="mt-4">
-                <Button className="w-full gap-1.5 group-hover:bg-primary" variant="outline"
-                  size="sm">
-                  Book Now <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
+            ) : null}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
