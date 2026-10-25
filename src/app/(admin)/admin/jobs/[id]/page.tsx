@@ -204,6 +204,8 @@ export default function AdminJobDetailPage() {
       <div className="card stack s">
         <h2>Quote and invoice</h2>
         <div className="row">
+          <Link href={`/admin/quotes/create?job=${id}`} className="btn sm primary">New quote</Link>
+          <Link href={`/admin/invoices/create?job=${id}`} className="btn sm">New invoice</Link>
           <Link href={`/admin/quotes?jobId=${id}`} className="btn sm">View quotes</Link>
           <Link href={`/admin/invoices?jobId=${id}`} className="btn sm">View invoices</Link>
           <Link href={`/tracking/${job.job_number}`} className="btn sm" target="_blank">Public tracking</Link>

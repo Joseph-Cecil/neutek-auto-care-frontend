@@ -6,7 +6,7 @@ import { invoiceDal } from '@/lib/dal/invoice.dal';
 import { paymentDal } from '@/lib/dal/payment.dal';
 import { queryKeys }  from '@/lib/api/queryKeys';
 import { getErrorMessage } from '@/lib/utils/errors';
-import type { ListInvoicesParams, InitializePaymentRequest } from '@/lib/dto';
+import type { CreateInvoiceRequest, ListInvoicesParams, InitializePaymentRequest } from '@/lib/dto';
 
 export function useInvoices(params?: ListInvoicesParams) {
   return useQuery({
@@ -26,6 +26,18 @@ export function useInvoice(id: string) {
       return res.data.data;
     },
     enabled: !!id,
+  });
+}
+
+export function useCreateInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateInvoiceRequest) => invoiceDal.create(body),
+    onSuccess: () => {
+      toast.success('Invoice created');
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all });
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 

@@ -70,6 +70,7 @@ export default function AdminQuotesPage() {
                 What we have offered, and what customers have answered.
               </p>
             </div>
+            <Link href="/admin/quotes/create" className="btn primary">New quote</Link>
           </div>
 
           <div className="tabs" role="tablist" aria-label="Quote status">

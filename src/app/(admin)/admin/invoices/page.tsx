@@ -80,8 +80,8 @@ export default function AdminInvoicesPage() {
                 What is owed, what is paid and what is late.
               </p>
             </div>
+            <Link href="/admin/invoices/create" className="btn primary">New invoice</Link>
           </div>
-
           <div className="tabs" role="tablist" aria-label="Invoice status">
             {STATUS_TABS.map(({ label, value }) => (
               <button
