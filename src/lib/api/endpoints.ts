@@ -115,6 +115,12 @@ export const ENDPOINTS = {
     SEND_DUE: '/reminders/send-due',
     SETTINGS: '/reminders/settings',
   },
+  MESSAGES: {
+    TEMPLATES: '/messages/templates',
+    TEMPLATE:  (id: string) => `/messages/templates/${id}`,
+    TEST:      (id: string) => `/messages/templates/${id}/test`,
+    LOG:       '/messages/deliveries',
+  },
   UPLOADS: {
     PRESIGN: '/uploads/presign',
     CONFIRM: '/uploads/confirm',

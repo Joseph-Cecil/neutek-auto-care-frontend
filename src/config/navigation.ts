@@ -51,6 +51,7 @@ export const adminNavigation: NavSection[] = [
     { title: 'Blog', href: '/admin/blog', icon: 'BookOpen' },
   ]},
   { title: 'Customer care', roles: ['admin','super_admin'], items: [
+    { title: 'Messages', href: '/admin/messages', icon: 'Chat' },
     { title: 'Reminders', href: '/admin/reminders', icon: 'Bell' },
     { title: 'Feedback', href: '/admin/feedback', icon: 'Star' },
   ]},

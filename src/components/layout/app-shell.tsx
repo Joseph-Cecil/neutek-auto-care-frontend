@@ -52,6 +52,7 @@ const ICONS: Record<string, string> = {
   Bell: 'M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4',
   User: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6',
   Star: 'M12 3l2.6 6.4L21 10l-5 4.2L17.4 21 12 17.8 6.6 21 8 14.2 3 10l6.4-.6z',
+  Chat: 'M4 5h16v11H9l-5 4z',
 };
 
 const SEGMENT_LABEL: Record<string, string> = {
@@ -69,6 +70,7 @@ const SEGMENT_LABEL: Record<string, string> = {
   users: 'Users',
   feedback: 'Feedback',
   reminders: 'Reminders',
+  messages: 'Messages',
   vehicles: 'My vehicles',
   notifications: 'Notifications',
   profile: 'Profile',
