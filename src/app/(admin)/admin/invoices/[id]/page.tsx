@@ -133,9 +133,9 @@ export default function AdminInvoiceDetailPage() {
               Send to customer
             </button>
           ) : null}
-          {invoice.pdf_url ? (
+          {invoice.pdf_url?.startsWith('http') ? (
             <a className="btn sm" href={invoice.pdf_url} target="_blank" rel="noopener noreferrer">
-              PDF
+              Download PDF
             </a>
           ) : null}
         </div>

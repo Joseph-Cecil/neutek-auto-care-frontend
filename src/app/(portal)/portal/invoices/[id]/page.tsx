@@ -86,8 +86,8 @@ function InvoiceBody({
           <p className="muted">Due {formatDate(invoice.due_date)}</p>
         </div>
         <div className="row">
-          {invoice.pdf_url ? (
-            <a href={invoice.pdf_url} className="btn sm" target="_blank" rel="noopener noreferrer">PDF</a>
+          {invoice.pdf_url?.startsWith('http') ? (
+            <a href={invoice.pdf_url} className="btn sm" target="_blank" rel="noopener noreferrer">Download PDF</a>
           ) : null}
           {canPay ? (
             <button
