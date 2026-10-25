@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { JobStatusBadge } from '@/components/shared/StatusBadge';
 import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ErrorAlert } from '@/components/shared/ErrorAlert';
 import { useAdminJob, useAdminTransitionJob } from '@/hooks/useAdminJobs';
 import { useJobHistory } from '@/hooks/useJobs';
 import { VALID_TRANSITIONS, getStatusMeta } from '@/lib/utils/jobStatus';
@@ -29,7 +30,7 @@ import type { JobStatus } from '@/lib/dto';
 export default function AdminJobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: job, isLoading, error } = useAdminJob(id);
-  const { data: history }               = useJobHistory(id);
+  const { data: history, isLoading: historyLoading, isError: historyError } = useJobHistory(id);
   const { mutate: transition, isPending: transitioning } = useAdminTransitionJob();
 
   const [showTransition, setShowTransition] = useState(false);
@@ -167,7 +168,11 @@ export default function AdminJobDetailPage() {
             <CardTitle className="text-base">Status History</CardTitle>
           </CardHeader>
           <CardContent>
-            {!history || history.length === 0 ? (
+            {historyLoading ? (
+              <LoadingSpinner size="sm" />
+            ) : historyError && !history ? (
+              <ErrorAlert message="Failed to load status history." />
+            ) : !history || history.length === 0 ? (
               <p className="text-sm text-muted-foreground">No history yet</p>
             ) : (
               <ul className="space-y-3">

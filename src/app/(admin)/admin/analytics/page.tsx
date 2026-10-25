@@ -20,6 +20,7 @@ import { DollarSign, Wrench, Users, TrendingUp, Clock, Award } from 'lucide-reac
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/admin/shared/PageHeader';
 import { StatsCard } from '@/components/admin/shared/StatsCard';
+import { ErrorAlert } from '@/components/shared/ErrorAlert';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import {
   useDashboardStats,
@@ -44,11 +45,23 @@ const CHART_COLORS = ['#0066FF', '#3B9EFF', '#10B981', '#F59E0B', '#8B5CF6', '#E
 export default function AdminAnalyticsPage() {
   const [granularity, setGranularity] = useState<RevenueGranularity>('month');
 
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: revenue, isLoading: revenueLoading } = useRevenueChart({ granularity });
-  const { data: jobsByStatus, isLoading: jobsLoading } = useJobsByStatus();
-  const { data: topServices, isLoading: servicesLoading } = useTopServices(8);
-  const { data: technicians, isLoading: techLoading } = useTechnicianPerformance();
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats();
+  const {
+    data: revenue,
+    isLoading: revenueLoading,
+    isError: revenueError,
+  } = useRevenueChart({ granularity });
+  const { data: jobsByStatus, isLoading: jobsLoading, isError: jobsError } = useJobsByStatus();
+  const {
+    data: topServices,
+    isLoading: servicesLoading,
+    isError: servicesError,
+  } = useTopServices(8);
+  const {
+    data: technicians,
+    isLoading: techLoading,
+    isError: techError,
+  } = useTechnicianPerformance();
 
   const revenueChange =
     stats && stats.revenueLastMonthPesewas > 0
@@ -68,6 +81,8 @@ export default function AdminAnalyticsPage() {
       {/* KPI Stats */}
       {statsLoading ? (
         <SectionLoader />
+      ) : statsError && !stats ? (
+        <ErrorAlert message="Failed to load workshop totals." />
       ) : stats ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatsCard
@@ -136,6 +151,8 @@ export default function AdminAnalyticsPage() {
             <div className="flex h-64 items-center justify-center">
               <SectionLoader />
             </div>
+          ) : revenueError && !revenue ? (
+            <ErrorAlert message="Failed to load revenue." />
           ) : !revenue || revenue.length === 0 ? (
             <div className="text-muted-foreground flex h-64 items-center justify-center text-sm">
               No revenue data available
@@ -215,6 +232,8 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             {jobsLoading ? (
               <SectionLoader />
+            ) : jobsError && !jobsByStatus ? (
+              <ErrorAlert message="Failed to load jobs by status." />
             ) : !jobsByStatus || jobsByStatus.length === 0 ? (
               <div className="text-muted-foreground flex h-48 items-center justify-center text-sm">
                 No data available
@@ -277,6 +296,8 @@ export default function AdminAnalyticsPage() {
           <CardContent>
             {servicesLoading ? (
               <SectionLoader />
+            ) : servicesError && !topServices ? (
+              <ErrorAlert message="Failed to load top services." />
             ) : !topServices || topServices.length === 0 ? (
               <div className="text-muted-foreground flex h-48 items-center justify-center text-sm">
                 No data available
@@ -339,6 +360,8 @@ export default function AdminAnalyticsPage() {
         <CardContent>
           {techLoading ? (
             <SectionLoader />
+          ) : techError && !technicians ? (
+            <ErrorAlert message="Failed to load technician performance." />
           ) : !technicians || technicians.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center text-sm">
               No technician data available

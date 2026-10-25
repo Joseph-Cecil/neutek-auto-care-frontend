@@ -19,7 +19,7 @@ import { useState } from 'react';
 export default function PortalNotificationsPage() {
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useNotifications({ page, limit: 20 });
+  const { data, isLoading, isError } = useNotifications({ page, limit: 20 });
   const { mutate: markRead, isPending: markingOne } = useMarkNotificationRead();
   const { mutate: markAll,  isPending: markingAll }  = useMarkAllNotificationsRead();
 
@@ -33,7 +33,13 @@ export default function PortalNotificationsPage() {
         <div>
           <h1 className="text-2xl font-bold lg:text-3xl">Notifications</h1>
           <p className="mt-1 text-muted-foreground">
-            {unreadCount > 0 ? unreadCount + " unread" : "All caught up"}
+            {isLoading
+              ? 'Loading notifications'
+              : isError
+                ? 'Could not load notifications'
+                : unreadCount > 0
+                  ? unreadCount + ' unread'
+                  : 'All caught up'}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -54,7 +60,7 @@ export default function PortalNotificationsPage() {
 
       {isLoading ? (
         <SectionLoader />
-      ) : error ? (
+      ) : isError ? (
         <ErrorAlert message="Failed to load notifications. Please refresh the page." />
       ) : notifications.length === 0 ? (
         <EmptyState
@@ -109,7 +115,9 @@ export default function PortalNotificationsPage() {
         </div>
       )}
 
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      {!isLoading && !isError ? (
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      ) : null}
     </div>
   );
 }

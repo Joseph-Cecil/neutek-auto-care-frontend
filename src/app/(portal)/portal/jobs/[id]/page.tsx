@@ -6,7 +6,8 @@ import { ArrowLeft, Clock, User, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { JobStatusBadge } from '@/components/shared/StatusBadge';
-import { SectionLoader }  from '@/components/shared/LoadingSpinner';
+import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ErrorAlert } from '@/components/shared/ErrorAlert';
 import { useJob, useJobHistory } from '@/hooks/useJobs';
 import { getStatusMeta, JOB_STATUS_STEPS } from '@/lib/utils/jobStatus';
 import { formatDate, formatDateTime } from '@/lib/utils/date';
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils/cn';
 export default function PortalJobDetailPage() {
   const { id }  = useParams<{ id: string }>();
   const { data: job, isLoading, error } = useJob(id);
-  const { data: history }               = useJobHistory(id);
+  const { data: history, isLoading: historyLoading, isError: historyError } = useJobHistory(id);
 
   if (isLoading) return <SectionLoader />;
 
@@ -143,7 +144,11 @@ export default function PortalJobDetailPage() {
             <CardTitle className="text-base">Status History</CardTitle>
           </CardHeader>
           <CardContent>
-            {!history || history.length === 0 ? (
+            {historyLoading ? (
+              <LoadingSpinner size="sm" />
+            ) : historyError && !history ? (
+              <ErrorAlert message="Failed to load status history." />
+            ) : !history || history.length === 0 ? (
               <p className="text-sm text-muted-foreground">No history yet</p>
             ) : (
               <ul className="space-y-3">

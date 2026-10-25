@@ -23,7 +23,7 @@ export default function PortalDashboardPage() {
     enabled:  !!user,
   });
 
-  const { data: notifData } = useQuery({
+  const { data: notifData, isLoading: notifLoading, isError: notifError } = useQuery({
     queryKey: queryKeys.notifications.list({ isRead: false }),
     queryFn:  async () => { const res = await notificationDal.list({ isRead: false, limit: 5 }); return res.data; },
     enabled:  !!user,
@@ -122,7 +122,11 @@ export default function PortalDashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            {notifications.length === 0 ? (
+            {notifLoading ? (
+              <SectionLoader className="py-8" />
+            ) : notifError && !notifData ? (
+              <ErrorAlert message="Failed to load notifications." className="text-xs" />
+            ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Bell className="h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">You&apos;re all caught up!</p>
