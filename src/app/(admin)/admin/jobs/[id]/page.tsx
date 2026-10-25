@@ -13,6 +13,7 @@ import { useVehicle } from '@/hooks/useVehicles';
 import { useAuthStore } from '@/stores/auth.store';
 import { formatDate, formatDateTime } from '@/lib/utils/date';
 import { formatPhone, fullName } from '@/lib/utils/format';
+import { JobDiagnostics } from '@/components/admin/jobs/JobDiagnostics';
 import { VALID_TRANSITIONS, getStatusMeta } from '@/lib/utils/jobStatus';
 import { isAdmin } from '@/lib/utils/permissions';
 import type { JobPriority, JobStatus } from '@/lib/dto';
@@ -211,6 +212,7 @@ export default function AdminJobDetailPage() {
           <Link href={`/tracking/${job.job_number}`} className="btn sm" target="_blank">Public tracking</Link>
         </div>
       </div>
+      <JobDiagnostics jobId={id} />
       <div className="card flush">
         <div style={{ padding: '20px 24px 8px' }}><h2>Status history</h2></div>
         {historyLoading ? <p className="muted" style={{ padding: '0 24px 20px' }}>Loading history.</p> : null}
