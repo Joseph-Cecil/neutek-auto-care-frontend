@@ -402,7 +402,7 @@ export function AppShell({
             </div>
           </header>
           {pop ? <button type="button" className="dismiss" aria-label="Close" onClick={closePop} /> : null}
-          <main className="page" id="main-content" tabIndex={-1}>
+          <main className="page nt-ui" id="main-content" tabIndex={-1}>
             {blocked ? (
               <div className="denied">
                 <h1>You do not have access to this page.</h1>

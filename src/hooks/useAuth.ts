@@ -3,11 +3,11 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
 import { authDal } from '@/lib/dal/auth.dal';
 import { useAuthStore } from '@/stores/auth.store';
 import { queryKeys } from '@/lib/api/queryKeys';
-import { getErrorMessage, applyServerErrors } from '@/lib/utils/errors';
+import { applyServerErrors } from '@/lib/utils/errors';
 import { homeForRole } from '@/lib/utils/permissions';
 import type {
   LoginRequest, RegisterRequest,
@@ -33,11 +33,11 @@ export function useLogin() {
       const { accessToken, user } = res.data.data;
       setAuth(accessToken, { ...user, email_verified: user.email_verified ?? false });
       qc.setQueryData(queryKeys.auth.me, user);
-      toast.success('Welcome back, ' + user.firstName + '!');
+      notify('success', 'Welcome back, ' + user.firstName + '!');
       router.push(homeForRole(user.role));
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error));
+      notify('error', error);
     },
   });
 }
@@ -51,11 +51,11 @@ export function useRegister() {
     onSuccess: (res) => {
       const { accessToken, user } = res.data.data;
       setAuth(accessToken, { ...user, email_verified: user.email_verified ?? false });
-      toast.success('Account created! Welcome to Neutek Auto Care.');
+      notify('success', 'Account created. Welcome to Neutek Auto Care.');
       router.push('/portal/dashboard');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error));
+      notify('error', error);
     },
   });
 }
@@ -82,11 +82,10 @@ export function useForgotPassword() {
   return useMutation({
     mutationFn: (data: ForgotPasswordRequest) => authDal.forgotPassword(data),
     onSuccess: () => {
-      toast.success("If an account exists with that email, you'll receive a reset link.");
+      notify('success', 'If an account exists, we sent a link.');
     },
     onError: () => {
-      // Always show success — prevent email enumeration
-      toast.success("If an account exists with that email, you'll receive a reset link.");
+      notify('success', 'If an account exists, we sent a link.');
     },
   });
 }
@@ -96,11 +95,11 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: (data: ResetPasswordRequest) => authDal.resetPassword(data),
     onSuccess: () => {
-      toast.success('Password reset successfully. Please log in.');
+      notify('success', 'Password saved. Sign in with the new one.');
       router.push('/login');
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error));
+      notify('error', error);
     },
   });
 }
@@ -115,14 +114,14 @@ export function useChangePassword<T extends FieldValues>({
   return useMutation({
     mutationFn: authDal.changePassword,
     onSuccess: () => {
-      toast.success('Password changed successfully.');
+      notify('success', 'Password changed.');
       onSuccess?.();
     },
     onError: (error) => {
       if (setError) {
         applyServerErrors(error, setError, 'root' as never);
       } else {
-        toast.error(getErrorMessage(error));
+        notify('error', error);
       }
     },
   });
