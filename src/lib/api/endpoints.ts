@@ -13,6 +13,7 @@ export const ENDPOINTS = {
     LIST:      '/users',
     ME:        '/users/me',
     ME_AVATAR: '/users/me/avatar',
+    INVITE:    '/users/invite',
     BY_ID:     (id: string) => `/users/${id}`,
   },
   CUSTOMERS: {

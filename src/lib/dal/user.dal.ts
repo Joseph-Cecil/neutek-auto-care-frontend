@@ -3,6 +3,7 @@ import { ENDPOINTS } from '@/lib/api/endpoints';
 import type {
   ApiResponse, PaginatedResponse, UserProfile,
   UpdateProfileRequest, UpdateAvatarRequest, ListUsersParams,
+  InviteUserRequest, InviteUserResult,
 } from '@/lib/dto';
 
 export const userDal = {
@@ -18,4 +19,6 @@ export const userDal = {
     apiClient.get<ApiResponse<UserProfile>>(ENDPOINTS.USERS.BY_ID(id)),
   deleteById:   (id: string) =>
     apiClient.delete<void>(ENDPOINTS.USERS.BY_ID(id)),
+  invite:       (body: InviteUserRequest) =>
+    apiClient.post<ApiResponse<InviteUserResult>>(ENDPOINTS.USERS.INVITE, body),
 };

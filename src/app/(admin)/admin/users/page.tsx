@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { TopProgress } from '@/components/ui/top-progress';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
-import { useAdminUsers, useAdminDeleteUser } from '@/hooks/useAdminUsers';
+import { useAdminUsers, useAdminDeleteUser, useInviteUser } from '@/hooks/useAdminUsers';
 import { fullName } from '@/lib/utils/format';
 import { formatDate } from '@/lib/utils/date';
-import { notify } from '@/lib/notify';
 import type { UserRole } from '@/lib/dto';
 
 const ROLES: { label: string; value: UserRole | 'all' }[] = [
@@ -64,7 +63,14 @@ export default function AdminUsersPage() {
   const [role, setRole] = useState<UserRole | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [inviteRole, setInviteRole] = useState<'technician' | 'admin'>('technician');
+  const [inviteError, setInviteError] = useState('');
   const dialogRef = useRef<HTMLDivElement>(null);
+  const inviteRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading, isError } = useAdminUsers({
     search: search || undefined,
@@ -73,6 +79,7 @@ export default function AdminUsersPage() {
     limit: 20,
   });
   const { mutate: deleteUser, isPending: deleting } = useAdminDeleteUser();
+  const invite = useInviteUser();
 
   const users = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -90,6 +97,54 @@ export default function AdminUsersPage() {
     return () => document.removeEventListener('keydown', onKey);
   }, [deleteId, deleting]);
 
+  useEffect(() => {
+    if (!inviteOpen) return;
+    inviteRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !invite.isPending) setInviteOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [inviteOpen, invite.isPending]);
+
+  const submitInvite = (event: FormEvent) => {
+    event.preventDefault();
+    const parts = inviteName.trim().split(/\s+/);
+    const first = parts[0];
+    const last = parts.slice(1).join(' ');
+    if (!first || !last) {
+      setInviteError('Enter a first and last name.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setInviteError('Enter a valid email.');
+      return;
+    }
+    if (password.length < 8) {
+      setInviteError('Enter a password of at least 8 characters.');
+      return;
+    }
+    setInviteError('');
+    invite.mutate(
+      {
+        firstName: first,
+        lastName: last,
+        email: email.trim(),
+        password,
+        role: inviteRole,
+      },
+      {
+        onSuccess: () => {
+          setInviteOpen(false);
+          setInviteName('');
+          setEmail('');
+          setPassword('');
+          setInviteRole('technician');
+        },
+      },
+    );
+  };
+
   if (isLoading && !data) {
     return (
       <>
@@ -101,14 +156,14 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <TopProgress active={isLoading || deleting} />
+      <TopProgress active={isLoading || deleting || invite.isPending} />
       <div className="pagehead">
         <div className="ttl">
           <h1>Users</h1>
           <p className="muted">Who can sign in to the workshop. {total} total users.</p>
         </div>
         <div className="row">
-          <button type="button" className="btn primary" onClick={() => notify('error', 'Invites are not available yet')}>
+          <button type="button" className="btn primary" onClick={() => { setInviteError(''); setInviteOpen(true); }}>
             Invite user
           </button>
         </div>
@@ -220,6 +275,47 @@ export default function AdminUsersPage() {
           <Pager page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
+
+      {inviteOpen ? (
+        <div
+          className="scrim"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !invite.isPending) setInviteOpen(false);
+          }}
+        >
+          <div ref={inviteRef} className="dlg" role="dialog" aria-modal="true" aria-labelledby="user-invite-title" tabIndex={-1}>
+            <h2 id="user-invite-title">Invite user</h2>
+            <p className="muted">Creates an account they can sign in with. No email is sent.</p>
+            <form onSubmit={submitInvite} noValidate>
+              {inviteError ? <div className="errsum" role="alert">{inviteError}</div> : null}
+              <div className="field">
+                <label htmlFor="iv-name">Full name</label>
+                <input id="iv-name" className="input" value={inviteName} onChange={(event) => setInviteName(event.target.value)} placeholder="Kojo Appiah" />
+              </div>
+              <div className="field">
+                <label htmlFor="iv-email">Email</label>
+                <input id="iv-email" className="input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="kojo@example.com" />
+              </div>
+              <div className="field">
+                <label htmlFor="iv-password">Password</label>
+                <input id="iv-password" className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
+                <span className="hint">At least 8 characters, with upper case, lower case, a number, and a symbol.</span>
+              </div>
+              <div className="field">
+                <label htmlFor="iv-role">Role</label>
+                <select id="iv-role" className="input" value={inviteRole} onChange={(event) => setInviteRole(event.target.value as 'technician' | 'admin')}>
+                  <option value="technician">Technician</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="row end">
+                <button type="button" className="btn" disabled={invite.isPending} onClick={() => setInviteOpen(false)}>Cancel</button>
+                <button type="submit" className={invite.isPending ? 'btn primary nt-loading' : 'btn primary'} disabled={invite.isPending}>Create account</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       {deleteId ? (
         <div
