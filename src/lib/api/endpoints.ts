@@ -121,6 +121,12 @@ export const ENDPOINTS = {
     TEST:      (id: string) => `/messages/templates/${id}/test`,
     LOG:       '/messages/deliveries',
   },
+  INVENTORY: {
+    LIST:        '/inventory',
+    CREATE:      '/inventory',
+    RECEIVE:     (id: string) => `/inventory/${id}/receive`,
+    RESTOCK_LOW: '/inventory/restock-low',
+  },
   UPLOADS: {
     PRESIGN: '/uploads/presign',
     CONFIRM: '/uploads/confirm',

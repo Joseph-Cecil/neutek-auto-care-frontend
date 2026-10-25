@@ -114,6 +114,10 @@ export const queryKeys = {
     templates:  (p?: { page?: number }) => ['messages', 'templates', p] as const,
     deliveries: (p?: { page?: number }) => ['messages', 'deliveries', p] as const,
   },
+  inventory: {
+    all:  ['inventory'] as const,
+    list: (p?: { page?: number; filter?: 'all' | 'low'; limit?: number }) => ['inventory', 'list', p] as const,
+  },
   analytics: {
     dashboard:   ['analytics', 'dashboard'] as const,
     revenue:     (p?: { granularity?: RevenueGranularity; from?: string; to?: string }) =>

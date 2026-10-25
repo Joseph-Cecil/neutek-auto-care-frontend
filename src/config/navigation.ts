@@ -46,6 +46,7 @@ export const adminNavigation: NavSection[] = [
   { title: 'Catalogue', roles: ['admin','super_admin'], items: [
     { title: 'Services', href: '/admin/services', icon: 'Package' },
     { title: 'Fleet',    href: '/admin/fleet',    icon: 'Building2' },
+    { title: 'Inventory', href: '/admin/inventory', icon: 'Box' },
   ]},
   { title: 'Content', roles: ['admin','super_admin'], items: [
     { title: 'Blog', href: '/admin/blog', icon: 'BookOpen' },

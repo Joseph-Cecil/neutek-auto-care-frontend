@@ -20,3 +20,4 @@ export * from './upload.dto';
 export * from './feedback.dto';
 export * from './reminder.dto';
 export * from './message.dto';
+export * from './inventory.dto';
