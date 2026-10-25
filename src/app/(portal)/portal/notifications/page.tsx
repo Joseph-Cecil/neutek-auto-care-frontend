@@ -1,123 +1,124 @@
 'use client';
 
-import { Bell, CheckCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { EmptyState }  from '@/components/shared/EmptyState';
-import { ErrorAlert }  from '@/components/shared/ErrorAlert';
-import { Pagination }  from '@/components/shared/Pagination';
+import { useState } from 'react';
+import Link from 'next/link';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
 import {
   useNotifications,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from '@/hooks/useNotifications';
 import { timeAgo } from '@/lib/utils/date';
-import { cn } from '@/lib/utils/cn';
-import { useState } from 'react';
+import type { Notification } from '@/lib/dto';
+
+function jobHref(note: Notification): string | null {
+  const meta = note.metadata ?? note.data;
+  if (!meta || typeof meta !== 'object') return null;
+  const jobId = (meta as Record<string, unknown>).jobId;
+  return typeof jobId === 'string' && jobId ? '/portal/jobs/' + jobId : null;
+}
 
 export default function PortalNotificationsPage() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useNotifications({ page, limit: 20 });
   const { mutate: markRead, isPending: markingOne } = useMarkNotificationRead();
-  const { mutate: markAll,  isPending: markingAll }  = useMarkAllNotificationsRead();
+  const { mutate: markAll, isPending: markingAll } = useMarkAllNotificationsRead();
 
   const notifications = data?.data       ?? [];
   const totalPages    = data?.totalPages ?? 1;
-  const unreadCount   = notifications.filter((n) => !n.is_read).length;
+  const unreadCount   = notifications.filter((note) => !note.is_read).length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold lg:text-3xl">Notifications</h1>
-          <p className="mt-1 text-muted-foreground">
-            {isLoading
-              ? 'Loading notifications'
-              : isError
-                ? 'Could not load notifications'
-                : unreadCount > 0
-                  ? unreadCount + ' unread'
-                  : 'All caught up'}
-          </p>
-        </div>
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => markAll()}
-            disabled={markingAll}
-            className="gap-1.5"
-          >
-            {markingAll
-              ? <LoadingSpinner size="sm" className="mr-1" />
-              : <CheckCheck className="h-4 w-4" />}
-            Mark all read
-          </Button>
-        )}
-      </div>
-
-      {isLoading ? (
-        <SectionLoader />
-      ) : isError ? (
-        <ErrorAlert message="Failed to load notifications. Please refresh the page." />
-      ) : notifications.length === 0 ? (
-        <EmptyState
-          icon={<Bell className="h-6 w-6" />}
-          title="No notifications"
-          description="You&apos;re all caught up! Notifications about your repairs will appear here."
-        />
-      ) : (
-        <div className="space-y-2">
-          {notifications.map((n) => (
-            <Card
-              key={n.id}
-              className={cn(
-                'transition-all',
-                !n.is_read && 'border-primary/30 bg-primary/5',
+    <>
+      <TopProgress active={isLoading} />
+      {isLoading ? <PageSkeleton kind="list" /> : (
+        <>
+          <div className="pagehead">
+            <div className="ttl">
+              <h1>Notifications</h1>
+              <p className="muted">Updates on your jobs, quotes and invoices.</p>
+              {isError && !data ? (
+                <p className="faint sm">Could not load notifications</p>
+              ) : unreadCount > 0 ? (
+                <p className="faint sm">{unreadCount} unread</p>
+              ) : (
+                <p className="faint sm">All caught up</p>
               )}
-            >
-              <CardContent className="flex items-start gap-3 p-4">
-                {/* Unread dot */}
-                <div className="mt-1.5 shrink-0">
-                  {!n.is_read ? (
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                  ) : (
-                    <div className="h-2 w-2 rounded-full bg-transparent" />
-                  )}
+            </div>
+            {unreadCount > 0 ? (
+              <div className="row">
+                <button
+                  type="button"
+                  className={markingAll ? 'btn nt-loading' : 'btn'}
+                  disabled={markingAll}
+                  onClick={() => markAll()}
+                >
+                  Mark all read
+                </button>
+              </div>
+            ) : null}
+          </div>
+          {isError && !data ? (
+            <div className="banner" role="alert">Failed to load notifications. Please refresh the page.</div>
+          ) : notifications.length === 0 ? (
+            <div className="card">
+              <div className="empty">
+                <h2>No notifications</h2>
+                <p className="muted">You&apos;re all caught up. Notifications about your repairs will appear here.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="stack">
+              <div className="card">
+                <div className="stack">
+                  {notifications.map((note) => {
+                    const href = jobHref(note);
+                    return (
+                      <div key={note.id} className="row sb">
+                        <div>
+                          <div className="row">
+                            {!note.is_read ? <span className="pill brand">Unread</span> : null}
+                            {href ? (
+                              <Link href={href} className="b" onClick={() => { if (!note.is_read) markRead(note.id); }}>
+                                {note.title}
+                              </Link>
+                            ) : (
+                              <span className="b">{note.title}</span>
+                            )}
+                          </div>
+                          <p className="muted sm">{note.body}</p>
+                          <p className="faint sm">{timeAgo(note.created_at)}</p>
+                        </div>
+                        {!note.is_read ? (
+                          <button
+                            type="button"
+                            className="btn sm ghost"
+                            disabled={markingOne}
+                            onClick={() => markRead(note.id)}
+                          >
+                            Mark read
+                          </button>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className={cn('text-sm', !n.is_read ? 'font-semibold' : 'font-medium')}>
-                    {n.title}
-                  </p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{n.body}</p>
-                  <p className="mt-1 text-xs text-muted-foreground/60">
-                    {timeAgo(n.created_at)}
-                  </p>
+              </div>
+              {totalPages > 1 ? (
+                <div className="row sb">
+                  <span className="muted sm">Page {page} of {totalPages}</span>
+                  <div className="row">
+                    <button type="button" className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+                    <button type="button" className="btn sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button>
+                  </div>
                 </div>
-
-                {!n.is_read && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => markRead(n.id)}
-                    disabled={markingOne}
-                    className="shrink-0 text-xs"
-                  >
-                    Mark read
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ) : null}
+            </div>
+          )}
+        </>
       )}
-
-      {!isLoading && !isError ? (
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-      ) : null}
-    </div>
+    </>
   );
 }

@@ -2,33 +2,31 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Receipt, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { StatusBadge }   from '@/components/shared/StatusBadge';
-import { SectionLoader } from '@/components/shared/LoadingSpinner';
-import { EmptyState }    from '@/components/shared/EmptyState';
-import { ErrorAlert }    from '@/components/shared/ErrorAlert';
-import { Pagination }    from '@/components/shared/Pagination';
-import { useInvoices }   from '@/hooks/useInvoices';
-import { useAuthStore }  from '@/stores/auth.store';
-import { pesewasToGHS }  from '@/lib/utils/format';
-import { formatDate }    from '@/lib/utils/date';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
+import { useInvoices } from '@/hooks/useInvoices';
+import { useAuthStore } from '@/stores/auth.store';
+import { ghsAmount } from '@/lib/utils/format';
+import { formatDate } from '@/lib/utils/date';
 import type { InvoiceStatus } from '@/lib/dto';
 
-const STATUS_MAP: Record<InvoiceStatus, 'default' | 'success' | 'warning' | 'danger' | 'info' | 'muted'> = {
-  draft:         'muted',
-  sent:          'info',
-  paid:          'success',
-  partially_paid:'warning',
-  overdue:       'danger',
-  cancelled:     'muted',
-};
+function invoicePill(status: InvoiceStatus): string {
+  if (status === 'paid') return 'pill ok';
+  if (status === 'overdue') return 'pill bad';
+  if (status === 'partially_paid') return 'pill warn';
+  if (status === 'sent') return 'pill brand';
+  return 'pill';
+}
+
+function invoiceLabel(status: string): string {
+  return status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export default function PortalInvoicesPage() {
   const user = useAuthStore((s) => s.user);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useInvoices({
+  const { data, isLoading, isError } = useInvoices({
     customerId: user?.id,
     page,
     limit: 10,
@@ -38,64 +36,77 @@ export default function PortalInvoicesPage() {
   const totalPages = data?.totalPages ?? 1;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold lg:text-3xl">My Invoices</h1>
-        <p className="mt-1 text-muted-foreground">View and pay your repair invoices</p>
-      </div>
-
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load your invoices. Please refresh the page." />
-      ) : invoices.length === 0 ? (
-        <EmptyState
-          icon={<Receipt className="h-6 w-6" />}
-          title="No invoices yet"
-          description="Invoices will appear here once your repair is complete."
-        />
-      ) : (
-        <div className="space-y-3">
-          {invoices.map((invoice) => {
-            const remaining = invoice.total_pesewas - invoice.amount_paid_pesewas;
-            const isPending = invoice.status === 'sent' || invoice.status === 'partially_paid' || invoice.status === 'overdue';
-            return (
-              <Link key={invoice.id} href={"/portal/invoices/" + invoice.id}>
-                <Card className="cursor-pointer transition-all hover:border-primary/40">
-                  <CardContent className="flex items-center justify-between gap-4 p-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-sm font-medium">
-                          {invoice.invoice_number}
-                        </span>
-                        <StatusBadge
-                          label={invoice.status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                          variant={STATUS_MAP[invoice.status]}
-                        />
-                        {isPending && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                            Pay Now
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>Total: {pesewasToGHS(invoice.total_pesewas)}</span>
-                        {invoice.amount_paid_pesewas > 0 && invoice.amount_paid_pesewas < invoice.total_pesewas && (
-                          <span>Remaining: {pesewasToGHS(remaining)}</span>
-                        )}
-                        <span>Due: {formatDate(invoice.due_date)}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+    <>
+      <TopProgress active={isLoading} />
+      {isLoading ? <PageSkeleton kind="list" /> : (
+        <>
+          <div className="pagehead">
+            <div className="ttl">
+              <h1>Invoices</h1>
+              <p className="muted">What you owe and what you have paid.</p>
+            </div>
+          </div>
+          {isError && !data ? (
+            <div className="banner" role="alert">Failed to load your invoices. Please refresh the page.</div>
+          ) : invoices.length === 0 ? (
+            <div className="card">
+              <div className="empty">
+                <h2>No invoices yet</h2>
+                <p className="muted">Invoices will appear here once your repair is complete.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="stack">
+              <div className="card flush">
+                <div className="tw">
+                  <table className="tbl">
+                    <thead>
+                      <tr>
+                        <th>Number</th>
+                        <th>Due</th>
+                        <th className="num">Total</th>
+                        <th className="num">Balance</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoices.map((invoice) => {
+                        const remaining = invoice.total_pesewas - invoice.amount_paid_pesewas;
+                        const canPay = invoice.status === 'sent' || invoice.status === 'partially_paid' || invoice.status === 'overdue';
+                        return (
+                          <tr key={invoice.id}>
+                            <td>
+                              <Link href={'/portal/invoices/' + invoice.id} className="b">{invoice.invoice_number}</Link>
+                            </td>
+                            <td>{formatDate(invoice.due_date)}</td>
+                            <td className="num">GHS {ghsAmount(invoice.total_pesewas)}</td>
+                            <td className="num b">GHS {ghsAmount(remaining)}</td>
+                            <td>
+                              <span className="row">
+                                <span className={invoicePill(invoice.status)}>{invoiceLabel(invoice.status)}</span>
+                                {canPay ? <span className="pill brand">Pay now</span> : null}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {totalPages > 1 ? (
+                <div className="row sb">
+                  <span className="muted sm">Page {page} of {totalPages}</span>
+                  <div className="row">
+                    <button type="button" className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+                    <button type="button" className="btn sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </>
       )}
-
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-    </div>
+    </>
   );
 }

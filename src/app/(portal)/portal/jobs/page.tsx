@@ -1,20 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Wrench, ChevronRight, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input }  from '@/components/ui/input';
-import { JobStatusBadge } from '@/components/shared/StatusBadge';
-import { SectionLoader }  from '@/components/shared/LoadingSpinner';
-import { EmptyState }     from '@/components/shared/EmptyState';
-import { ErrorAlert }     from '@/components/shared/ErrorAlert';
-import { Pagination }     from '@/components/shared/Pagination';
-import { useJobs }        from '@/hooks/useJobs';
-import { useAuthStore }   from '@/stores/auth.store';
-import { formatDate }     from '@/lib/utils/date';
-import { cn }             from '@/lib/utils/cn';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
+import { useJobs } from '@/hooks/useJobs';
+import { formatDate } from '@/lib/utils/date';
+import { getStatusMeta } from '@/lib/utils/jobStatus';
 import type { JobStatus } from '@/lib/dto';
 
 const STATUS_FILTERS: { label: string; value: JobStatus | undefined }[] = [
@@ -26,12 +18,20 @@ const STATUS_FILTERS: { label: string; value: JobStatus | undefined }[] = [
   { label: 'Completed',    value: 'completed' },
 ];
 
-export default function PortalJobsPage() {
-  const user   = useAuthStore((s) => s.user);
-  const [status, setStatus] = useState<JobStatus | undefined>(undefined);
-  const [page,   setPage]   = useState(1);
+function jobPill(status: JobStatus): string {
+  if (status === 'completed' || status === 'ready_for_pickup') return 'pill ok';
+  if (status === 'cancelled' || status === 'quote_rejected') return 'pill bad';
+  if (status === 'diagnosing' || status === 'quality_check' || status === 'quote_sent') return 'pill warn';
+  if (status === 'in_progress' || status === 'quote_approved') return 'pill brand';
+  return 'pill';
+}
 
-  const { data, isLoading, error } = useJobs({
+export default function PortalJobsPage() {
+  const [status, setStatus] = useState<JobStatus | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const { data, isLoading, isError } = useJobs({
     page,
     limit: 10,
     status,
@@ -41,77 +41,106 @@ export default function PortalJobsPage() {
   const totalPages = data?.totalPages ?? 1;
   const total      = data?.total      ?? 0;
 
+  const choose = (index: number) => {
+    const next = STATUS_FILTERS[index];
+    if (!next) return;
+    setStatus(next.value);
+    setPage(1);
+    tabRefs.current[index]?.focus();
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold lg:text-3xl">My Jobs</h1>
-          <p className="mt-1 text-muted-foreground">
-            {total} job{total !== 1 ? 's' : ''} total
-          </p>
-        </div>
-        <Link href="/booking">
-          <Button className="gap-1.5">
-            <Wrench className="h-4 w-4" /> Book New Service
-          </Button>
-        </Link>
-      </div>
-
-      {/* Status filters */}
-      <div className="flex flex-wrap gap-2">
-        {STATUS_FILTERS.map(({ label, value }) => (
-          <button key={label}
-            onClick={() => { setStatus(value); setPage(1); }}
-            className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-              status === value
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-            )}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load your jobs. Please refresh the page." />
-      ) : jobs.length === 0 ? (
-        <EmptyState
-          icon={<Wrench className="h-6 w-6" />}
-          title="No jobs found"
-          description="You have no repair jobs matching this filter."
-          action={{ label: 'Book a Service', onClick: () => window.location.href = '/booking' }}
-        />
-      ) : (
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <Link key={job.id} href={"/portal/jobs/" + job.id}>
-              <Card className="cursor-pointer transition-all hover:border-primary/40">
-                <CardContent className="flex items-center justify-between gap-4 p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{job.title}</p>
-                      <JobStatusBadge status={job.status} />
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span className="font-mono">{job.job_number}</span>
-                      <span>{formatDate(job.created_at)}</span>
-                      {job.estimated_completion_at && (
-                        <span>Est. done: {formatDate(job.estimated_completion_at)}</span>
-                      )}
-                    </div>
+    <>
+      <TopProgress active={isLoading} />
+      {isLoading ? <PageSkeleton kind="list" /> : (
+        <>
+          <div className="pagehead">
+            <div className="ttl">
+              <h1>My jobs</h1>
+              <p className="muted">Every visit, with its latest status.</p>
+              {!isError && data ? <p className="faint sm">{total} {total === 1 ? 'job' : 'jobs'}</p> : null}
+            </div>
+            <div className="row">
+              <Link href="/booking" className="btn primary">Book service</Link>
+            </div>
+          </div>
+          <div className="tabs" role="tablist" aria-label="Job status">
+            {STATUS_FILTERS.map(({ label, value }, index) => (
+              <button
+                key={label}
+                ref={(node) => { tabRefs.current[index] = node; }}
+                type="button"
+                className="tab"
+                role="tab"
+                aria-selected={status === value}
+                onClick={() => choose(index)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+                  event.preventDefault();
+                  const delta = event.key === 'ArrowRight' ? 1 : -1;
+                  const next = (index + delta + STATUS_FILTERS.length) % STATUS_FILTERS.length;
+                  choose(next);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {isError && !data ? (
+            <div className="banner" role="alert">Failed to load your jobs. Please refresh the page.</div>
+          ) : jobs.length === 0 ? (
+            <div className="card">
+              <div className="empty">
+                <h2>No jobs found</h2>
+                <p className="muted">You have no repair jobs matching this filter.</p>
+                <Link href="/booking" className="btn primary">Book a service</Link>
+              </div>
+            </div>
+          ) : (
+            <div className="stack">
+              <div className="card flush">
+                <div className="tw">
+                  <table className="tbl">
+                    <thead>
+                      <tr>
+                        <th>Job</th>
+                        <th>Status</th>
+                        <th>Updated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {jobs.map((job) => (
+                        <tr key={job.id}>
+                          <td>
+                            <Link href={'/portal/jobs/' + job.id} className="b">{job.job_number}</Link>
+                            <div className="faint sm">{job.title}</div>
+                          </td>
+                          <td><span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span></td>
+                          <td>
+                            <div>{formatDate(job.updated_at)}</div>
+                            {job.estimated_completion_at ? (
+                              <div className="faint sm">Est. done {formatDate(job.estimated_completion_at)}</div>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {totalPages > 1 ? (
+                <div className="row sb">
+                  <span className="muted sm">Page {page} of {totalPages}</span>
+                  <div className="row">
+                    <button type="button" className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+                    <button type="button" className="btn sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </>
       )}
-
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-    </div>
+    </>
   );
 }
