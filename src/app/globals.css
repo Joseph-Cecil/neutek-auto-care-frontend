@@ -203,8 +203,38 @@ body {
   }
 }
 
+.btn-pending {
+  position: relative;
+  color: transparent !important;
+  opacity: 1 !important;
+}
+
+.btn-pending::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ntspin 0.7s linear infinite;
+}
+
+.btn-pending[data-variant='outline']::after,
+.btn-pending[data-variant='secondary']::after,
+.btn-pending[data-variant='ghost']::after,
+.btn-pending[data-variant='link']::after {
+  border-color: var(--color-border);
+  border-top-color: var(--color-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .nt-loading::after {
+  .nt-loading::after,
+  .btn-pending::after {
     animation-duration: 1.8s;
   }
 }

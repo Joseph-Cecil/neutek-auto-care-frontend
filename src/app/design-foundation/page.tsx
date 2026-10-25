@@ -1,18 +1,23 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { toast } from 'sonner';
 
 import { Banner } from '@/components/ui/banner';
+import { Button } from '@/components/ui/button';
 import { NtButton } from '@/components/ui/nt-button';
 import { NtEmpty } from '@/components/ui/nt-empty';
 import { NtInput } from '@/components/ui/nt-input';
 import { NtToaster } from '@/components/ui/nt-toaster';
+import { PageSkeleton, SKELETON_KINDS, type SkeletonKind } from '@/components/ui/page-skeleton';
 import { Pill } from '@/components/ui/pill';
+import { TopProgress } from '@/components/ui/top-progress';
+import { notify } from '@/lib/notify';
 
 export default function DesignFoundationPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  const [kind, setKind] = useState<SkeletonKind>('list');
 
   function onSave(event: FormEvent) {
     event.preventDefault();
@@ -21,12 +26,17 @@ export default function DesignFoundationPage() {
       return;
     }
     setError('');
-    toast.success('Saved just now');
+    setPending(true);
+    window.setTimeout(() => {
+      setPending(false);
+      notify('success', 'Saved just now');
+    }, 800);
   }
 
   return (
     <main className="nt min-h-screen px-6 py-10">
       <NtToaster />
+      <TopProgress active={pending} />
       <div className="mx-auto flex max-w-3xl flex-col gap-8">
         <header>
           <h1 className="text-2xl font-bold tracking-tight">Foundation</h1>
@@ -73,9 +83,12 @@ export default function DesignFoundationPage() {
               {error}
             </p>
           ) : null}
-          <NtButton type="submit" variant="primary">
+          <NtButton type="submit" variant="primary" loading={pending}>
             Save
           </NtButton>
+          <Button type="submit" pending={pending}>
+            Save
+          </Button>
         </form>
 
         <section className="flex flex-col gap-3" aria-label="Banners">
@@ -93,6 +106,25 @@ export default function DesignFoundationPage() {
         </section>
 
         <NtEmpty title="Nothing matches that." description="Try another search." />
+
+        <section className="flex flex-col gap-4" aria-label="Skeletons">
+          <h2 className="text-base font-semibold">Skeletons</h2>
+          <div className="flex flex-wrap gap-2">
+            {SKELETON_KINDS.map((item) => (
+              <NtButton
+                key={item}
+                type="button"
+                size="sm"
+                variant={item === kind ? 'primary' : 'default'}
+                onClick={() => setKind(item)}
+                aria-pressed={item === kind}
+              >
+                {item}
+              </NtButton>
+            ))}
+          </div>
+          <PageSkeleton kind={kind} />
+        </section>
       </div>
     </main>
   );
