@@ -36,6 +36,7 @@ export const adminNavigation: NavSection[] = [
   { title: 'Operations', items: [
     { title: 'Bookings',  href: '/admin/bookings',  icon: 'Calendar', roles: ['admin','super_admin','technician'] },
     { title: 'Jobs',      href: '/admin/jobs',      icon: 'Wrench',   roles: ['admin','super_admin','technician'] },
+    { title: 'Schedule',  href: '/admin/schedule',  icon: 'Calendar', roles: ['admin','super_admin'] },
     { title: 'Customers', href: '/admin/customers', icon: 'Users',    roles: ['admin','super_admin'] },
   ]},
   { title: 'Finance', roles: ['admin','super_admin'], items: [

@@ -127,6 +127,11 @@ export const ENDPOINTS = {
     RECEIVE:     (id: string) => `/inventory/${id}/receive`,
     RESTOCK_LOW: '/inventory/restock-low',
   },
+  SCHEDULE: {
+    BOARD:  '/schedule',
+    ASSIGN: '/schedule/assign',
+    BAY:    (id: string) => `/schedule/bays/${id}`,
+  },
   UPLOADS: {
     PRESIGN: '/uploads/presign',
     CONFIRM: '/uploads/confirm',

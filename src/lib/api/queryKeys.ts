@@ -118,6 +118,10 @@ export const queryKeys = {
     all:  ['inventory'] as const,
     list: (p?: { page?: number; filter?: 'all' | 'low'; limit?: number }) => ['inventory', 'list', p] as const,
   },
+  schedule: {
+    all:   ['schedule'] as const,
+    board: ['schedule', 'board'] as const,
+  },
   analytics: {
     dashboard:   ['analytics', 'dashboard'] as const,
     revenue:     (p?: { granularity?: RevenueGranularity; from?: string; to?: string }) =>

@@ -21,3 +21,4 @@ export * from './feedback.dto';
 export * from './reminder.dto';
 export * from './message.dto';
 export * from './inventory.dto';
+export * from './schedule.dto';
