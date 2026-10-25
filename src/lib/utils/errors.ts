@@ -6,9 +6,9 @@ export function getErrorMessage(error: unknown): string {
   if (isAxiosError<ApiError>(error)) {
     const data = error.response?.data;
     if (data?.message) return data.message;
-    if (error.message)  return error.message;
+    if (error.message) return error.message;
   }
-  if (error instanceof Error)    return error.message;
+  if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   return 'An unexpected error occurred';
 }
@@ -24,15 +24,13 @@ export function isStatus(error: unknown, status: number): boolean {
 export function getValidationErrors(
   error: unknown,
 ): Array<{ field: string; message: string }> | null {
-  return isAxiosError<ApiError>(error)
-    ? (error.response?.data?.errors ?? null)
-    : null;
+  return isAxiosError<ApiError>(error) ? (error.response?.data?.errors ?? null) : null;
 }
 
 export function applyServerErrors<T extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<T>,
-  fallbackField: Path<T> = 'root' as Path<T>,
+  fallbackField: Path<T> | 'root' = 'root',
 ): void {
   const errs = getValidationErrors(error);
   if (errs && errs.length > 0) {
@@ -40,10 +38,10 @@ export function applyServerErrors<T extends FieldValues>(
       setError(field as Path<T>, { type: 'server', message });
     });
   } else {
-    setError(fallbackField, { type: 'server', message: getErrorMessage(error) });
+    setError(fallbackField as Path<T>, { type: 'server', message: getErrorMessage(error) });
   }
 }
 
 export function isNetworkError(error: unknown): boolean {
-  return isAxiosError(error) ? (!error.response && !!error.request) : false;
+  return isAxiosError(error) ? !error.response && !!error.request : false;
 }

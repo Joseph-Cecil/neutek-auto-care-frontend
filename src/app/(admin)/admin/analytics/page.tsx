@@ -2,17 +2,31 @@
 
 import { useState } from 'react';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import { DollarSign, Wrench, Users, TrendingUp, Clock, Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader }    from '@/components/admin/shared/PageHeader';
-import { StatsCard }     from '@/components/admin/shared/StatsCard';
+import { PageHeader } from '@/components/admin/shared/PageHeader';
+import { StatsCard } from '@/components/admin/shared/StatsCard';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import {
-  useDashboardStats, useRevenueChart,
-  useJobsByStatus, useTopServices, useTechnicianPerformance,
+  useDashboardStats,
+  useRevenueChart,
+  useJobsByStatus,
+  useTopServices,
+  useTechnicianPerformance,
 } from '@/hooks/useAnalytics';
 import { pesewasToGHS, pesewasToFloat } from '@/lib/utils/format';
 import { getStatusMeta } from '@/lib/utils/jobStatus';
@@ -20,8 +34,8 @@ import { cn } from '@/lib/utils/cn';
 import type { RevenueGranularity } from '@/lib/dto';
 
 const GRANULARITY_OPTIONS: { label: string; value: RevenueGranularity }[] = [
-  { label: 'Daily',   value: 'day' },
-  { label: 'Weekly',  value: 'week' },
+  { label: 'Daily', value: 'day' },
+  { label: 'Weekly', value: 'week' },
   { label: 'Monthly', value: 'month' },
 ];
 
@@ -30,25 +44,26 @@ const CHART_COLORS = ['#0066FF', '#3B9EFF', '#10B981', '#F59E0B', '#8B5CF6', '#E
 export default function AdminAnalyticsPage() {
   const [granularity, setGranularity] = useState<RevenueGranularity>('month');
 
-  const { data: stats,        isLoading: statsLoading }   = useDashboardStats();
-  const { data: revenue,      isLoading: revenueLoading } = useRevenueChart({ granularity });
-  const { data: jobsByStatus, isLoading: jobsLoading }    = useJobsByStatus();
-  const { data: topServices,  isLoading: servicesLoading } = useTopServices(8);
-  const { data: technicians,  isLoading: techLoading }    = useTechnicianPerformance();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: revenue, isLoading: revenueLoading } = useRevenueChart({ granularity });
+  const { data: jobsByStatus, isLoading: jobsLoading } = useJobsByStatus();
+  const { data: topServices, isLoading: servicesLoading } = useTopServices(8);
+  const { data: technicians, isLoading: techLoading } = useTechnicianPerformance();
 
-  const revenueChange = stats && stats.revenueLastMonthPesewas > 0
-    ? parseFloat((
-        ((stats.revenueThisMonthPesewas - stats.revenueLastMonthPesewas) /
-          stats.revenueLastMonthPesewas) * 100
-      ).toFixed(1))
-    : null;
+  const revenueChange =
+    stats && stats.revenueLastMonthPesewas > 0
+      ? parseFloat(
+          (
+            ((stats.revenueThisMonthPesewas - stats.revenueLastMonthPesewas) /
+              stats.revenueLastMonthPesewas) *
+            100
+          ).toFixed(1),
+        )
+      : null;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Analytics"
-        description="Workshop performance overview"
-      />
+      <PageHeader title="Analytics" description="Workshop performance overview" />
 
       {/* KPI Stats */}
       {statsLoading ? (
@@ -58,22 +73,24 @@ export default function AdminAnalyticsPage() {
           <StatsCard
             title="Total Revenue"
             value={pesewasToGHS(stats.totalRevenuePesewas)}
-            subtitle={"This month: " + pesewasToGHS(stats.revenueThisMonthPesewas)}
+            subtitle={'This month: ' + pesewasToGHS(stats.revenueThisMonthPesewas)}
             icon={<DollarSign className="h-5 w-5 text-green-400" />}
             iconBg="bg-green-500/10"
-            trend={revenueChange !== null ? { value: revenueChange, label: 'vs last month' } : undefined}
+            trend={
+              revenueChange !== null ? { value: revenueChange, label: 'vs last month' } : undefined
+            }
           />
           <StatsCard
             title="Total Jobs"
             value={stats.totalJobs.toLocaleString()}
-            subtitle={stats.activeJobs + " active now"}
+            subtitle={stats.activeJobs + ' active now'}
             icon={<Wrench className="h-5 w-5 text-blue-400" />}
             iconBg="bg-blue-500/10"
           />
           <StatsCard
             title="Total Customers"
             value={stats.totalCustomers.toLocaleString()}
-            subtitle={"+" + stats.newCustomersThisMonth + " this month"}
+            subtitle={'+' + stats.newCustomersThisMonth + ' this month'}
             icon={<Users className="h-5 w-5 text-violet-400" />}
             iconBg="bg-violet-500/10"
           />
@@ -81,10 +98,10 @@ export default function AdminAnalyticsPage() {
             title="Avg Job Duration"
             value={
               stats.averageJobDurationMinutes < 60
-                ? stats.averageJobDurationMinutes + "m"
-                : (stats.averageJobDurationMinutes / 60).toFixed(1) + "h"
+                ? stats.averageJobDurationMinutes + 'm'
+                : (stats.averageJobDurationMinutes / 60).toFixed(1) + 'h'
             }
-            subtitle={stats.completedJobsThisMonth + " completed this month"}
+            subtitle={stats.completedJobsThisMonth + ' completed this month'}
             icon={<Clock className="h-5 w-5 text-amber-400" />}
             iconBg="bg-amber-500/10"
           />
@@ -95,18 +112,20 @@ export default function AdminAnalyticsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="h-4 w-4 text-primary" /> Revenue Over Time
+            <TrendingUp className="text-primary h-4 w-4" /> Revenue Over Time
           </CardTitle>
           <div className="flex gap-1">
             {GRANULARITY_OPTIONS.map(({ label, value }) => (
-              <button key={value}
+              <button
+                key={value}
                 onClick={() => setGranularity(value)}
                 className={cn(
                   'rounded px-2.5 py-1 text-xs font-medium transition-colors',
                   granularity === value
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground',
-                )}>
+                )}
+              >
                 {label}
               </button>
             ))}
@@ -118,16 +137,18 @@ export default function AdminAnalyticsPage() {
               <SectionLoader />
             </div>
           ) : !revenue || revenue.length === 0 ? (
-            <div className="flex h-64 items-center justify-center text-muted-foreground text-sm">
+            <div className="text-muted-foreground flex h-64 items-center justify-center text-sm">
               No revenue data available
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={revenue.map((r) => ({
-                period:   r.period,
-                revenue:  pesewasToFloat(r.revenuePesewas),
-                jobs:     r.jobCount,
-              }))}>
+              <LineChart
+                data={revenue.map((r) => ({
+                  period: r.period,
+                  revenue: pesewasToFloat(r.revenuePesewas),
+                  jobs: r.jobCount,
+                }))}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis
                   dataKey="period"
@@ -138,7 +159,7 @@ export default function AdminAnalyticsPage() {
                   yAxisId="revenue"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                   tickLine={false}
-                  tickFormatter={(v) => "GHS " + v.toLocaleString()}
+                  tickFormatter={(v) => 'GHS ' + v.toLocaleString()}
                 />
                 <YAxis
                   yAxisId="jobs"
@@ -148,16 +169,17 @@ export default function AdminAnalyticsPage() {
                 />
                 <Tooltip
                   contentStyle={{
-                    background:   'hsl(var(--card))',
-                    border:       '1px solid hsl(var(--border))',
+                    background: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    color:        'hsl(var(--foreground))',
+                    color: 'hsl(var(--foreground))',
                   }}
-                  formatter={(value: number, name: string) =>
-                    name === 'revenue'
-                      ? ["GHS " + value.toLocaleString(), 'Revenue']
-                      : [value, 'Jobs']
-                  }
+                  formatter={(value, name) => {
+                    const amount = typeof value === 'number' ? value : Number(value ?? 0);
+                    return String(name) === 'revenue'
+                      ? [`GHS ${amount.toLocaleString()}`, 'Revenue']
+                      : [amount, 'Jobs'];
+                  }}
                 />
                 <Legend />
                 <Line
@@ -194,7 +216,7 @@ export default function AdminAnalyticsPage() {
             {jobsLoading ? (
               <SectionLoader />
             ) : !jobsByStatus || jobsByStatus.length === 0 ? (
-              <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex h-48 items-center justify-center text-sm">
                 No data available
               </div>
             ) : (
@@ -211,22 +233,19 @@ export default function AdminAnalyticsPage() {
                       innerRadius={40}
                     >
                       {jobsByStatus.map((entry, i) => (
-                        <Cell
-                          key={entry.status}
-                          fill={CHART_COLORS[i % CHART_COLORS.length]}
-                        />
+                        <Cell key={entry.status} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        background:   'hsl(var(--card))',
-                        border:       '1px solid hsl(var(--border))',
+                        background: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
-                        color:        'hsl(var(--foreground))',
+                        color: 'hsl(var(--foreground))',
                       }}
-                      formatter={(value: number, name: string) => [
-                        value + " jobs",
-                        getStatusMeta(name as Parameters<typeof getStatusMeta>[0]).label,
+                      formatter={(value, name) => [
+                        `${Number(value ?? 0)} jobs`,
+                        getStatusMeta(String(name) as Parameters<typeof getStatusMeta>[0]).label,
                       ]}
                     />
                   </PieChart>
@@ -259,27 +278,32 @@ export default function AdminAnalyticsPage() {
             {servicesLoading ? (
               <SectionLoader />
             ) : !topServices || topServices.length === 0 ? (
-              <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex h-48 items-center justify-center text-sm">
                 No data available
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart
                   data={topServices.map((s) => ({
-                    name:    s.serviceName.length > 15
-                               ? s.serviceName.slice(0, 15) + '...'
-                               : s.serviceName,
+                    name:
+                      s.serviceName.length > 15
+                        ? s.serviceName.slice(0, 15) + '...'
+                        : s.serviceName,
                     revenue: pesewasToFloat(s.revenuePesewas),
-                    jobs:    s.jobCount,
+                    jobs: s.jobCount,
                   }))}
                   layout="vertical"
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    horizontal={false}
+                  />
                   <XAxis
                     type="number"
                     tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                     tickLine={false}
-                    tickFormatter={(v) => "GHS " + v.toLocaleString()}
+                    tickFormatter={(v) => 'GHS ' + v.toLocaleString()}
                   />
                   <YAxis
                     type="category"
@@ -290,12 +314,12 @@ export default function AdminAnalyticsPage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      background:   'hsl(var(--card))',
-                      border:       '1px solid hsl(var(--border))',
+                      background: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
-                      color:        'hsl(var(--foreground))',
+                      color: 'hsl(var(--foreground))',
                     }}
-                    formatter={(value: number) => ["GHS " + value.toLocaleString(), 'Revenue']}
+                    formatter={(value) => [`GHS ${Number(value ?? 0).toLocaleString()}`, 'Revenue']}
                   />
                   <Bar dataKey="revenue" fill="#0066FF" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -309,36 +333,36 @@ export default function AdminAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Award className="h-4 w-4 text-primary" /> Technician Performance
+            <Award className="text-primary h-4 w-4" /> Technician Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
           {techLoading ? (
             <SectionLoader />
           ) : !technicians || technicians.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center text-sm">
               No technician data available
             </div>
           ) : (
             <div className="space-y-3">
               {technicians.map((tech, i) => (
-                <div key={tech.technicianId}
-                  className="flex items-center gap-4 rounded-lg border border-border p-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                <div
+                  key={tech.technicianId}
+                  className="border-border flex items-center gap-4 rounded-lg border p-3"
+                >
+                  <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                     {i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{tech.technicianName}</p>
-                    <div className="mt-0.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground mt-0.5 flex flex-wrap gap-3 text-xs">
                       <span>{tech.completedJobs} jobs completed</span>
-                      <span>
-                        Avg {tech.averageCompletionHours.toFixed(1)}h per job
-                      </span>
+                      <span>Avg {tech.averageCompletionHours.toFixed(1)}h per job</span>
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-lg font-bold text-primary">{tech.completedJobs}</p>
-                    <p className="text-xs text-muted-foreground">jobs</p>
+                    <p className="text-primary text-lg font-bold">{tech.completedJobs}</p>
+                    <p className="text-muted-foreground text-xs">jobs</p>
                   </div>
                 </div>
               ))}

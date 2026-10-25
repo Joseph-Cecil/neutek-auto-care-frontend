@@ -3,21 +3,24 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils/cn';
 
-interface Rule { label: string; test: (p: string) => boolean; }
+interface Rule {
+  label: string;
+  test: (p: string) => boolean;
+}
 
 const RULES: Rule[] = [
-  { label: 'At least 8 characters',             test: (p) => p.length >= 8 },
-  { label: 'One uppercase letter',              test: (p) => /[A-Z]/.test(p) },
-  { label: 'One lowercase letter',              test: (p) => /[a-z]/.test(p) },
-  { label: 'One number',                        test: (p) => /[0-9]/.test(p) },
+  { label: 'At least 8 characters', test: (p) => p.length >= 8 },
+  { label: 'One uppercase letter', test: (p) => /[A-Z]/.test(p) },
+  { label: 'One lowercase letter', test: (p) => /[a-z]/.test(p) },
+  { label: 'One number', test: (p) => /[0-9]/.test(p) },
   { label: 'One special character (@\$!%*?&)', test: (p) => /[@\$!%*?&]/.test(p) },
 ];
 
 const STRENGTH_CONFIG = [
-  { label: '',       color: 'bg-muted' },
-  { label: 'Weak',   color: 'bg-red-500' },
-  { label: 'Fair',   color: 'bg-amber-500' },
-  { label: 'Good',   color: 'bg-blue-500' },
+  { label: '', color: 'bg-muted' },
+  { label: 'Weak', color: 'bg-red-500' },
+  { label: 'Fair', color: 'bg-amber-500' },
+  { label: 'Good', color: 'bg-blue-500' },
   { label: 'Strong', color: 'bg-green-500' },
 ];
 
@@ -32,7 +35,7 @@ function getStrength(password: string): 0 | 1 | 2 | 3 | 4 {
 
 export function PasswordStrength({ password }: { password: string }) {
   const strength = useMemo(() => getStrength(password), [password]);
-  const config   = STRENGTH_CONFIG[strength];
+  const config = STRENGTH_CONFIG[strength] ?? { label: '', color: 'bg-muted' };
 
   if (!password) return null;
 
@@ -40,19 +43,25 @@ export function PasswordStrength({ password }: { password: string }) {
     <div className="mt-2 space-y-2">
       <div className="flex gap-1">
         {[1, 2, 3, 4].map((level) => (
-          <div key={level} className={cn(
-            'h-1 flex-1 rounded-full transition-all duration-300',
-            level <= strength ? config.color : 'bg-muted',
-          )} />
+          <div
+            key={level}
+            className={cn(
+              'h-1 flex-1 rounded-full transition-all duration-300',
+              level <= strength ? config.color : 'bg-muted',
+            )}
+          />
         ))}
       </div>
       {config.label && (
-        <p className={cn('text-xs font-medium',
-          strength === 1 && 'text-red-500',
-          strength === 2 && 'text-amber-500',
-          strength === 3 && 'text-blue-500',
-          strength === 4 && 'text-green-500',
-        )}>
+        <p
+          className={cn(
+            'text-xs font-medium',
+            strength === 1 && 'text-red-500',
+            strength === 2 && 'text-amber-500',
+            strength === 3 && 'text-blue-500',
+            strength === 4 && 'text-green-500',
+          )}
+        >
           {config.label} password
         </p>
       )}
@@ -61,10 +70,12 @@ export function PasswordStrength({ password }: { password: string }) {
           const passed = rule.test(password);
           return (
             <li key={rule.label} className="flex items-center gap-1.5 text-xs">
-              <span className={cn(
-                'flex h-3.5 w-3.5 items-center justify-center rounded-full text-[10px] font-bold',
-                passed ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground',
-              )}>
+              <span
+                className={cn(
+                  'flex h-3.5 w-3.5 items-center justify-center rounded-full text-[10px] font-bold',
+                  passed ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground',
+                )}
+              >
                 {passed ? '✓' : '·'}
               </span>
               <span className={cn(passed ? 'text-foreground' : 'text-muted-foreground')}>
