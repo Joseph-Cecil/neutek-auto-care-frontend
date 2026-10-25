@@ -108,11 +108,12 @@ export const ENDPOINTS = {
     CREATE: '/feedback',
     BY_ID:  (id: string) => `/feedback/${id}`,
   },
-  FEEDBACK: {
-    LIST:   '/feedback',
-    BY_JOB: (jobId: string) => `/feedback/job/${jobId}`,
-    CREATE: '/feedback',
-    BY_ID:  (id: string) => `/feedback/${id}`,
+  REMINDERS: {
+    LIST:     '/reminders',
+    CREATE:   '/reminders',
+    SEND:     (id: string) => `/reminders/${id}/send`,
+    SEND_DUE: '/reminders/send-due',
+    SETTINGS: '/reminders/settings',
   },
   UPLOADS: {
     PRESIGN: '/uploads/presign',

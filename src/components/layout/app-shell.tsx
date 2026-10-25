@@ -68,6 +68,7 @@ const SEGMENT_LABEL: Record<string, string> = {
   analytics: 'Analytics',
   users: 'Users',
   feedback: 'Feedback',
+  reminders: 'Reminders',
   vehicles: 'My vehicles',
   notifications: 'Notifications',
   profile: 'Profile',

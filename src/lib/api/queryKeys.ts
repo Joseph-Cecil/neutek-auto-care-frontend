@@ -105,6 +105,10 @@ export const queryKeys = {
     list:   (p?: { page?: number }) => ['feedback', 'list', p] as const,
     byJob:  (jobId: string) => ['feedback', 'job', jobId] as const,
   },
+  reminders: {
+    all:  ['reminders'] as const,
+    list: (p?: { page?: number }) => ['reminders', 'list', p] as const,
+  },
   analytics: {
     dashboard:   ['analytics', 'dashboard'] as const,
     revenue:     (p?: { granularity?: RevenueGranularity; from?: string; to?: string }) =>
