@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { TopProgress } from '@/components/ui/top-progress';
@@ -20,11 +20,14 @@ const SLOTS = Array.from({ length: 20 }, (_, index) => {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 });
 
-function todayStamp() {
+function readClock() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
+  return {
+    today: `${now.getFullYear()}-${month}-${day}`,
+    earliest: now.getTime() + 2 * 60 * 60 * 1000,
+  };
 }
 
 function BookingContent() {
@@ -46,16 +49,15 @@ function BookingContent() {
   const [vehicleId, setVehicleId] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [clock] = useState(readClock);
 
   const rows = services.data?.data ?? [];
   const chosen = rows.filter((service) => selected.includes(service.id));
   const total = chosen.reduce((sum, service) => sum + service.base_price_pesewas, 0);
   const signedIn = Boolean(isAuthenticated && customer.data);
-  const slots = useMemo(() => {
-    if (date !== todayStamp()) return SLOTS;
-    const earliest = Date.now() + 2 * 60 * 60 * 1000;
-    return SLOTS.filter((slot) => new Date(`${date}T${slot}`).getTime() >= earliest);
-  }, [date]);
+  const slots = date !== clock.today
+    ? SLOTS
+    : SLOTS.filter((slot) => new Date(`${date}T${slot}`).getTime() >= clock.earliest);
 
   const toggle = (id: string) => {
     setSelected((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -166,7 +168,7 @@ function BookingContent() {
           <div className="grid g2">
             <div className="field">
               <label htmlFor="bk-date">Date</label>
-              <input id="bk-date" className="input" type="date" min={todayStamp()} value={date} onChange={(event) => { setDate(event.target.value); setTime(''); }} />
+              <input id="bk-date" className="input" type="date" min={clock.today} value={date} onChange={(event) => { setDate(event.target.value); setTime(''); }} />
             </div>
             <div className="field">
               <label htmlFor="bk-time">Time</label>
@@ -176,7 +178,7 @@ function BookingContent() {
               </select>
             </div>
           </div>
-          {date === todayStamp() && slots.length === 0 ? <p className="hint">No slots are left today. Choose a later date.</p> : null}
+          {date === clock.today && slots.length === 0 ? <p className="hint">No slots are left today. Choose a later date.</p> : null}
         </>
       ) : null}
       {step === 2 ? (
