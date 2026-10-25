@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useInvoices } from '@/hooks/useInvoices';
-import { useAuthStore } from '@/stores/auth.store';
 import { ghsAmount } from '@/lib/utils/format';
 import { formatDate } from '@/lib/utils/date';
 import type { InvoiceStatus } from '@/lib/dto';
@@ -23,11 +22,9 @@ function invoiceLabel(status: string): string {
 }
 
 export default function PortalInvoicesPage() {
-  const user = useAuthStore((s) => s.user);
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useInvoices({
-    customerId: user?.id,
     page,
     limit: 10,
   });

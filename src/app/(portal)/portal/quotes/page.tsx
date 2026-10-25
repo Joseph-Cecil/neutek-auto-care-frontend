@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useQuotes } from '@/hooks/useQuotes';
-import { useAuthStore } from '@/stores/auth.store';
 import { ghsAmount } from '@/lib/utils/format';
 import { formatDate } from '@/lib/utils/date';
 import type { QuoteStatus } from '@/lib/dto';
@@ -23,11 +22,9 @@ function quoteLabel(status: QuoteStatus): string {
 }
 
 export default function PortalQuotesPage() {
-  const user = useAuthStore((s) => s.user);
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useQuotes({
-    customerId: user?.id,
     page,
     limit: 10,
   });
