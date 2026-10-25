@@ -100,6 +100,11 @@ export const queryKeys = {
     detail:   (id: string) => ['fleet', id] as const,
     vehicles: (id: string) => ['fleet', id, 'vehicles'] as const,
   },
+  feedback: {
+    all:    ['feedback'] as const,
+    list:   (p?: { page?: number }) => ['feedback', 'list', p] as const,
+    byJob:  (jobId: string) => ['feedback', 'job', jobId] as const,
+  },
   analytics: {
     dashboard:   ['analytics', 'dashboard'] as const,
     revenue:     (p?: { granularity?: RevenueGranularity; from?: string; to?: string }) =>

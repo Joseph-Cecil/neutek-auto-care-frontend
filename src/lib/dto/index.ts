@@ -17,3 +17,4 @@ export * from './blog.dto';
 export * from './fleet.dto';
 export * from './analytics.dto';
 export * from './upload.dto';
+export * from './feedback.dto';

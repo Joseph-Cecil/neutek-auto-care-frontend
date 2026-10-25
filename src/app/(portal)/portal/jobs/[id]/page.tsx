@@ -7,6 +7,7 @@ import { TopProgress } from '@/components/ui/top-progress';
 import { useJob, useJobHistory } from '@/hooks/useJobs';
 import { getStatusMeta, JOB_STATUS_STEPS } from '@/lib/utils/jobStatus';
 import { formatDate, formatDateTime } from '@/lib/utils/date';
+import { JobRating } from '@/components/portal/JobRating';
 import type { JobStatus } from '@/lib/dto';
 
 function jobPill(status: JobStatus): string {
@@ -114,6 +115,7 @@ export default function PortalJobDetailPage() {
                 ) : null}
               </dl>
             </div>
+            <JobRating jobId={id} status={job.status} />
             <div className="card stack s">
               <h2>Status history</h2>
               {historyLoading ? (

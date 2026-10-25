@@ -102,6 +102,18 @@ export const ENDPOINTS = {
     SERVICES:    '/analytics/services',
     TECHNICIANS: '/analytics/technicians',
   },
+  FEEDBACK: {
+    LIST:   '/feedback',
+    BY_JOB: (jobId: string) => `/feedback/job/${jobId}`,
+    CREATE: '/feedback',
+    BY_ID:  (id: string) => `/feedback/${id}`,
+  },
+  FEEDBACK: {
+    LIST:   '/feedback',
+    BY_JOB: (jobId: string) => `/feedback/job/${jobId}`,
+    CREATE: '/feedback',
+    BY_ID:  (id: string) => `/feedback/${id}`,
+  },
   UPLOADS: {
     PRESIGN: '/uploads/presign',
     CONFIRM: '/uploads/confirm',
