@@ -1,59 +1,104 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ArrowLeft, AlertCircle, Wrench,
-  ChevronDown, Clock, User,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu, DropdownMenuContent,
-  DropdownMenuItem, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog, DialogContent, DialogHeader,
-  DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
-import { JobStatusBadge } from '@/components/shared/StatusBadge';
-import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { ErrorAlert } from '@/components/shared/ErrorAlert';
-import { useAdminJob, useAdminTransitionJob } from '@/hooks/useAdminJobs';
+import { useParams } from 'next/navigation';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
+import { useAdminJob, useAdminTransitionJob, useAdminUpdateJob } from '@/hooks/useAdminJobs';
 import { useJobHistory } from '@/hooks/useJobs';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { useCustomer } from '@/hooks/useCustomers';
+import { useVehicle } from '@/hooks/useVehicles';
+import { useAuthStore } from '@/stores/auth.store';
+import { formatDate, formatDateTime } from '@/lib/utils/date';
+import { formatPhone, fullName } from '@/lib/utils/format';
 import { VALID_TRANSITIONS, getStatusMeta } from '@/lib/utils/jobStatus';
-import { formatDateTime, formatDate } from '@/lib/utils/date';
-import type { JobStatus } from '@/lib/dto';
+import { isAdmin } from '@/lib/utils/permissions';
+import type { JobPriority, JobStatus } from '@/lib/dto';
+
+function jobPill(status: JobStatus) {
+  if (status === 'cancelled' || status === 'quote_rejected') return 'pill bad';
+  if (status === 'completed' || status === 'ready_for_pickup' || status === 'quote_approved') return 'pill ok';
+  if (status === 'diagnosing' || status === 'quality_check' || status === 'quote_sent') return 'pill warn';
+  if (status === 'in_progress') return 'pill brand';
+  return 'pill';
+}
+
+function priorityPill(priority: JobPriority) {
+  if (priority === 'urgent') return 'pill bad';
+  if (priority === 'high') return 'pill warn';
+  return 'pill';
+}
+
+function TechnicianField({ jobId, assignedId }: { jobId: string; assignedId: string | null }) {
+  const users = useAdminUsers({ role: 'technician', limit: 100 });
+  const update = useAdminUpdateJob();
+  const techs = (users.data?.data ?? []).filter((user) => user.role === 'technician' && (user.is_active || user.id === assignedId));
+  const known = techs.some((user) => user.id === assignedId);
+
+  return (
+    <div className="field">
+      <TopProgress active={users.isFetching || update.isPending} />
+      <label htmlFor="jb-tech">Technician</label>
+      <select
+        id="jb-tech"
+        className="input"
+        value={assignedId ?? ''}
+        disabled={update.isPending}
+        onChange={(event) => {
+          const value = event.target.value;
+          update.mutate({ id: jobId, body: { assignedTechnicianId: value || null } });
+        }}
+      >
+        <option value="">Unassigned</option>
+        {assignedId && !known ? <option value={assignedId}>Assigned technician</option> : null}
+        {techs.map((user) => (
+          <option key={user.id} value={user.id}>{fullName(user.first_name, user.last_name)}</option>
+        ))}
+      </select>
+      {users.isError && !users.data ? (
+        <span className="hint err">Could not load technicians.</span>
+      ) : (
+        <span className="hint">Saves as soon as you choose.</span>
+      )}
+    </div>
+  );
+}
 
 export default function AdminJobDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: job, isLoading, error } = useAdminJob(id);
-  const { data: history, isLoading: historyLoading, isError: historyError } = useJobHistory(id);
+  const role = useAuthStore((state) => state.user?.role);
+  const admin = role ? isAdmin(role) : false;
+  const { data: job, isLoading, isFetching } = useAdminJob(id);
+  const { data: history, isLoading: historyLoading, isError: historyError, isFetching: historyFetching } = useJobHistory(id);
+  const customer = useCustomer(job?.customer_id ?? '');
+  const vehicle = useVehicle(job?.vehicle_id ?? '');
   const { mutate: transition, isPending: transitioning } = useAdminTransitionJob();
 
   const [showTransition, setShowTransition] = useState(false);
-  const [targetStatus,   setTargetStatus]   = useState<JobStatus | null>(null);
-  const [notes,          setNotes]          = useState('');
+  const [targetStatus, setTargetStatus] = useState<JobStatus | null>(null);
+  const [notes, setNotes] = useState('');
 
-  if (isLoading) return <SectionLoader />;
-
-  if (error || !job) {
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <AlertCircle className="h-10 w-10 text-destructive" />
-        <h2 className="text-lg font-semibold">Job not found</h2>
-        <Link href="/admin/jobs">
-          <Button variant="outline" className="gap-2">
-            <ArrowLeft className="h-4 w-4" /> Back to Jobs
-          </Button>
-        </Link>
+      <>
+        <TopProgress active />
+        <PageSkeleton kind="detail" />
+      </>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="stack">
+        <Link href="/admin/jobs" className="btn sm">Back to jobs</Link>
+        <div className="banner" role="alert">Could not load this job.</div>
       </div>
     );
   }
 
-  const validNextStatuses = VALID_TRANSITIONS[job.status];
+  const nextStatuses = VALID_TRANSITIONS[job.status];
 
   const handleTransition = () => {
     if (!targetStatus) return;
@@ -64,190 +109,177 @@ export default function AdminJobDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <Link href="/admin/jobs">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to Jobs
-        </Button>
-      </Link>
-
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="font-mono text-xs text-muted-foreground">{job.job_number}</p>
-          <h1 className="mt-1 text-xl font-bold">{job.title}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <JobStatusBadge status={job.status} />
-            <span className="text-xs capitalize text-muted-foreground">
-              Priority: {job.priority}
-            </span>
+    <div className="stack">
+      <TopProgress active={isFetching || historyFetching || transitioning || customer.isFetching || vehicle.isFetching} />
+      <div className="pagehead">
+        <div className="ttl">
+          <div className="row">
+            <Link href="/admin/jobs" className="btn sm">Back to jobs</Link>
           </div>
+          <div className="row">
+            <h1>{job.job_number}</h1>
+            <span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span>
+            <span className={priorityPill(job.priority)}>{job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}</span>
+          </div>
+          <p className="muted">{job.title}</p>
         </div>
-
-        {/* Transition button */}
-        {validNextStatuses.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="gap-1.5" disabled={transitioning}>
-                {transitioning && <LoadingSpinner size="sm" className="mr-1" />}
-                Update Status <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {validNextStatuses.map((status) => (
-                <DropdownMenuItem key={status}
-                  onClick={() => { setTargetStatus(status); setShowTransition(true); }}>
-                  <JobStatusBadge status={status} className="mr-2" />
-                  {getStatusMeta(status).label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {nextStatuses.length > 0 ? (
+          <div className="row">
+            {nextStatuses.map((status) => (
+              <button
+                key={status}
+                type="button"
+                className={status === 'cancelled' || status === 'quote_rejected' ? 'btn sm danger' : 'btn sm'}
+                disabled={transitioning}
+                onClick={() => { setTargetStatus(status); setShowTransition(true); }}
+              >
+                {getStatusMeta(status).label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="muted sm">No further status moves.</p>
         )}
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Job info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Wrench className="h-4 w-4 text-primary" /> Job Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Created</span>
-              <span>{formatDate(job.created_at)}</span>
-            </div>
-            {job.estimated_completion_at && (
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> Est. Completion
-                </span>
-                <span>{formatDateTime(job.estimated_completion_at)}</span>
-              </div>
-            )}
-            {job.actual_completion_at && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Completed</span>
-                <span>{formatDateTime(job.actual_completion_at)}</span>
-              </div>
-            )}
-            {job.assigned_technician_id && (
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <User className="h-3.5 w-3.5" /> Technician
-                </span>
-                <span className="font-mono text-xs">{job.assigned_technician_id}</span>
-              </div>
-            )}
-            {job.description && (
-              <div className="border-t border-border pt-3">
-                <p className="mb-1 text-muted-foreground">Description</p>
-                <p>{job.description}</p>
-              </div>
-            )}
-            {job.intake_notes && (
-              <div className="border-t border-border pt-3">
-                <p className="mb-1 text-muted-foreground">Intake Notes</p>
-                <p>{job.intake_notes}</p>
-              </div>
-            )}
-            {job.completion_notes && (
-              <div className="border-t border-border pt-3">
-                <p className="mb-1 text-muted-foreground">Completion Notes</p>
-                <p>{job.completion_notes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Status history */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Status History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {historyLoading ? (
-              <LoadingSpinner size="sm" />
-            ) : historyError && !history ? (
-              <ErrorAlert message="Failed to load status history." />
-            ) : !history || history.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No history yet</p>
-            ) : (
-              <ul className="space-y-3">
-                {[...history].reverse().map((entry, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    <div>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {entry.from_status && (
-                          <>
-                            <JobStatusBadge status={entry.from_status} />
-                            <span className="text-muted-foreground">→</span>
-                          </>
-                        )}
-                        <JobStatusBadge status={entry.to_status} />
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {formatDateTime(entry.created_at)}
-                      </p>
-                      {entry.notes && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">{entry.notes}</p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick links */}
-      <div className="flex flex-wrap gap-3">
-        <Link href={"/admin/quotes?jobId=" + id}>
-          <Button variant="outline" size="sm">View Quotes</Button>
-        </Link>
-        <Link href={"/admin/invoices?jobId=" + id}>
-          <Button variant="outline" size="sm">View Invoices</Button>
-        </Link>
-        <Link href={"/tracking/" + job.job_number} target="_blank">
-          <Button variant="outline" size="sm">Public Tracking</Button>
-        </Link>
-      </div>
-
-      {/* Transition dialog */}
-      <Dialog open={showTransition} onOpenChange={setShowTransition}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Update Status to{' '}
-              {targetStatus ? getStatusMeta(targetStatus).label : ''}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {targetStatus ? getStatusMeta(targetStatus).description : ''}
-            </p>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes (optional)..."
-              rows={3}
-            />
+      <div className="grid g2">
+        <div className="card stack s">
+          <h2>Customer and vehicle</h2>
+          {customer.isError && !customer.data ? <div className="banner" role="alert">Could not load the customer.</div> : null}
+          {vehicle.isError && !vehicle.data ? <div className="banner" role="alert">Could not load the vehicle.</div> : null}
+          <dl className="kv">
+            <dt>Customer</dt>
+            <dd className="b">{customer.data ? fullName(customer.data.first_name, customer.data.last_name) : customer.isLoading ? 'Loading customer.' : '—'}</dd>
+            <dt>Phone</dt>
+            <dd>{customer.data ? formatPhone(customer.data.phone) : '—'}</dd>
+            <dt>Vehicle</dt>
+            <dd>{vehicle.data ? `${vehicle.data.year} ${vehicle.data.make} ${vehicle.data.model}` : vehicle.isLoading ? 'Loading vehicle.' : '—'}</dd>
+            <dt>Plate</dt>
+            <dd>{vehicle.data?.license_plate ?? '—'}</dd>
+            <dt>Colour</dt>
+            <dd>{vehicle.data?.color ?? '—'}</dd>
+            <dt>Mileage</dt>
+            <dd>{vehicle.data?.mileage != null ? `${vehicle.data.mileage.toLocaleString()} km` : '—'}</dd>
+          </dl>
+        </div>
+        <div className="card stack s">
+          <h2>Description and intake notes</h2>
+          <div>
+            <div className="faint sm">Description</div>
+            <p>{job.description || '—'}</p>
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowTransition(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleTransition} disabled={transitioning}>
-              {transitioning && <LoadingSpinner size="sm" className="mr-2" />}
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <div className="faint sm">Intake notes</div>
+            <p>{job.intake_notes || '—'}</p>
+          </div>
+          {job.completion_notes ? (
+            <div>
+              <div className="faint sm">Completion notes</div>
+              <p>{job.completion_notes}</p>
+            </div>
+          ) : null}
+          <div>
+            <div className="faint sm">Created</div>
+            <p>{formatDate(job.created_at)}</p>
+          </div>
+          <div>
+            <div className="faint sm">Estimated completion</div>
+            <p>{job.estimated_completion_at ? formatDateTime(job.estimated_completion_at) : '—'}</p>
+          </div>
+          {job.actual_completion_at ? (
+            <div>
+              <div className="faint sm">Completed</div>
+              <p>{formatDateTime(job.actual_completion_at)}</p>
+            </div>
+          ) : null}
+          {admin ? (
+            <TechnicianField jobId={id} assignedId={job.assigned_technician_id} />
+          ) : (
+            <div>
+              <div className="faint sm">Technician</div>
+              <p>{job.assigned_technician_id ?? 'Unassigned'}</p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="card stack s">
+        <h2>Quote and invoice</h2>
+        <div className="row">
+          <Link href={`/admin/quotes?jobId=${id}`} className="btn sm">View quotes</Link>
+          <Link href={`/admin/invoices?jobId=${id}`} className="btn sm">View invoices</Link>
+          <Link href={`/tracking/${job.job_number}`} className="btn sm" target="_blank">Public tracking</Link>
+        </div>
+      </div>
+      <div className="card flush">
+        <div style={{ padding: '20px 24px 8px' }}><h2>Status history</h2></div>
+        {historyLoading ? <p className="muted" style={{ padding: '0 24px 20px' }}>Loading history.</p> : null}
+        {historyError && !history ? (
+          <div className="banner" role="alert" style={{ margin: '0 24px 20px' }}>Failed to load status history.</div>
+        ) : null}
+        {!historyLoading && !historyError && (!history || history.length === 0) ? (
+          <p className="muted" style={{ padding: '0 24px 20px' }}>No history yet</p>
+        ) : null}
+        {history && history.length > 0 ? (
+          <div className="tw">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Note</th>
+                  <th>When</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...history].reverse().map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{entry.from_status ? getStatusMeta(entry.from_status).label : '—'}</td>
+                    <td>{getStatusMeta(entry.to_status).label}</td>
+                    <td>{entry.notes || '—'}</td>
+                    <td>{formatDateTime(entry.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
+      {showTransition && targetStatus ? (
+        <div className="scrim" onMouseDown={() => setShowTransition(false)}>
+          <div
+            className="dlg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="status-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <h2 id="status-title">Update status to {getStatusMeta(targetStatus).label}</h2>
+            <p className="muted">{getStatusMeta(targetStatus).description}</p>
+            <div className="field">
+              <label htmlFor="status-notes">Notes</label>
+              <textarea
+                id="status-notes"
+                className="input"
+                rows={3}
+                value={notes}
+                placeholder="Add notes (optional)"
+                onChange={(event) => setNotes(event.target.value)}
+              />
+            </div>
+            <div className="row end">
+              <button type="button" className="btn" onClick={() => setShowTransition(false)}>Cancel</button>
+              <button
+                type="button"
+                className={transitioning ? 'btn primary nt-loading' : 'btn primary'}
+                data-variant="primary"
+                disabled={transitioning}
+                onClick={handleTransition}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

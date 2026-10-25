@@ -45,8 +45,8 @@ export function useUpdateBooking() {
 export function useCancelBooking() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => bookingDal.cancel(id),
-    onSuccess: (_res, id) => {
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => bookingDal.cancel(id, reason),
+    onSuccess: (_res, { id }) => {
       toast.success('Booking cancelled');
       qc.invalidateQueries({ queryKey: queryKeys.bookings.all });
       qc.invalidateQueries({ queryKey: queryKeys.bookings.detail(id) });

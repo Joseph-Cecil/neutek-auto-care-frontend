@@ -1,123 +1,250 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Wrench, Plus, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PageHeader }    from '@/components/admin/shared/PageHeader';
-import { JobStatusBadge } from '@/components/shared/StatusBadge';
-import { SectionLoader }  from '@/components/shared/LoadingSpinner';
-import { EmptyState }     from '@/components/shared/EmptyState';
-import { ErrorAlert }     from '@/components/shared/ErrorAlert';
-import { Pagination }     from '@/components/shared/Pagination';
-import { useAdminJobs }   from '@/hooks/useAdminJobs';
-import { formatDate }     from '@/lib/utils/date';
-import { cn }             from '@/lib/utils/cn';
-import type { JobStatus, JobPriority } from '@/lib/dto';
+import { useRouter } from 'next/navigation';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
+import { useAdminJobs } from '@/hooks/useAdminJobs';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { useAuthStore } from '@/stores/auth.store';
+import { formatDate } from '@/lib/utils/date';
+import { fullName } from '@/lib/utils/format';
+import { getStatusMeta } from '@/lib/utils/jobStatus';
+import { isAdmin } from '@/lib/utils/permissions';
+import type { JobPriority, JobStatus } from '@/lib/dto';
 
-const STATUS_TABS: { label: string; value: JobStatus | undefined }[] = [
-  { label: 'All',        value: undefined },
-  { label: 'Intake',     value: 'intake' },
+const STATUSES: { label: string; value: JobStatus | '' }[] = [
+  { label: 'All', value: '' },
+  { label: 'Intake', value: 'intake' },
   { label: 'Diagnosing', value: 'diagnosing' },
-  { label: 'Quote Sent', value: 'quote_sent' },
-  { label: 'In Progress',value: 'in_progress' },
-  { label: 'QC Check',   value: 'quality_check' },
-  { label: 'Ready',      value: 'ready_for_pickup' },
-  { label: 'Completed',  value: 'completed' },
+  { label: 'Quote sent', value: 'quote_sent' },
+  { label: 'Quote approved', value: 'quote_approved' },
+  { label: 'In progress', value: 'in_progress' },
+  { label: 'Quality check', value: 'quality_check' },
+  { label: 'Ready', value: 'ready_for_pickup' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Quote rejected', value: 'quote_rejected' },
+  { label: 'Cancelled', value: 'cancelled' },
 ];
 
-const PRIORITY_COLOR: Record<JobPriority, string> = {
-  low:    'text-gray-400',
-  normal: 'text-blue-400',
-  high:   'text-amber-400',
-  urgent: 'text-red-400',
-};
+const PRIORITIES: { label: string; value: JobPriority | '' }[] = [
+  { label: 'All', value: '' },
+  { label: 'Low', value: 'low' },
+  { label: 'Normal', value: 'normal' },
+  { label: 'High', value: 'high' },
+  { label: 'Urgent', value: 'urgent' },
+];
+
+function jobPill(status: JobStatus) {
+  if (status === 'cancelled' || status === 'quote_rejected') return 'pill bad';
+  if (status === 'completed' || status === 'ready_for_pickup' || status === 'quote_approved') return 'pill ok';
+  if (status === 'diagnosing' || status === 'quality_check' || status === 'quote_sent') return 'pill warn';
+  if (status === 'in_progress') return 'pill brand';
+  return 'pill';
+}
+
+function priorityPill(priority: JobPriority) {
+  if (priority === 'urgent') return 'pill bad';
+  if (priority === 'high') return 'pill warn';
+  return 'pill';
+}
+
+function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (page: number) => void }) {
+  if (pages <= 1) return null;
+  return (
+    <div className="row end">
+      <button type="button" className="btn sm" disabled={page <= 1} onClick={() => onPage(page - 1)}>Previous</button>
+      <span className="muted sm">Page {page} of {pages}</span>
+      <button type="button" className="btn sm" disabled={page >= pages} onClick={() => onPage(page + 1)}>Next</button>
+    </div>
+  );
+}
+
+function TechnicianFilter({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const users = useAdminUsers({ role: 'technician', limit: 100 });
+  const techs = (users.data?.data ?? []).filter((user) => user.role === 'technician');
+  return (
+    <div className="field">
+      <label htmlFor="jf-t">Technician</label>
+      <select id="jf-t" className="input" value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">All</option>
+        {techs.map((user) => (
+          <option key={user.id} value={user.id}>{fullName(user.first_name, user.last_name)}</option>
+        ))}
+      </select>
+      {users.isError && !users.data ? <span className="hint err">Could not load technicians.</span> : null}
+    </div>
+  );
+}
 
 export default function AdminJobsPage() {
-  const [status, setStatus] = useState<JobStatus | undefined>(undefined);
-  const [page,   setPage]   = useState(1);
+  const router = useRouter();
+  const role = useAuthStore((state) => state.user?.role);
+  const admin = role ? isAdmin(role) : false;
+  const [draft, setDraft] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<JobStatus | ''>('');
+  const [priority, setPriority] = useState<JobPriority | ''>('');
+  const [technicianId, setTechnicianId] = useState('');
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useAdminJobs({ status, page, limit: 20 });
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearch(draft.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [draft]);
 
-  const jobs       = data?.data       ?? [];
+  const { data, isLoading, isError, isFetching } = useAdminJobs({
+    status: status || undefined,
+    priority: priority || undefined,
+    search: search || undefined,
+    technicianId: technicianId || undefined,
+    page,
+    limit: 20,
+  });
+
+  const jobs = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
-  const total      = data?.total      ?? 0;
+  const filtered = Boolean(search || status || priority || technicianId);
+
+  const clear = () => {
+    setDraft('');
+    setSearch('');
+    setStatus('');
+    setPriority('');
+    setTechnicianId('');
+    setPage(1);
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <TopProgress active />
+        <PageSkeleton kind="list" />
+      </>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Jobs"
-        description={total + " total jobs"}
-        action={
-          <Link href="/admin/jobs/create">
-            <Button className="gap-1.5">
-              <Plus className="h-4 w-4" /> Create Job
-            </Button>
-          </Link>
-        }
-      />
-
-      {/* Status tabs */}
-      <div className="flex flex-wrap gap-2">
-        {STATUS_TABS.map(({ label, value }) => (
-          <button key={label}
-            onClick={() => { setStatus(value); setPage(1); }}
-            className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-              status === value
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-            )}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load jobs. Please refresh the page." />
-      ) : jobs.length === 0 ? (
-        <EmptyState
-          icon={<Wrench className="h-6 w-6" />}
-          title="No jobs found"
-          description="No jobs match the current filter."
-        />
-      ) : (
-        <div className="space-y-2">
-          {jobs.map((job) => (
-            <Link key={job.id} href={"/admin/jobs/" + job.id}>
-              <Card className="cursor-pointer transition-all hover:border-primary/40">
-                <CardContent className="flex items-center justify-between gap-4 p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{job.title}</span>
-                      <JobStatusBadge status={job.status} />
-                      <span className={cn(
-                        'text-xs font-medium capitalize',
-                        PRIORITY_COLOR[job.priority],
-                      )}>
-                        {job.priority}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span className="font-mono">{job.job_number}</span>
-                      <span>Created: {formatDate(job.created_at)}</span>
-                      {job.estimated_completion_at && (
-                        <span>Est: {formatDate(job.estimated_completion_at)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+    <div className="stack">
+      <TopProgress active={isFetching} />
+      <div className="pagehead">
+        <div className="ttl">
+          <h1>Jobs</h1>
+          <p className="muted">Every car in the workshop, and where it has got to.{data ? ` ${data.total} jobs.` : ''}</p>
         </div>
-      )}
-
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <div className="row">
+          <Link href="/admin/jobs/create" className="btn primary">New job</Link>
+        </div>
+      </div>
+      <div className="card">
+        <div className="filters">
+          <div className="field">
+            <label htmlFor="jf-q">Search</label>
+            <input
+              id="jf-q"
+              className="input"
+              type="search"
+              placeholder="Job number or title"
+              value={draft}
+              onChange={(event) => {
+                setDraft(event.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="jf-s">Status</label>
+            <select
+              id="jf-s"
+              className="input"
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value as JobStatus | '');
+                setPage(1);
+              }}
+            >
+              {STATUSES.map((option) => (
+                <option key={option.label} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="jf-p">Priority</label>
+            <select
+              id="jf-p"
+              className="input"
+              value={priority}
+              onChange={(event) => {
+                setPriority(event.target.value as JobPriority | '');
+                setPage(1);
+              }}
+            >
+              {PRIORITIES.map((option) => (
+                <option key={option.label} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          {admin ? (
+            <TechnicianFilter
+              value={technicianId}
+              onChange={(value) => {
+                setTechnicianId(value);
+                setPage(1);
+              }}
+            />
+          ) : null}
+          <div>
+            <button type="button" className="btn" onClick={clear}>Clear</button>
+          </div>
+        </div>
+      </div>
+      {isError && !data ? (
+        <div className="banner" role="alert">Failed to load jobs. Please refresh the page.</div>
+      ) : null}
+      {!isError && jobs.length === 0 ? (
+        <div className="card">
+          <div className="empty">
+            <h2>No jobs match</h2>
+            <p className="muted">{filtered ? 'Nothing fits those filters. Clear them to see every job.' : 'No jobs yet.'}</p>
+            {filtered ? <button type="button" className="btn" onClick={clear}>Clear filters</button> : null}
+          </div>
+        </div>
+      ) : null}
+      {jobs.length > 0 ? (
+        <div className="card flush">
+          <div className="tw">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Job</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Estimated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job) => (
+                  <tr key={job.id} className="click" onClick={() => router.push(`/admin/jobs/${job.id}`)}>
+                    <td>
+                      <div className="two">
+                        <Link href={`/admin/jobs/${job.id}`} className="b" onClick={(event) => event.stopPropagation()}>{job.job_number}</Link>
+                        <span>{job.title}</span>
+                      </div>
+                    </td>
+                    <td><span className={priorityPill(job.priority)}>{job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}</span></td>
+                    <td><span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span></td>
+                    <td>{formatDate(job.created_at)}</td>
+                    <td>{job.estimated_completion_at ? formatDate(job.estimated_completion_at) : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+      {data ? <Pager page={page} pages={totalPages} onPage={setPage} /> : null}
     </div>
   );
 }

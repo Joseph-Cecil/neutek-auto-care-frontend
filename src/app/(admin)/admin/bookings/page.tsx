@@ -1,21 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, ChevronRight, XCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/admin/shared/PageHeader';
-import { SearchInput } from '@/components/admin/shared/SearchInput';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { SectionLoader } from '@/components/shared/LoadingSpinner';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { Pagination } from '@/components/shared/Pagination';
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { ErrorAlert } from '@/components/shared/ErrorAlert';
-import { useAdminBookings, useCancelBooking } from '@/hooks/useAdminBookings';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
+import { useAdminBookings, useCancelBooking, useUpdateBooking } from '@/hooks/useAdminBookings';
 import { formatDateTime } from '@/lib/utils/date';
-import { fullName } from '@/lib/utils/format';
-import { cn } from '@/lib/utils/cn';
+import { formatPhone } from '@/lib/utils/format';
 import type { BookingStatus } from '@/lib/dto';
 
 const STATUS_TABS: { label: string; value: BookingStatus | undefined }[] = [
@@ -26,120 +16,214 @@ const STATUS_TABS: { label: string; value: BookingStatus | undefined }[] = [
   { label: 'Cancelled', value: 'cancelled' },
 ];
 
-const STATUS_VARIANT: Record<
-  BookingStatus,
-  'default' | 'success' | 'warning' | 'danger' | 'info' | 'muted'
-> = {
-  pending: 'warning',
-  confirmed: 'info',
-  completed: 'success',
-  cancelled: 'muted',
-  no_show: 'danger',
+const STATUS_LABEL: Record<BookingStatus, string> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No show',
 };
+
+const STATUS_PILL: Record<BookingStatus, string> = {
+  pending: 'pill warn',
+  confirmed: 'pill brand',
+  completed: 'pill ok',
+  cancelled: 'pill bad',
+  no_show: 'pill bad',
+};
+
+function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (page: number) => void }) {
+  if (pages <= 1) return null;
+  return (
+    <div className="row end">
+      <button type="button" className="btn sm" disabled={page <= 1} onClick={() => onPage(page - 1)}>Previous</button>
+      <span className="muted sm">Page {page} of {pages}</span>
+      <button type="button" className="btn sm" disabled={page >= pages} onClick={() => onPage(page + 1)}>Next</button>
+    </div>
+  );
+}
 
 export default function AdminBookingsPage() {
   const [status, setStatus] = useState<BookingStatus | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
 
-  const { data, isLoading, error } = useAdminBookings({ status, page, limit: 20 });
+  const { data, isLoading, isError, isFetching } = useAdminBookings({ status, page, limit: 20 });
+  const { mutate: updateBooking, isPending: confirming } = useUpdateBooking();
   const { mutate: cancelBooking, isPending: cancelling } = useCancelBooking();
 
   const bookings = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
+  const cancellingRow = bookings.find((booking) => booking.id === cancelId);
+
+  const closeCancel = () => {
+    setCancelId(null);
+    setReason('');
+    setReasonError('');
+  };
+
+  const submitCancel = () => {
+    const trimmed = reason.trim();
+    if (!cancelId) return;
+    if (!trimmed) {
+      setReasonError('Give a reason for cancelling.');
+      return;
+    }
+    cancelBooking({ id: cancelId, reason: trimmed }, { onSuccess: closeCancel });
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <TopProgress active />
+        <PageSkeleton kind="list" />
+      </>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Bookings" description={total + ' total bookings'} />
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
+    <div className="stack">
+      <TopProgress active={isFetching || confirming || cancelling} />
+      <div className="pagehead">
+        <div className="ttl">
+          <h1>Bookings</h1>
+          <p className="muted">
+            Confirm what customers have asked for and keep the diary honest.
+            {data ? ` ${total} ${total === 1 ? 'booking' : 'bookings'}.` : ''}
+          </p>
+        </div>
+      </div>
+      <div className="tabs" role="tablist">
         {STATUS_TABS.map(({ label, value }) => (
           <button
             key={label}
+            type="button"
+            role="tab"
+            className="tab"
+            aria-selected={status === value}
             onClick={() => {
               setStatus(value);
               setPage(1);
             }}
-            className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-              status === value
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-            )}
           >
             {label}
           </button>
         ))}
       </div>
-
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load bookings. Please refresh the page." />
-      ) : bookings.length === 0 ? (
-        <EmptyState
-          icon={<Calendar className="h-6 w-6" />}
-          title="No bookings found"
-          description="No bookings match the current filter."
-        />
-      ) : (
-        <div className="space-y-2">
-          {bookings.map((booking) => (
-            <Card key={booking.id}>
-              <CardContent className="flex items-center justify-between gap-4 p-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-medium">{booking.booking_number}</span>
-                    <StatusBadge
-                      label={booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                      variant={STATUS_VARIANT[booking.status]}
-                    />
-                  </div>
-                  <div className="text-muted-foreground mt-1 flex flex-wrap gap-3 text-xs">
-                    <span>
-                      {booking.walk_in_name ? booking.walk_in_name : 'Registered customer'}
-                    </span>
-                    <span>{booking.walk_in_phone ?? ''}</span>
-                    <span>{formatDateTime(booking.scheduled_at)}</span>
-                    <span>{booking.service_ids.length} service(s)</span>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {booking.status === 'pending' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-destructive hover:bg-destructive/10 gap-1"
-                      onClick={() => setCancelId(booking.id)}
-                    >
-                      <XCircle className="h-3.5 w-3.5" /> Cancel
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {isError && !data ? (
+        <div className="banner" role="alert">Failed to load bookings. Please refresh the page.</div>
+      ) : null}
+      {!isError && bookings.length === 0 ? (
+        <div className="card">
+          <div className="empty">
+            <h2>No bookings match</h2>
+            <p className="muted">Try another status to see more of the diary.</p>
+          </div>
         </div>
-      )}
-
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-
-      <ConfirmDialog
-        open={!!cancelId}
-        onOpenChange={(o) => !o && setCancelId(null)}
-        title="Cancel Booking"
-        description="Are you sure you want to cancel this booking? This cannot be undone."
-        confirmLabel="Cancel Booking"
-        variant="destructive"
-        onConfirm={() => {
-          if (cancelId) {
-            cancelBooking(cancelId, { onSuccess: () => setCancelId(null) });
-          }
-        }}
-        isPending={cancelling}
-      />
+      ) : null}
+      {bookings.length > 0 ? (
+        <div className="card flush">
+          <div className="tw">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Number</th>
+                  <th>Customer</th>
+                  <th>Services</th>
+                  <th>Scheduled</th>
+                  <th>Status</th>
+                  <th><span className="sr">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking) => (
+                  <tr key={booking.id}>
+                    <td className="b">{booking.booking_number}</td>
+                    <td>
+                      <div className="two">
+                        <b>{booking.walk_in_name || 'Registered customer'}</b>
+                        <span>{booking.walk_in_phone ? formatPhone(booking.walk_in_phone) : '—'}</span>
+                      </div>
+                    </td>
+                    <td>{booking.service_ids.length} service(s)</td>
+                    <td>{formatDateTime(booking.scheduled_at)}</td>
+                    <td><span className={STATUS_PILL[booking.status]}>{STATUS_LABEL[booking.status]}</span></td>
+                    <td>
+                      {booking.status === 'pending' ? (
+                        <div className="row">
+                          <button
+                            type="button"
+                            className="btn sm"
+                            disabled={confirming}
+                            onClick={() => updateBooking({ id: booking.id, body: { status: 'confirmed' } })}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            type="button"
+                            className="btn sm danger"
+                            onClick={() => {
+                              setCancelId(booking.id);
+                              setReason('');
+                              setReasonError('');
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+      {data ? <Pager page={page} pages={totalPages} onPage={setPage} /> : null}
+      {cancelId ? (
+        <div className="scrim" onMouseDown={closeCancel}>
+          <div
+            className="dlg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <h2 id="cancel-title">Cancel {cancellingRow?.booking_number ?? 'booking'}?</h2>
+            <p className="muted">This cannot be undone. A reason is required.</p>
+            <div className="field">
+              <label htmlFor="bk-reason">Reason</label>
+              <input
+                id="bk-reason"
+                className={reasonError ? 'input err' : 'input'}
+                value={reason}
+                placeholder="Reason for cancelling"
+                onChange={(event) => {
+                  setReason(event.target.value);
+                  if (reasonError) setReasonError('');
+                }}
+              />
+              {reasonError ? <span className="hint err">{reasonError}</span> : null}
+            </div>
+            <div className="row end">
+              <button type="button" className="btn" onClick={closeCancel}>Keep booking</button>
+              <button
+                type="button"
+                className={cancelling ? 'btn danger nt-loading' : 'btn danger'}
+                data-variant="danger"
+                disabled={cancelling}
+                onClick={submitCancel}
+              >
+                Cancel booking
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

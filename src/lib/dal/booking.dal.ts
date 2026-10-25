@@ -14,6 +14,6 @@ export const bookingDal = {
     apiClient.get<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.BY_ID(id)),
   update:  (id: string, body: UpdateBookingRequest) =>
     apiClient.patch<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.BY_ID(id), body),
-  cancel:  (id: string) =>
-    apiClient.post<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.CANCEL(id)),
+  cancel:  (id: string, reason: string) =>
+    apiClient.post<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.CANCEL(id), { reason }),
 };

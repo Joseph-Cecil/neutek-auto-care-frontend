@@ -1,48 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Package, Plus, Pencil, Trash2, Clock } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { PageHeader } from '@/components/admin/shared/PageHeader';
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { ErrorAlert } from '@/components/shared/ErrorAlert';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { TopProgress } from '@/components/ui/top-progress';
 import {
   useAdminServices,
   useAdminServiceCategories,
   useAdminCreateService,
   useAdminUpdateService,
-  useAdminDeleteService,
 } from '@/hooks/useAdminServices';
-import { pesewasToGHS, ghsToPesewas, formatDuration } from '@/lib/utils/format';
+import { ghsAmount, ghsToPesewas, formatDuration } from '@/lib/utils/format';
 import type { Service } from '@/lib/dto';
 
 const serviceFormSchema = z.object({
@@ -53,6 +23,26 @@ const serviceFormSchema = z.object({
   estimatedDurationMinutes: z.number().int().min(1, 'Duration required'),
 });
 type ServiceFormData = z.infer<typeof serviceFormSchema>;
+
+function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <div className="scrim" onMouseDown={onClose}>
+      <div
+        className="dlg"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dlg-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="row sb">
+          <h2 id="dlg-title">{title}</h2>
+          <button type="button" className="btn ghost sm" onClick={onClose}>Close</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function ServiceForm({
   categories,
@@ -76,277 +66,266 @@ function ServiceForm({
       ...defaultValues,
     },
   });
+  const messages = Object.values(form.formState.errors).map((error) => error?.message).filter(Boolean) as string[];
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="categoryId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Service Name</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="e.g. Engine Diagnostic" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Description <span className="text-muted-foreground">(optional)</span>
-              </FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Service description..." />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="basePriceGHS"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Base Price (GHS)</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="estimatedDurationMinutes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duration (minutes)</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min="1"
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={form.handleSubmit(onSubmit)} className="stack s" noValidate>
+      {messages.length > 0 ? (
+        <div className="errsum" role="alert">
+          <b>Fix these fields</b>
+          <ul>{messages.map((message) => <li key={message}>{message}</li>)}</ul>
         </div>
-        <DialogFooter>
-          <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
-            {isPending && <LoadingSpinner size="sm" className="mr-2" />}
-            Save Service
-          </Button>
-        </DialogFooter>
-      </form>
-    </Form>
+      ) : null}
+      <div className="field">
+        <label htmlFor="sv-cat">Category</label>
+        <select id="sv-cat" className={form.formState.errors.categoryId ? 'input err' : 'input'} {...form.register('categoryId')}>
+          <option value="">Select category</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>{category.name}</option>
+          ))}
+        </select>
+        {form.formState.errors.categoryId ? <span className="hint err">{form.formState.errors.categoryId.message}</span> : null}
+      </div>
+      <div className="field">
+        <label htmlFor="sv-name">Service name</label>
+        <input id="sv-name" className={form.formState.errors.name ? 'input err' : 'input'} placeholder="Engine diagnostic" {...form.register('name')} />
+        {form.formState.errors.name ? <span className="hint err">{form.formState.errors.name.message}</span> : null}
+      </div>
+      <div className="field">
+        <label htmlFor="sv-desc">Description <span className="faint">(optional)</span></label>
+        <textarea id="sv-desc" className="input" placeholder="Service description" {...form.register('description')} />
+      </div>
+      <div className="grid g2">
+        <div className="field">
+          <label htmlFor="sv-price">Base price (GHS)</label>
+          <input
+            id="sv-price"
+            className={form.formState.errors.basePriceGHS ? 'input err' : 'input'}
+            type="number"
+            step="0.01"
+            min="0"
+            {...form.register('basePriceGHS', { valueAsNumber: true })}
+          />
+          {form.formState.errors.basePriceGHS ? <span className="hint err">{form.formState.errors.basePriceGHS.message}</span> : null}
+        </div>
+        <div className="field">
+          <label htmlFor="sv-mins">Duration (minutes)</label>
+          <input
+            id="sv-mins"
+            className={form.formState.errors.estimatedDurationMinutes ? 'input err' : 'input'}
+            type="number"
+            min="1"
+            {...form.register('estimatedDurationMinutes', { valueAsNumber: true })}
+          />
+          {form.formState.errors.estimatedDurationMinutes ? <span className="hint err">{form.formState.errors.estimatedDurationMinutes.message}</span> : null}
+        </div>
+      </div>
+      <div className="row end">
+        <button
+          type="submit"
+          className={isPending ? 'btn primary nt-loading' : 'btn primary'}
+          data-variant="primary"
+          disabled={isPending}
+        >
+          Save service
+        </button>
+      </div>
+    </form>
   );
 }
 
 export default function AdminServicesPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editSvc, setEditSvc] = useState<Service | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [askId, setAskId] = useState<string | null>(null);
 
-  const { data: servicesData, isLoading, error } = useAdminServices({ limit: 100 });
-  const { data: categories } = useAdminServiceCategories();
+  const { data: servicesData, isLoading, isError, isFetching } = useAdminServices({ limit: 100 });
+  const categoriesQuery = useAdminServiceCategories();
   const { mutate: createService, isPending: creating } = useAdminCreateService();
   const { mutate: updateService, isPending: updating } = useAdminUpdateService();
-  const { mutate: deleteService, isPending: deleting } = useAdminDeleteService();
 
   const services = servicesData?.data ?? [];
+  const categories = categoriesQuery.data ?? [];
+  const counts = new Map<string, number>();
+  for (const service of services) {
+    counts.set(service.category_id, (counts.get(service.category_id) ?? 0) + 1);
+  }
+
+  const setActive = (service: Service, isActive: boolean) => {
+    updateService(
+      { id: service.id, body: { isActive } },
+      { onSuccess: () => setAskId(null) },
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <TopProgress active />
+        <PageSkeleton kind="list" />
+      </>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Services"
-        description={services.length + ' services'}
-        action={
-          <Button onClick={() => setShowAdd(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Add Service
-          </Button>
-        }
-      />
-
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load services. Please refresh the page." />
-      ) : services.length === 0 ? (
-        <EmptyState
-          icon={<Package className="h-6 w-6" />}
-          title="No services yet"
-          action={{ label: 'Add Service', onClick: () => setShowAdd(true) }}
-        />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
-            <Card key={service.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-medium">{service.name}</p>
-                    {service.description && (
-                      <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
-                        {service.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => setEditSvc(service)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteId(service.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="text-primary text-lg font-bold">
-                    {pesewasToGHS(service.base_price_pesewas)}
-                  </p>
-                  <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                    <Clock className="h-3 w-3" />
-                    {formatDuration(service.estimated_duration_minutes)}
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <span
-                    className={
-                      'inline-flex rounded-full border px-2 py-0.5 text-xs ' +
-                      (service.is_active
-                        ? 'border-green-500/20 bg-green-500/10 text-green-400'
-                        : 'border-border text-muted-foreground')
-                    }
-                  >
-                    {service.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+    <div className="stack">
+      <TopProgress active={isFetching || creating || updating || categoriesQuery.isFetching} />
+      <div className="pagehead">
+        <div className="ttl">
+          <h1>Services</h1>
+          <p className="muted">What customers can book, and what it costs.</p>
         </div>
-      )}
-
-      {/* Add */}
-      <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Service</DialogTitle>
-          </DialogHeader>
+        <div className="row">
+          <button type="button" className="btn primary" onClick={() => setShowAdd(true)}>Add service</button>
+        </div>
+      </div>
+      {isError && !servicesData ? (
+        <div className="banner" role="alert">Failed to load services. Please refresh the page.</div>
+      ) : null}
+      {categoriesQuery.isError && !categoriesQuery.data ? (
+        <div className="banner" role="alert">Could not load categories.</div>
+      ) : null}
+      {!isError && services.length === 0 ? (
+        <div className="card">
+          <div className="empty">
+            <h2>No services yet</h2>
+            <button type="button" className="btn" onClick={() => setShowAdd(true)}>Add service</button>
+          </div>
+        </div>
+      ) : null}
+      {services.length > 0 ? (
+        <div className="stack">
+          {categories.length > 0 ? (
+            <div className="card">
+              <h2>Categories</h2>
+              <div className="stack s" style={{ marginTop: 12 }}>
+                {categories.map((category) => (
+                  <div key={category.id} className="row sb">
+                    <span>{category.name}</span>
+                    <span className="faint sm">{counts.get(category.id) ?? 0}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <div className="card flush">
+            <div className="tw">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th className="num">Price</th>
+                    <th className="num">Duration</th>
+                    <th>Status</th>
+                    <th><span className="sr">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((service) => {
+                    const asking = askId === service.id;
+                    const categoryName = categories.find((category) => category.id === service.category_id)?.name ?? '—';
+                    return (
+                      <tr key={service.id}>
+                        <td>
+                          <div className="two">
+                            <span className="b">{service.name}</span>
+                            {service.description ? <span>{service.description}</span> : null}
+                          </div>
+                        </td>
+                        <td>{categoryName}</td>
+                        <td className="num">GHS {ghsAmount(service.base_price_pesewas)}</td>
+                        <td className="num">{formatDuration(service.estimated_duration_minutes)}</td>
+                        <td>
+                          <span className={service.is_active ? 'pill ok' : 'pill'}>{service.is_active ? 'Active' : 'Inactive'}</span>
+                        </td>
+                        <td>
+                          {asking ? (
+                            <div className="row">
+                              <span className="b">Deactivate {service.name}?</span>
+                              <button type="button" className="btn sm" onClick={() => setAskId(null)}>Keep active</button>
+                              <button
+                                type="button"
+                                className={updating ? 'btn sm danger nt-loading' : 'btn sm danger'}
+                                data-variant="danger"
+                                disabled={updating}
+                                onClick={() => setActive(service, false)}
+                              >
+                                Deactivate
+                              </button>
+                            </div>
+                          ) : service.is_active ? (
+                            <div className="row">
+                              <button type="button" className="btn sm" onClick={() => setEditSvc(service)}>Edit</button>
+                              <button type="button" className="btn sm danger" onClick={() => setAskId(service.id)}>Deactivate</button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className={updating ? 'btn sm nt-loading' : 'btn sm'}
+                              disabled={updating}
+                              onClick={() => setActive(service, true)}
+                            >
+                              Reactivate
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {showAdd ? (
+        <Dialog title="Add service" onClose={() => setShowAdd(false)}>
           <ServiceForm
-            categories={categories ?? []}
-            onSubmit={(data) =>
-              createService(
-                {
-                  categoryId: data.categoryId,
-                  name: data.name,
-                  description: data.description,
-                  basePricePesewas: ghsToPesewas(data.basePriceGHS),
-                  estimatedDurationMinutes: data.estimatedDurationMinutes,
-                },
-                { onSuccess: () => setShowAdd(false) },
-              )
-            }
+            categories={categories}
+            onSubmit={(formData) => createService(
+              {
+                categoryId: formData.categoryId,
+                name: formData.name,
+                description: formData.description,
+                basePricePesewas: ghsToPesewas(formData.basePriceGHS),
+                estimatedDurationMinutes: formData.estimatedDurationMinutes,
+              },
+              { onSuccess: () => setShowAdd(false) },
+            )}
             isPending={creating}
           />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit */}
-      <Dialog open={!!editSvc} onOpenChange={(o) => !o && setEditSvc(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
-          </DialogHeader>
-          {editSvc && (
-            <ServiceForm
-              categories={categories ?? []}
-              defaultValues={{
-                categoryId: editSvc.category_id,
-                name: editSvc.name,
-                description: editSvc.description ?? '',
-                basePriceGHS: editSvc.base_price_pesewas / 100,
-                estimatedDurationMinutes: editSvc.estimated_duration_minutes,
-              }}
-              onSubmit={(data) =>
-                updateService(
-                  {
-                    id: editSvc.id,
-                    body: {
-                      categoryId: data.categoryId,
-                      name: data.name,
-                      description: data.description,
-                      basePricePesewas: ghsToPesewas(data.basePriceGHS),
-                      estimatedDurationMinutes: data.estimatedDurationMinutes,
-                    },
-                  },
-                  { onSuccess: () => setEditSvc(null) },
-                )
-              }
-              isPending={updating}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete */}
-      <ConfirmDialog
-        open={!!deleteId}
-        onOpenChange={(o) => !o && setDeleteId(null)}
-        title="Delete Service"
-        description="This will permanently delete the service. This cannot be undone."
-        confirmLabel="Delete"
-        variant="destructive"
-        onConfirm={() => {
-          if (deleteId) deleteService(deleteId, { onSuccess: () => setDeleteId(null) });
-        }}
-        isPending={deleting}
-      />
+        </Dialog>
+      ) : null}
+      {editSvc ? (
+        <Dialog title="Edit service" onClose={() => setEditSvc(null)}>
+          <ServiceForm
+            key={editSvc.id}
+            categories={categories}
+            defaultValues={{
+              categoryId: editSvc.category_id,
+              name: editSvc.name,
+              description: editSvc.description ?? '',
+              basePriceGHS: editSvc.base_price_pesewas / 100,
+              estimatedDurationMinutes: editSvc.estimated_duration_minutes,
+            }}
+            onSubmit={(formData) => updateService(
+              {
+                id: editSvc.id,
+                body: {
+                  categoryId: formData.categoryId,
+                  name: formData.name,
+                  description: formData.description,
+                  basePricePesewas: ghsToPesewas(formData.basePriceGHS),
+                  estimatedDurationMinutes: formData.estimatedDurationMinutes,
+                },
+              },
+              { onSuccess: () => setEditSvc(null) },
+            )}
+            isPending={updating}
+          />
+        </Dialog>
+      ) : null}
     </div>
   );
 }
