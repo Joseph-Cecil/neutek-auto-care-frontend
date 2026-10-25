@@ -2,167 +2,159 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Upload } from 'lucide-react';
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from '@/components/ui/form';
-import { Input }   from '@/components/ui/input';
-import { Button }  from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { blogPostSchema, type BlogPostFormData } from '@/lib/validations/blog.schema';
-import type { BlogCategory, BlogPost } from '@/lib/dto';
+import type { BlogCategory } from '@/lib/dto';
 
 interface BlogPostFormProps {
-  categories:    BlogCategory[];
+  categories: BlogCategory[];
   defaultValues?: Partial<BlogPostFormData>;
-  onSubmit:      (data: BlogPostFormData) => void;
-  isPending:     boolean;
-  submitLabel?:  string;
+  onSubmit: (data: BlogPostFormData) => void;
+  isPending: boolean;
+  submitLabel?: string;
 }
 
 export function BlogPostForm({
-  categories, defaultValues, onSubmit, isPending, submitLabel = 'Save Post',
+  categories,
+  defaultValues,
+  onSubmit,
+  isPending,
+  submitLabel = 'Save Post',
 }: BlogPostFormProps) {
   const form = useForm<BlogPostFormData>({
-    resolver:      zodResolver(blogPostSchema),
+    resolver: zodResolver(blogPostSchema),
     defaultValues: {
-      categoryId: '', title: '', content: '',
-      slug: '', excerpt: '', status: 'draft', coverImageUrl: '',
+      categoryId: '',
+      title: '',
+      content: '',
+      slug: '',
+      excerpt: '',
+      status: 'draft',
+      coverImageUrl: '',
       ...defaultValues,
     },
   });
 
+  const errors = form.formState.errors;
+  const messages = Object.values(errors)
+    .map((issue) => issue?.message)
+    .filter((message): message is string => Boolean(message));
+  const cover = form.watch('coverImageUrl');
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <div className="grid gap-5 lg:grid-cols-3">
-          {/* Main content */}
-          <div className="space-y-4 lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Content</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField control={form.control} name="title" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Post title..." className="text-lg font-medium" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="excerpt" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Excerpt <span className="text-muted-foreground">(optional)</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Short description for listing pages..." />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="content" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <textarea
-                        {...field}
-                        rows={18}
-                        placeholder="Write your post content here... (HTML or Markdown)"
-                        className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar settings */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="categoryId" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="slug" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slug <span className="text-muted-foreground">(optional)</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="auto-generated-from-title"
-                        className="font-mono text-sm" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="coverImageUrl" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cover Image URL <span className="text-muted-foreground">(optional)</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="https://..." />
-                    </FormControl>
-                    {field.value && (
-                      <div className="mt-2 aspect-video overflow-hidden rounded-md border border-border">
-                        <img src={field.value} alt="Cover preview"
-                          className="h-full w-full object-cover" />
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </CardContent>
-            </Card>
-
-            <Button type="submit" disabled={isPending} className="w-full">
-              {isPending && <LoadingSpinner size="sm" className="mr-2" />}
-              {submitLabel}
-            </Button>
-          </div>
+    <form className="card stack" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+      {messages.length > 0 ? (
+        <div className="errsum" role="alert">
+          <b>Fix these fields</b>
+          <ul>
+            {messages.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
         </div>
-      </form>
-    </Form>
+      ) : null}
+
+      <div className="field">
+        <label htmlFor="bp-title">Title</label>
+        <input
+          id="bp-title"
+          className={errors.title ? 'input err' : 'input'}
+          placeholder="A clear, specific headline"
+          {...form.register('title')}
+        />
+        {errors.title ? <span className="hint err">{errors.title.message}</span> : null}
+      </div>
+
+      <div className="field">
+        <label htmlFor="bp-excerpt">
+          Excerpt <span className="faint">(optional)</span>
+        </label>
+        <input
+          id="bp-excerpt"
+          className={errors.excerpt ? 'input err' : 'input'}
+          placeholder="Short description for listing pages"
+          {...form.register('excerpt')}
+        />
+        {errors.excerpt ? <span className="hint err">{errors.excerpt.message}</span> : null}
+      </div>
+
+      <div className="grid g2">
+        <div className="field">
+          <label htmlFor="bp-category">Category</label>
+          <select
+            id="bp-category"
+            className={errors.categoryId ? 'input err' : 'input'}
+            {...form.register('categoryId')}
+          >
+            <option value="">Select a category</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          {errors.categoryId ? <span className="hint err">{errors.categoryId.message}</span> : null}
+        </div>
+        <div className="field">
+          <label htmlFor="bp-status">Status</label>
+          <select id="bp-status" className="input" {...form.register('status')}>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="bp-slug">
+          Slug <span className="faint">(optional)</span>
+        </label>
+        <input
+          id="bp-slug"
+          className={errors.slug ? 'input err' : 'input'}
+          placeholder="auto-generated-from-title"
+          {...form.register('slug')}
+        />
+        {errors.slug ? <span className="hint err">{errors.slug.message}</span> : null}
+      </div>
+
+      <div className="field">
+        <label htmlFor="bp-cover">
+          Cover image URL <span className="faint">(optional)</span>
+        </label>
+        <input
+          id="bp-cover"
+          className={errors.coverImageUrl ? 'input err' : 'input'}
+          placeholder="https://"
+          {...form.register('coverImageUrl')}
+        />
+        {errors.coverImageUrl ? <span className="hint err">{errors.coverImageUrl.message}</span> : null}
+        {cover ? (
+          <img src={cover} alt="Cover preview" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8 }} />
+        ) : null}
+      </div>
+
+      <div className="field">
+        <label htmlFor="bp-body">Content</label>
+        <textarea
+          id="bp-body"
+          className={errors.content ? 'input err' : 'input'}
+          style={{ minHeight: 220 }}
+          placeholder="Write the post. Separate paragraphs with a blank line."
+          {...form.register('content')}
+        />
+        {errors.content ? <span className="hint err">{errors.content.message}</span> : null}
+      </div>
+
+      <div className="row end">
+        <button
+          type="submit"
+          className={isPending ? 'btn primary nt-loading' : 'btn primary'}
+          data-variant="primary"
+          disabled={isPending}
+        >
+          {submitLabel}
+        </button>
+      </div>
+    </form>
   );
 }

@@ -12,6 +12,8 @@ export const blogDal = {
     apiClient.get<PaginatedResponse<BlogPost>>(ENDPOINTS.BLOG.LIST, { params }),
   getBySlug:      (slug: string) =>
     apiClient.get<ApiResponse<BlogPost>>(ENDPOINTS.BLOG.BY_SLUG(slug)),
+  getById:        (id: string) =>
+    apiClient.get<ApiResponse<BlogPost>>(ENDPOINTS.BLOG.BY_ID_READ(id)),
   create:         (body: CreateBlogPostRequest) =>
     apiClient.post<ApiResponse<BlogPost>>(ENDPOINTS.BLOG.CREATE, body),
   update:         (id: string, body: UpdateBlogPostRequest) =>

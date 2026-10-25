@@ -87,6 +87,7 @@ export const ENDPOINTS = {
     CREATE:     '/blog',
     BY_SLUG:    (slug: string) => `/blog/${slug}`,
     BY_ID:      (id: string) => `/blog/${id}`,
+    BY_ID_READ: (id: string) => `/blog/id/${id}`,
   },
   FLEET: {
     LIST:     '/fleet',

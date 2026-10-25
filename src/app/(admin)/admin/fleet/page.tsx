@@ -1,36 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, Plus, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { PageHeader } from '@/components/admin/shared/PageHeader';
-import { SectionLoader, LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { ErrorAlert } from '@/components/shared/ErrorAlert';
-import { Pagination } from '@/components/shared/Pagination';
+import { TopProgress } from '@/components/ui/top-progress';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { useFleetAccounts, useCreateFleetAccount } from '@/hooks/useFleet';
-import { pesewasToGHS, ghsToPesewas, formatPhone } from '@/lib/utils/format';
+import { ghsAmount, ghsToPesewas, formatPhone } from '@/lib/utils/format';
 
 const fleetSchema = z.object({
   companyName: z.string().min(1, 'Company name required'),
@@ -42,16 +20,49 @@ const fleetSchema = z.object({
 });
 type FleetFormData = z.infer<typeof fleetSchema>;
 
+function Pager({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="row">
+      <button type="button" className="btn sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+        Previous
+      </button>
+      <span className="muted sm">
+        Page {page} of {totalPages}
+      </span>
+      <button
+        type="button"
+        className="btn sm"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+
 export default function AdminFleetPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, error } = useFleetAccounts({ page, limit: 20 });
+  const { data, isLoading, isError } = useFleetAccounts({ page, limit: 20 });
   const { mutate: createAccount, isPending: creating } = useCreateFleetAccount();
 
   const accounts = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
+  const failed = isError && !data;
 
   const form = useForm<FleetFormData>({
     resolver: zodResolver(fleetSchema),
@@ -65,15 +76,25 @@ export default function AdminFleetPage() {
     },
   });
 
-  const onSubmit = (data: FleetFormData) => {
+  useEffect(() => {
+    if (!showAdd) return;
+    dialogRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowAdd(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showAdd]);
+
+  const onSubmit = (values: FleetFormData) => {
     createAccount(
       {
-        companyName: data.companyName,
-        contactName: data.contactName,
-        phone: data.phone,
-        email: data.email || undefined,
-        address: data.address || undefined,
-        creditLimitPesewas: ghsToPesewas(data.creditLimitGHS),
+        companyName: values.companyName,
+        contactName: values.contactName,
+        phone: values.phone,
+        email: values.email || undefined,
+        address: values.address || undefined,
+        creditLimitPesewas: ghsToPesewas(values.creditLimitGHS),
       },
       {
         onSuccess: () => {
@@ -84,184 +105,218 @@ export default function AdminFleetPage() {
     );
   };
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Fleet Accounts"
-        description={total + ' accounts'}
-        action={
-          <Button onClick={() => setShowAdd(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Add Fleet Account
-          </Button>
-        }
-      />
+  if (isLoading && !data) {
+    return (
+      <>
+        <TopProgress active />
+        <PageSkeleton kind="list" />
+      </>
+    );
+  }
 
-      {isLoading ? (
-        <SectionLoader />
-      ) : error ? (
-        <ErrorAlert message="Failed to load fleet accounts. Please refresh the page." />
+  const messages = Object.values(form.formState.errors)
+    .map((issue) => issue?.message)
+    .filter((message): message is string => Boolean(message));
+
+  return (
+    <>
+      <TopProgress active={isLoading || creating} />
+      <div className="pagehead">
+        <div className="ttl">
+          <h1>Fleet</h1>
+          <p className="muted">
+            Companies that bring several vehicles on account. {total} accounts.
+          </p>
+        </div>
+        <div className="row">
+          <button type="button" className="btn primary" onClick={() => setShowAdd(true)}>
+            Add fleet account
+          </button>
+        </div>
+      </div>
+
+      {failed ? (
+        <div className="banner" role="alert">
+          Failed to load fleet accounts.
+        </div>
       ) : accounts.length === 0 ? (
-        <EmptyState
-          icon={<Building2 className="h-6 w-6" />}
-          title="No fleet accounts yet"
-          action={{ label: 'Add Fleet Account', onClick: () => setShowAdd(true) }}
-        />
+        <div className="card">
+          <div className="empty">
+            <h2>No fleet accounts yet</h2>
+            <p className="muted">Add a company to bill several vehicles on one account.</p>
+            <button type="button" className="btn primary" onClick={() => setShowAdd(true)}>
+              Add fleet account
+            </button>
+          </div>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {accounts.map((account) => (
-            <Link key={account.id} href={'/admin/fleet/' + account.id}>
-              <Card className="hover:border-primary/40 cursor-pointer transition-all">
-                <CardContent className="flex items-center justify-between gap-4 p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{account.company_name}</p>
-                      <span
-                        className={
-                          'inline-flex rounded-full border px-2 py-0.5 text-xs ' +
-                          (account.is_active
-                            ? 'border-green-500/20 bg-green-500/10 text-green-400'
-                            : 'border-border text-muted-foreground')
-                        }
-                      >
-                        {account.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <div className="text-muted-foreground mt-1 flex flex-wrap gap-3 text-xs">
-                      <span>{account.contact_name}</span>
-                      <span>{formatPhone(account.phone)}</span>
-                      <span>Credit limit: {pesewasToGHS(account.credit_limit_pesewas)}</span>
-                      <span
-                        className={
-                          account.outstanding_balance_pesewas > 0
-                            ? 'text-amber-400'
-                            : 'text-muted-foreground'
-                        }
-                      >
-                        Balance: {pesewasToGHS(account.outstanding_balance_pesewas)}
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+        <div className="stack">
+          <div className="card flush">
+            <div className="tw">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Contact</th>
+                    <th>Phone</th>
+                    <th className="num">Credit limit</th>
+                    <th className="num">Outstanding</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accounts.map((account) => (
+                    <tr
+                      key={account.id}
+                      className="click"
+                      onClick={() => router.push('/admin/fleet/' + account.id)}
+                    >
+                      <td>
+                        <button
+                          type="button"
+                          className="lnk"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            router.push('/admin/fleet/' + account.id);
+                          }}
+                        >
+                          {account.company_name}
+                        </button>
+                      </td>
+                      <td>{account.contact_name}</td>
+                      <td>{formatPhone(account.phone)}</td>
+                      <td className="num">GHS {ghsAmount(account.credit_limit_pesewas)}</td>
+                      <td className="num">GHS {ghsAmount(account.outstanding_balance_pesewas)}</td>
+                      <td>
+                        <span className={account.is_active ? 'pill ok' : 'pill'}>
+                          {account.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <Pager page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
 
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-
-      {/* Add fleet dialog */}
-      <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Fleet Account</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="companyName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Acme Transport Ltd." />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="contactName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Person</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="John Doe" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+      {showAdd ? (
+        <div
+          className="scrim"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowAdd(false);
+          }}
+        >
+          <div
+            ref={dialogRef}
+            className="dlg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fleet-add-title"
+            tabIndex={-1}
+          >
+            <h2 id="fleet-add-title">Add fleet account</h2>
+            <form className="stack s" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+              {messages.length > 0 ? (
+                <div className="errsum" role="alert">
+                  <b>Fix these fields</b>
+                  <ul>
+                    {messages.map((message) => (
+                      <li key={message}>{message}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <div className="field">
+                <label htmlFor="fleet-company">Company name</label>
+                <input
+                  id="fleet-company"
+                  className={form.formState.errors.companyName ? 'input err' : 'input'}
+                  {...form.register('companyName')}
                 />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="tel" placeholder="0XX XXX XXXX" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {form.formState.errors.companyName ? (
+                  <span className="hint err">{form.formState.errors.companyName.message}</span>
+                ) : null}
               </div>
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Email <span className="text-muted-foreground">(optional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} type="email" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Address <span className="text-muted-foreground">(optional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="creditLimitGHS"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Credit Limit (GHS)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter className="gap-2">
-                <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>
+              <div className="grid g2">
+                <div className="field">
+                  <label htmlFor="fleet-contact">Contact person</label>
+                  <input
+                    id="fleet-contact"
+                    className={form.formState.errors.contactName ? 'input err' : 'input'}
+                    {...form.register('contactName')}
+                  />
+                  {form.formState.errors.contactName ? (
+                    <span className="hint err">{form.formState.errors.contactName.message}</span>
+                  ) : null}
+                </div>
+                <div className="field">
+                  <label htmlFor="fleet-phone">Phone</label>
+                  <input
+                    id="fleet-phone"
+                    type="tel"
+                    className={form.formState.errors.phone ? 'input err' : 'input'}
+                    placeholder="0XX XXX XXXX"
+                    {...form.register('phone')}
+                  />
+                  {form.formState.errors.phone ? (
+                    <span className="hint err">{form.formState.errors.phone.message}</span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="field">
+                <label htmlFor="fleet-email">
+                  Email <span className="faint">(optional)</span>
+                </label>
+                <input
+                  id="fleet-email"
+                  type="email"
+                  className={form.formState.errors.email ? 'input err' : 'input'}
+                  {...form.register('email')}
+                />
+                {form.formState.errors.email ? (
+                  <span className="hint err">{form.formState.errors.email.message}</span>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="fleet-address">
+                  Address <span className="faint">(optional)</span>
+                </label>
+                <input id="fleet-address" className="input" {...form.register('address')} />
+              </div>
+              <div className="field">
+                <label htmlFor="fleet-limit">Credit limit (GHS)</label>
+                <input
+                  id="fleet-limit"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={form.formState.errors.creditLimitGHS ? 'input err' : 'input'}
+                  {...form.register('creditLimitGHS', { valueAsNumber: true })}
+                />
+                {form.formState.errors.creditLimitGHS ? (
+                  <span className="hint err">{form.formState.errors.creditLimitGHS.message}</span>
+                ) : null}
+              </div>
+              <div className="row end">
+                <button type="button" className="btn" onClick={() => setShowAdd(false)}>
                   Cancel
-                </Button>
-                <Button type="submit" disabled={creating}>
-                  {creating && <LoadingSpinner size="sm" className="mr-2" />}
-                  Create Account
-                </Button>
-              </DialogFooter>
+                </button>
+                <button
+                  type="submit"
+                  className={creating ? 'btn primary nt-loading' : 'btn primary'}
+                  data-variant="primary"
+                  disabled={creating}
+                >
+                  Create account
+                </button>
+              </div>
             </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

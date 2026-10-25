@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -16,12 +16,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { DollarSign, Wrench, Users, TrendingUp, Clock, Award } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/admin/shared/PageHeader';
-import { StatsCard } from '@/components/admin/shared/StatsCard';
-import { ErrorAlert } from '@/components/shared/ErrorAlert';
-import { SectionLoader } from '@/components/shared/LoadingSpinner';
+import { TopProgress } from '@/components/ui/top-progress';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import {
   useDashboardStats,
   useRevenueChart,
@@ -29,21 +25,34 @@ import {
   useTopServices,
   useTechnicianPerformance,
 } from '@/hooks/useAnalytics';
-import { pesewasToGHS, pesewasToFloat } from '@/lib/utils/format';
+import { ghsAmount, pesewasToFloat } from '@/lib/utils/format';
 import { getStatusMeta } from '@/lib/utils/jobStatus';
-import { cn } from '@/lib/utils/cn';
+import { notify } from '@/lib/notify';
 import type { RevenueGranularity } from '@/lib/dto';
 
 const GRANULARITY_OPTIONS: { label: string; value: RevenueGranularity }[] = [
   { label: 'Daily', value: 'day' },
-  { label: 'Weekly', value: 'week' },
-  { label: 'Monthly', value: 'month' },
+  { label: 'Week', value: 'week' },
+  { label: 'Month', value: 'month' },
 ];
 
-const CHART_COLORS = ['#0066FF', '#3B9EFF', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
+const CHART_COLORS = ['#C2410C', '#1C1917', '#0F766E', '#B45309', '#7C3AED', '#B42318'];
+
+const tooltipStyle = {
+  background: '#fff',
+  border: '1px solid #e7e5e4',
+  borderRadius: '8px',
+  color: '#1c1917',
+};
+
+function durationLabel(minutes: number) {
+  if (minutes < 60) return minutes + 'm';
+  return (minutes / 60).toFixed(1) + 'h';
+}
 
 export default function AdminAnalyticsPage() {
   const [granularity, setGranularity] = useState<RevenueGranularity>('month');
+  const [technicianId, setTechnicianId] = useState('all');
 
   const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats();
   const {
@@ -74,325 +83,328 @@ export default function AdminAnalyticsPage() {
         )
       : null;
 
+  const visibleTechnicians = useMemo(() => {
+    const rows = technicians ?? [];
+    if (technicianId === 'all') return rows;
+    return rows.filter((tech) => tech.technicianId === technicianId);
+  }, [technicians, technicianId]);
+
+  const noFile = () => notify('success', 'No file is downloaded.');
+
+  if (statsLoading && !stats) {
+    return (
+      <>
+        <TopProgress active />
+        <PageSkeleton kind="dashboard" />
+      </>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <PageHeader title="Analytics" description="Workshop performance overview" />
-
-      {/* KPI Stats */}
-      {statsLoading ? (
-        <SectionLoader />
-      ) : statsError && !stats ? (
-        <ErrorAlert message="Failed to load workshop totals." />
-      ) : stats ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatsCard
-            title="Total Revenue"
-            value={pesewasToGHS(stats.totalRevenuePesewas)}
-            subtitle={'This month: ' + pesewasToGHS(stats.revenueThisMonthPesewas)}
-            icon={<DollarSign className="h-5 w-5 text-green-400" />}
-            iconBg="bg-green-500/10"
-            trend={
-              revenueChange !== null ? { value: revenueChange, label: 'vs last month' } : undefined
-            }
-          />
-          <StatsCard
-            title="Total Jobs"
-            value={stats.totalJobs.toLocaleString()}
-            subtitle={stats.activeJobs + ' active now'}
-            icon={<Wrench className="h-5 w-5 text-blue-400" />}
-            iconBg="bg-blue-500/10"
-          />
-          <StatsCard
-            title="Total Customers"
-            value={stats.totalCustomers.toLocaleString()}
-            subtitle={'+' + stats.newCustomersThisMonth + ' this month'}
-            icon={<Users className="h-5 w-5 text-violet-400" />}
-            iconBg="bg-violet-500/10"
-          />
-          <StatsCard
-            title="Avg Job Duration"
-            value={
-              stats.averageJobDurationMinutes < 60
-                ? stats.averageJobDurationMinutes + 'm'
-                : (stats.averageJobDurationMinutes / 60).toFixed(1) + 'h'
-            }
-            subtitle={stats.completedJobsThisMonth + ' completed this month'}
-            icon={<Clock className="h-5 w-5 text-amber-400" />}
-            iconBg="bg-amber-500/10"
-          />
+    <>
+      <TopProgress active={statsLoading || revenueLoading || jobsLoading || servicesLoading || techLoading} />
+      <div className="pagehead">
+        <div className="ttl">
+          <h1>Analytics</h1>
+          <p className="muted">Revenue, workload and who is delivering.</p>
         </div>
-      ) : null}
-
-      {/* Revenue Chart */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="text-primary h-4 w-4" /> Revenue Over Time
-          </CardTitle>
-          <div className="flex gap-1">
+        <div className="row">
+          <div className="tabs" role="tablist" aria-label="Period" style={{ margin: 0 }}>
             {GRANULARITY_OPTIONS.map(({ label, value }) => (
               <button
                 key={value}
+                type="button"
+                className="tab"
+                role="tab"
+                aria-selected={granularity === value}
                 onClick={() => setGranularity(value)}
-                className={cn(
-                  'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                  granularity === value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
               >
                 {label}
               </button>
             ))}
           </div>
-        </CardHeader>
-        <CardContent>
-          {revenueLoading ? (
-            <div className="flex h-64 items-center justify-center">
-              <SectionLoader />
+          <button type="button" className="btn" onClick={noFile}>
+            Export report
+          </button>
+        </div>
+      </div>
+
+      <div className="stack">
+        {statsError && !stats ? (
+          <div className="banner" role="alert">
+            Failed to load workshop totals.
+          </div>
+        ) : stats ? (
+          <div className="card">
+            <div className="grid g4">
+              <div className="fig">
+                <span className="l">Total revenue</span>
+                <span className="v">GHS {ghsAmount(stats.totalRevenuePesewas)}</span>
+                <span className="sm">
+                  {revenueChange !== null ? (
+                    <span className={revenueChange >= 0 ? 'pill ok' : 'pill warn'}>
+                      {revenueChange}% vs last month
+                    </span>
+                  ) : null}{' '}
+                  <span className="faint">This month GHS {ghsAmount(stats.revenueThisMonthPesewas)}</span>
+                </span>
+              </div>
+              <div className="fig">
+                <span className="l">Total jobs</span>
+                <span className="v">{stats.totalJobs.toLocaleString()}</span>
+                <span className="faint sm">{stats.activeJobs} active now</span>
+              </div>
+              <div className="fig">
+                <span className="l">Total customers</span>
+                <span className="v">{stats.totalCustomers.toLocaleString()}</span>
+                <span className="faint sm">+{stats.newCustomersThisMonth} this month</span>
+              </div>
+              <div className="fig">
+                <span className="l">Avg job duration</span>
+                <span className="v">{durationLabel(stats.averageJobDurationMinutes)}</span>
+                <span className="faint sm">{stats.completedJobsThisMonth} completed this month</span>
+              </div>
             </div>
+          </div>
+        ) : null}
+
+        <div className="card">
+          <h2 style={{ marginBottom: 12 }}>Revenue (GHS)</h2>
+          {revenueLoading && !revenue ? (
+            <p className="muted">Loading revenue.</p>
           ) : revenueError && !revenue ? (
-            <ErrorAlert message="Failed to load revenue." />
+            <div className="banner" role="alert">
+              Failed to load revenue.
+            </div>
           ) : !revenue || revenue.length === 0 ? (
-            <div className="text-muted-foreground flex h-64 items-center justify-center text-sm">
-              No revenue data available
+            <div className="empty">
+              <h2>No revenue data available</h2>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart
-                data={revenue.map((r) => ({
-                  period: r.period,
-                  revenue: pesewasToFloat(r.revenuePesewas),
-                  jobs: r.jobCount,
-                }))}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="period"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  tickLine={false}
-                />
-                <YAxis
-                  yAxisId="revenue"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  tickLine={false}
-                  tickFormatter={(v) => 'GHS ' + v.toLocaleString()}
-                />
-                <YAxis
-                  yAxisId="jobs"
-                  orientation="right"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    color: 'hsl(var(--foreground))',
-                  }}
-                  formatter={(value, name) => {
-                    const amount = typeof value === 'number' ? value : Number(value ?? 0);
-                    return String(name) === 'revenue'
-                      ? [`GHS ${amount.toLocaleString()}`, 'Revenue']
-                      : [amount, 'Jobs'];
-                  }}
-                />
-                <Legend />
-                <Line
-                  yAxisId="revenue"
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#0066FF"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Revenue (GHS)"
-                />
-                <Line
-                  yAxisId="jobs"
-                  type="monotone"
-                  dataKey="jobs"
-                  stroke="#10B981"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Jobs"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={revenue.map((row) => ({
+                    period: row.period,
+                    revenue: pesewasToFloat(row.revenuePesewas),
+                    jobs: row.jobCount,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
+                  <XAxis dataKey="period" tick={{ fill: '#78716c', fontSize: 11 }} tickLine={false} />
+                  <YAxis
+                    yAxisId="revenue"
+                    tick={{ fill: '#78716c', fontSize: 11 }}
+                    tickLine={false}
+                    tickFormatter={(value: number) => 'GHS ' + value.toLocaleString()}
+                  />
+                  <YAxis
+                    yAxisId="jobs"
+                    orientation="right"
+                    tick={{ fill: '#78716c', fontSize: 11 }}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(value, name) => {
+                      const amount = typeof value === 'number' ? value : Number(value ?? 0);
+                      return String(name) === 'revenue'
+                        ? [`GHS ${amount.toLocaleString()}`, 'Revenue']
+                        : [amount, 'Jobs'];
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    yAxisId="revenue"
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#C2410C"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Revenue (GHS)"
+                  />
+                  <Line
+                    yAxisId="jobs"
+                    type="monotone"
+                    dataKey="jobs"
+                    stroke="#0F766E"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Jobs"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Jobs by Status — Pie */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Jobs by Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {jobsLoading ? (
-              <SectionLoader />
+        <div className="grid g2">
+          <div className="card">
+            <h2 style={{ marginBottom: 12 }}>Jobs by status</h2>
+            {jobsLoading && !jobsByStatus ? (
+              <p className="muted">Loading jobs by status.</p>
             ) : jobsError && !jobsByStatus ? (
-              <ErrorAlert message="Failed to load jobs by status." />
+              <div className="banner" role="alert">
+                Failed to load jobs by status.
+              </div>
             ) : !jobsByStatus || jobsByStatus.length === 0 ? (
-              <div className="text-muted-foreground flex h-48 items-center justify-center text-sm">
-                No data available
+              <div className="empty">
+                <h2>No data available</h2>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={jobsByStatus}
-                      dataKey="count"
-                      nameKey="status"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      innerRadius={40}
-                    >
-                      {jobsByStatus.map((entry, i) => (
-                        <Cell key={entry.status} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        background: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        color: 'hsl(var(--foreground))',
-                      }}
-                      formatter={(value, name) => [
-                        `${Number(value ?? 0)} jobs`,
-                        getStatusMeta(String(name) as Parameters<typeof getStatusMeta>[0]).label,
-                      ]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <ul className="min-w-[140px] space-y-1.5">
-                  {jobsByStatus.map((entry, i) => (
-                    <li key={entry.status} className="flex items-center gap-2 text-xs">
-                      <div
-                        className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+              <div className="row" style={{ alignItems: 'center' }}>
+                <div style={{ width: '100%', maxWidth: 280, height: 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={jobsByStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} innerRadius={40}>
+                        {jobsByStatus.map((entry, index) => (
+                          <Cell key={entry.status} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(value, name) => [
+                          `${Number(value ?? 0)} jobs`,
+                          getStatusMeta(String(name) as Parameters<typeof getStatusMeta>[0]).label,
+                        ]}
                       />
-                      <span className="text-muted-foreground">
-                        {getStatusMeta(entry.status).label}
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <ul className="stack s" style={{ listStyle: 'none', margin: 0, padding: 0, minWidth: 180, flex: 1 }}>
+                  {jobsByStatus.map((entry, index) => (
+                    <li key={entry.status} className="row sb">
+                      <span className="row" style={{ gap: 8 }}>
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: 999,
+                            background: CHART_COLORS[index % CHART_COLORS.length],
+                          }}
+                        />
+                        <span>{getStatusMeta(entry.status).label}</span>
                       </span>
-                      <span className="ml-auto font-medium">{entry.count}</span>
+                      <b className="num">{entry.count}</b>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Top Services — Bar */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Top Services by Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {servicesLoading ? (
-              <SectionLoader />
+          <div className="card">
+            <h2 style={{ marginBottom: 12 }}>Top services by revenue (GHS)</h2>
+            {servicesLoading && !topServices ? (
+              <p className="muted">Loading top services.</p>
             ) : servicesError && !topServices ? (
-              <ErrorAlert message="Failed to load top services." />
+              <div className="banner" role="alert">
+                Failed to load top services.
+              </div>
             ) : !topServices || topServices.length === 0 ? (
-              <div className="text-muted-foreground flex h-48 items-center justify-center text-sm">
-                No data available
+              <div className="empty">
+                <h2>No data available</h2>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={topServices.map((s) => ({
-                    name:
-                      s.serviceName.length > 15
-                        ? s.serviceName.slice(0, 15) + '...'
-                        : s.serviceName,
-                    revenue: pesewasToFloat(s.revenuePesewas),
-                    jobs: s.jobCount,
-                  }))}
-                  layout="vertical"
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                    horizontal={false}
-                  />
-                  <XAxis
-                    type="number"
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                    tickLine={false}
-                    tickFormatter={(v) => 'GHS ' + v.toLocaleString()}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                    tickLine={false}
-                    width={100}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      color: 'hsl(var(--foreground))',
-                    }}
-                    formatter={(value) => [`GHS ${Number(value ?? 0).toLocaleString()}`, 'Revenue']}
-                  />
-                  <Bar dataKey="revenue" fill="#0066FF" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: 240 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={topServices.map((service) => ({
+                      name: service.serviceName.length > 15 ? service.serviceName.slice(0, 15) + '...' : service.serviceName,
+                      revenue: pesewasToFloat(service.revenuePesewas),
+                    }))}
+                    layout="vertical"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      tick={{ fill: '#78716c', fontSize: 10 }}
+                      tickLine={false}
+                      tickFormatter={(value: number) => 'GHS ' + value.toLocaleString()}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      tick={{ fill: '#78716c', fontSize: 10 }}
+                      tickLine={false}
+                      width={100}
+                    />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(value) => [`GHS ${Number(value ?? 0).toLocaleString()}`, 'Revenue']}
+                    />
+                    <Bar dataKey="revenue" fill="#C2410C" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
 
-      {/* Technician Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Award className="text-primary h-4 w-4" /> Technician Performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {techLoading ? (
-            <SectionLoader />
+        <div className="card flush">
+          <div className="row sb" style={{ padding: '20px 24px 8px' }}>
+            <h2>Technician performance</h2>
+            <div className="row">
+              <label className="sr" htmlFor="an-tech">
+                Technician
+              </label>
+              <select
+                id="an-tech"
+                className="input"
+                style={{ width: 200 }}
+                value={technicianId}
+                onChange={(event) => setTechnicianId(event.target.value)}
+                disabled={!technicians || technicians.length === 0}
+              >
+                <option value="all">All technicians</option>
+                {(technicians ?? []).map((tech) => (
+                  <option key={tech.technicianId} value={tech.technicianId}>
+                    {tech.technicianName}
+                  </option>
+                ))}
+              </select>
+              <button type="button" className="btn" onClick={noFile}>
+                Export
+              </button>
+            </div>
+          </div>
+          {techLoading && !technicians ? (
+            <p className="muted" style={{ padding: '8px 24px 20px' }}>
+              Loading technician performance.
+            </p>
           ) : techError && !technicians ? (
-            <ErrorAlert message="Failed to load technician performance." />
+            <div className="banner" role="alert" style={{ margin: '8px 24px 20px' }}>
+              Failed to load technician performance.
+            </div>
           ) : !technicians || technicians.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center text-sm">
-              No technician data available
+            <div className="empty">
+              <h2>No technician data available</h2>
             </div>
           ) : (
-            <div className="space-y-3">
-              {technicians.map((tech, i) => (
-                <div
-                  key={tech.technicianId}
-                  className="border-border flex items-center gap-4 rounded-lg border p-3"
-                >
-                  <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-                    {i + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">{tech.technicianName}</p>
-                    <div className="text-muted-foreground mt-0.5 flex flex-wrap gap-3 text-xs">
-                      <span>{tech.completedJobs} jobs completed</span>
-                      <span>Avg {tech.averageCompletionHours.toFixed(1)}h per job</span>
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-primary text-lg font-bold">{tech.completedJobs}</p>
-                    <p className="text-muted-foreground text-xs">jobs</p>
-                  </div>
-                </div>
-              ))}
+            <div className="tw">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Technician</th>
+                    <th className="num">Completed jobs</th>
+                    <th className="num">Average hours</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleTechnicians.map((tech) => (
+                    <tr key={tech.technicianId}>
+                      <td className="b">{tech.technicianName}</td>
+                      <td className="num">{tech.completedJobs}</td>
+                      <td className="num">{tech.averageCompletionHours.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
