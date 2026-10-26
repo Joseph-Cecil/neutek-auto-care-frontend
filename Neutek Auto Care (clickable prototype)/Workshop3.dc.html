@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workshop: catalogue, fleet, content and users</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="ws3" style="min-height:0;background:transparent">
+
+<sc-if value="{{app.routeIs.services_admin}}" hint-placeholder-val="{{ true }}">
+<div id="page-services-admin">
+  <div class="pagehead"><div class="ttl"><h1>Services</h1><p class="muted">What customers can book, and what it costs.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.add}}">Add service</button></div></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));align-items:start;gap:24px">
+    <div class="card" style="grid-column:span 1"><h2 style="margin-bottom:12px">Categories</h2><ul style="list-style:none;margin:0;padding:0" class="stack s"><sc-for list="{{app.v.cats}}" as="k" hint-placeholder-count="4"><li class="row sb"><span>{{k.k}}</span><span class="faint sm">{{k.n}}</span></li></sc-for></ul></div>
+    <div class="card flush" style="grid-column:span 3"><div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Category</th><th class="num">Price (GHS)</th><th class="num">Minutes</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+      <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="6"><tr class="{{r.rowCls}}"><td class="b">{{r.name}}</td><td>{{r.cat}}</td><td class="num">{{r.price}}</td><td class="num">{{r.mins}}</td><td><span class="{{r.pill}}">{{r.label}}</span></td>
+        <td style="min-width:230px"><div class="row" style="gap:16px"><sc-if value="{{r.normal}}" hint-placeholder-val="{{ true }}"><button type="button" class="lnk" onClick="{{r.edit}}">Edit</button><button type="button" class="lnk red" onClick="{{r.ask}}">Deactivate</button></sc-if><sc-if value="{{r.off}}" hint-placeholder-val="{{ false }}"><button type="button" class="lnk" onClick="{{r.on}}">Reactivate</button></sc-if><sc-if value="{{r.asking}}" hint-placeholder-val="{{ false }}"><span class="b">Deactivate {{r.name}}?</span><button type="button" class="btn sm" onClick="{{app.cancelAsk}}">Keep active</button><button type="button" class="btn sm danger" onClick="{{r.doOff}}">Deactivate</button></sc-if></div></td></tr></sc-for>
+    </tbody></table></div></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.fleet}}" hint-placeholder-val="{{ false }}">
+<div id="page-fleet">
+  <div class="pagehead"><div class="ttl"><h1>Fleet</h1><p class="muted">Companies that bring several vehicles on account.</p></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Company</th><th>Contact</th><th>Phone</th><th class="num">Credit limit (GHS)</th><th class="num">Outstanding (GHS)</th><th>Status</th></tr></thead><tbody>
+    <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="1"><tr class="click" onClick="{{r.go}}"><td><button type="button" class="lnk" onClick="{{r.go}}">{{r.company}}</button></td><td>{{r.contact}}</td><td>{{r.phone}}</td><td class="num">{{r.limit}}</td><td class="num">{{r.out}}</td><td><span class="pill ok">Active</span></td></tr></sc-for>
+  </tbody></table></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.fleet_account}}" hint-placeholder-val="{{ false }}">
+<div id="page-fleet-account">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to fleet</button></div><h1 style="margin-top:8px">Mensah Logistics</h1><p class="muted">Contact Esi Mensah, 024 700 3318</p></div></div>
+  <div class="stack">
+    <div class="card"><div class="sumcard"><div class="fig"><span class="l">Credit limit (GHS)</span><span class="v">{{app.v.limit}}</span></div><div class="fig"><span class="l">Outstanding (GHS)</span><span class="v">{{app.v.out}}</span></div><div class="fig"><span class="l">Credit left (GHS)</span><span class="v">{{app.v.left}}</span></div></div></div>
+    <div class="card flush"><div class="row sb" style="padding:20px 24px 8px"><h2>Vehicles</h2><button type="button" class="btn sm" onClick="{{app.v.addVeh}}">Add vehicle</button></div><div class="tw"><table class="tbl"><thead><tr><th>Plate</th><th>Vehicle</th><th>Driver</th><th>Driver phone</th></tr></thead><tbody><sc-for list="{{app.v.vans}}" as="v" hint-placeholder-count="3"><tr><td class="b">{{v.plate}}</td><td>{{v.t}}</td><td>{{v.driver}}</td><td>{{v.dphone}}</td></tr></sc-for></tbody></table></div></div>
+    <div class="card flush"><div class="row sb" style="padding:20px 24px 8px"><h2>Maintenance schedules</h2><button type="button" class="btn sm" onClick="{{app.v.addSched}}">Add schedule</button></div><div class="tw"><table class="tbl"><thead><tr><th>Vehicle</th><th>Service</th><th>Every</th><th>Last done</th><th>Next due</th></tr></thead><tbody><sc-for list="{{app.v.sch}}" as="x" hint-placeholder-count="4"><tr><td class="b">{{x.plate}}</td><td>{{x.sv}}</td><td>{{x.every}}</td><td>{{x.last}}</td><td><span class="{{x.pill}}">{{x.due}}</span></td></tr></sc-for></tbody></table></div></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.blog_admin}}" hint-placeholder-val="{{ false }}">
+<div id="page-blog-admin">
+  <div class="pagehead"><div class="ttl"><h1>Blog</h1><p class="muted">Write and publish notes for the public site.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.add}}">New post</button></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody><sc-for list="{{app.v.rows}}" as="p" hint-placeholder-count="4"><tr><td class="b">{{p.t}}</td><td>{{p.cat}}</td><td>{{p.d}}</td><td><span class="{{p.pill}}">{{p.status}}</span></td><td><button type="button" class="lnk" onClick="{{p.edit}}">Edit</button></td></tr></sc-for></tbody></table></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.blog_edit}}" hint-placeholder-val="{{ false }}">
+<div id="page-blog-edit">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to blog</button></div><h1 style="margin-top:8px">{{app.v.ttl}}</h1><p class="muted">Drafts stay private until you publish them.</p></div></div>
+  <div class="card stack">
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+    <div class="field"><label for="bp-t">Title</label><input id="bp-t" class="input {{app.ecp.ptitle}}" name="ptitle" placeholder="A clear, specific headline" value="{{app.f.ptitle}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.ptitle}}</span></div>
+    <div class="grid g2"><div class="field"><label for="bp-c">Category</label><select id="bp-c" class="input" name="pcat" value="{{app.f.pcat}}" onChange="{{app.inp}}"><sc-for list="{{app.postCats}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+    <div class="field"><label for="bp-s">Status</label><select id="bp-s" class="input" name="pstatus" value="{{app.f.pstatus}}" onChange="{{app.inp}}"><sc-for list="{{app.postStatuses}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div></div>
+    <div class="field"><label for="bp-b">Body</label><textarea id="bp-b" class="input" style="min-height:220px" name="pbody" placeholder="Separate paragraphs with a blank line" onInput="{{app.inp}}">{{app.f.pbody}}</textarea></div>
+    <div class="row end"><button type="button" class="btn" onClick="{{app.v.back}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.savePost}}">Save post</button></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.analytics}}" hint-placeholder-val="{{ false }}">
+<div id="page-analytics">
+  <div class="pagehead"><div class="ttl"><h1>Analytics</h1><p class="muted">Revenue, workload and who is delivering.</p></div>
+    <div class="row"><div class="seg" style="width:220px" role="group" aria-label="Period"><button type="button" aria-pressed="{{app.v.isWeek}}" onClick="{{app.v.setWeek}}">Week</button><button type="button" aria-pressed="{{app.v.isMonth}}" onClick="{{app.v.setMonth}}">Month</button></div><button type="button" class="btn" onClick="{{app.v.exportAll}}">Export report</button></div></div>
+  <div class="stack">
+    <div class="card"><div class="sumcard">
+      <sc-for list="{{app.v.kpis}}" as="k" hint-placeholder-count="4"><div class="fig"><span class="l">{{k.l}}</span><span class="v">{{k.v}}</span><span class="sm"><span class="{{k.pill}}">{{k.d}}</span> <span class="faint">{{k.note}}</span></span></div></sc-for>
+    </div></div>
+    <div class="card"><div class="chd"><h2>Revenue (GHS)</h2></div>
+      <div class="cols" role="img" aria-label="Revenue columns"><sc-for list="{{app.v.cols}}" as="c" hint-placeholder-count="6"><div class="col" style="height:{{c.h}}" title="{{c.v}}"></div></sc-for></div>
+      <div class="row" style="gap:20px;margin-top:8px;flex-wrap:nowrap"><sc-for list="{{app.v.cols}}" as="c" hint-placeholder-count="6"><div style="width:24px;text-align:center" class="faint sm">{{c.l}}</div></sc-for></div></div>
+    <div class="grid g2">
+      <div class="card"><h2 style="margin-bottom:12px">Jobs by status</h2><ul style="list-style:none;margin:0;padding:0" class="stack s"><sc-for list="{{app.v.counts}}" as="x" hint-placeholder-count="8"><li class="row sb"><span>{{x.st}}</span><b class="num">{{x.n}}</b></li></sc-for></ul></div>
+      <div class="card"><h2 style="margin-bottom:12px">Top services by revenue (GHS)</h2><ul style="list-style:none;margin:0;padding:0" class="stack s"><sc-for list="{{app.v.top}}" as="x" hint-placeholder-count="5"><li class="row sb"><span>{{x.n}}</span><b class="num">{{x.v}}</b></li></sc-for></ul></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h2 style="margin-bottom:4px">Quote to completed job</h2><p class="muted sm" style="margin-bottom:16px">How many quotes turn into paid work.</p><div class="stack s"><sc-for list="{{app.v.funnel}}" as="x" hint-placeholder-count="3"><div><div class="row sb sm" style="margin-bottom:6px"><span>{{x.l}}</span><span><b class="num">{{x.n}}</b> <span class="faint">{{x.p}}</span></span></div><div style="height:8px;border-radius:4px;background:var(--bg-secondary)"><div style="height:8px;border-radius:4px;background:var(--surface-brand);width:{{x.w}}"></div></div></div></sc-for></div></div>
+      <div class="card"><h2 style="margin-bottom:4px">How customers pay</h2><p class="muted sm" style="margin-bottom:16px">Share of payments received by method.</p><div class="stack s"><sc-for list="{{app.v.methods}}" as="x" hint-placeholder-count="4"><div><div class="row sb sm" style="margin-bottom:6px"><span>{{x.l}}</span><b class="num">{{x.p}}</b></div><div style="height:8px;border-radius:4px;background:var(--bg-secondary)"><div style="height:8px;border-radius:4px;background:var(--surface-brand);width:{{x.p}}"></div></div></div></sc-for></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h2 style="margin-bottom:4px">Money owed</h2><p class="muted sm" style="margin-bottom:16px">Invoices raised in this period, by payment status.</p><ul style="list-style:none;margin:0;padding:0" class="stack s"><sc-for list="{{app.v.owed}}" as="x" hint-placeholder-count="3"><li class="row sb"><span class="row" style="gap:8px"><span class="{{x.pill}}">{{x.l}}</span><span class="faint sm">{{x.n}} invoices</span></span><b class="num">{{x.v}}</b></li></sc-for></ul></div>
+      <div class="card"><h2 style="margin-bottom:4px">Customers</h2><p class="muted sm" style="margin-bottom:16px">Who is coming through the door.</p><ul style="list-style:none;margin:0;padding:0" class="stack s"><sc-for list="{{app.v.mix}}" as="x" hint-placeholder-count="4"><li class="row sb"><span>{{x.l}}</span><b class="num">{{x.v}}</b></li></sc-for></ul></div>
+    </div>
+    <div class="card flush"><div class="row sb" style="padding:20px 24px 8px"><h2>Technician performance</h2><div class="row"><label class="sr" for="an-tech">Technician</label><select id="an-tech" class="input" style="width:200px" name="atech" value="{{app.f.atech}}" onChange="{{app.inp}}"><sc-for list="{{app.v.techOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select><button type="button" class="btn" onClick="{{app.v.exportTech}}">Export</button></div></div><table class="tbl"><thead><tr><th>Technician</th><th class="num">Completed jobs</th><th class="num">Average hours</th></tr></thead><tbody><sc-for list="{{app.v.techs}}" as="t" hint-placeholder-count="3"><tr><td class="b">{{t.n}}</td><td class="num">{{t.jobs}}</td><td class="num">{{t.hrs}}</td></tr></sc-for></tbody></table></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.users}}" hint-placeholder-val="{{ false }}">
+<div id="page-users">
+  <div class="pagehead"><div class="ttl"><h1>Users</h1><p class="muted">Who can sign in to the workshop.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.invite}}">Invite user</button></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+    <sc-for list="{{app.v.rows}}" as="u" hint-placeholder-count="4"><tr class="{{u.rowCls}}"><td><div class="two"><b>{{u.name}}</b><span>{{u.title}}</span></div></td><td>{{u.email}}</td><td>{{u.role}}</td><td><span class="{{u.pill}}">{{u.label}}</span></td>
+      <td style="min-width:250px"><div class="row" style="gap:16px"><sc-if value="{{u.canOff}}" hint-placeholder-val="{{ false }}"><button type="button" class="lnk red" onClick="{{u.ask}}">Deactivate</button></sc-if><sc-if value="{{u.isMe}}" hint-placeholder-val="{{ false }}"><span class="faint sm">This is you</span></sc-if><sc-if value="{{u.canOn}}" hint-placeholder-val="{{ false }}"><button type="button" class="lnk" onClick="{{u.on}}">Reactivate</button></sc-if><sc-if value="{{u.asking}}" hint-placeholder-val="{{ false }}"><span class="b">Deactivate {{u.name}}?</span><button type="button" class="btn sm" onClick="{{app.cancelAsk}}">Keep active</button><button type="button" class="btn sm danger" onClick="{{u.doOff}}">Deactivate</button></sc-if></div></td></tr></sc-for>
+  </tbody></table></div></div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1100,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { app: this.props.app || { routeIs: {}, v: {}, f: {}, ecp: {}, ehp: {}, errs: [], nav: {} } };
+  }
+}
+</script>
+</body>
+</html>

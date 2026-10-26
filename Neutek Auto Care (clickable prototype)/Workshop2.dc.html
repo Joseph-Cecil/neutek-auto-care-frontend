@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workshop: customers and finance</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="ws2" style="min-height:0;background:transparent">
+
+<sc-if value="{{app.routeIs.customers}}" hint-placeholder-val="{{ true }}">
+<div id="page-customers">
+  <div class="pagehead"><div class="ttl"><h1>Customers</h1><p class="muted">Everyone we look after, with their cars.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.add}}">Add customer</button></div></div>
+  <div class="stack">
+    <div class="card"><div class="field" style="max-width:360px"><label for="cu-q">Search</label><input id="cu-q" class="input" type="search" name="cq" placeholder="Name, phone or email" value="{{app.f.cq}}" onInput="{{app.inp}}"></div></div>
+    <div class="card flush">
+      <sc-if value="{{app.v.none}}" hint-placeholder-val="{{ false }}"><div class="empty"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5"></path></svg></div><h2>No customers match</h2><p class="muted">Check the spelling, or search by phone number.</p></div></sc-if>
+      <sc-if value="{{app.v.has}}" hint-placeholder-val="{{ true }}"><div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Fleet</th><th>Vehicles</th></tr></thead><tbody>
+        <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="4"><tr class="click" onClick="{{r.open}}"><td><div class="two"><button type="button" class="lnk" style="text-align:left" onClick="{{r.open}}">{{r.name}}</button><span>{{r.area}}</span></div></td><td>{{r.phone}}</td><td>{{r.email}}</td><td><sc-if value="{{r.fleet}}" hint-placeholder-val="{{ false }}"><span class="pill brand">Fleet</span></sc-if></td><td>{{r.vs}}</td></tr></sc-for>
+      </tbody></table></div></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.quotes}}" hint-placeholder-val="{{ false }}">
+<div id="page-quotes">
+  <div class="pagehead"><div class="ttl"><h1>Quotes</h1><p class="muted">What we have offered, and what customers have answered.</p></div></div>
+  <div class="tabs" role="tablist"><sc-for list="{{app.v.tabs}}" as="t" hint-placeholder-count="5"><button type="button" role="tab" class="tab" aria-selected="{{t.sel}}" onClick="{{t.go}}">{{t.k}}<sc-if value="{{t.hasN}}" hint-placeholder-val="{{ false }}"><span class="cnt">{{t.n}}</span></sc-if></button></sc-for></div>
+  <div class="card flush">
+    <sc-if value="{{app.v.none}}" hint-placeholder-val="{{ false }}"><div class="empty"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"></path></svg></div><h2>No {{app.v.tab}} quotes</h2><p class="muted">Quotes will show here as they move through.</p></div></sc-if>
+    <sc-if value="{{app.v.has}}" hint-placeholder-val="{{ true }}"><div class="tw"><table class="tbl"><thead><tr><th>Number</th><th>Job</th><th>Customer</th><th class="num">Total (GHS)</th><th>Valid until</th><th>Status</th></tr></thead><tbody>
+      <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="2"><tr class="click" onClick="{{r.go}}"><td><button type="button" class="lnk" onClick="{{r.go}}">{{r.id}}</button></td><td>{{r.job}}</td><td>{{r.who}}</td><td class="num">{{r.total}}</td><td>{{r.valid}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td></tr></sc-for>
+    </tbody></table></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.quote}}" hint-placeholder-val="{{ false }}">
+<div id="page-quote">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to quotes</button></div><div class="row" style="margin-top:8px"><h1>{{app.v.id}}</h1><span class="{{app.v.pill}}">{{app.v.status}}</span></div><p class="muted">For {{app.v.who}}, {{app.v.veh}}</p></div>
+    <sc-if value="{{app.v.isDraft}}" hint-placeholder-val="{{ false }}"><div class="row"><button type="button" class="btn primary {{app.bz.send}}" onClick="{{app.v.send}}">Send quote</button></div></sc-if></div>
+  <div class="stack">
+    <sc-if value="{{app.v.isSent}}" hint-placeholder-val="{{ false }}"><div class="banner info" role="status">Waiting on the customer. They can approve or reject from their account.</div></sc-if>
+    <sc-if value="{{app.v.isRej}}" hint-placeholder-val="{{ false }}"><div class="banner" role="status">Customer's reason: {{app.v.reason}}</div></sc-if>
+    <sc-if value="{{app.v.isApp}}" hint-placeholder-val="{{ false }}"><div class="banner ok" role="status">The customer approved this quote.</div></sc-if>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price (GHS)</th><th class="num">Line total (GHS)</th></tr></thead><tbody>
+      <sc-for list="{{app.v.lines}}" as="l" hint-placeholder-count="3"><tr><td>{{l.d}}</td><td class="num">{{l.q}}</td><td class="num">{{l.u}}</td><td class="num">{{l.t}}</td></tr></sc-for>
+      <tr><td colspan="3" class="num muted">Subtotal</td><td class="num">{{app.v.t.sub}}</td></tr>
+      <tr><td colspan="3" class="num muted">Tax and levies</td><td class="num">{{app.v.t.tax}}</td></tr>
+      <tr><td colspan="3" class="num muted">Discount</td><td class="num">{{app.v.t.disc}}</td></tr>
+      <tr><td colspan="3" class="num b">Total</td><td class="num b" style="font-size:16px">{{app.v.t.total}}</td></tr>
+    </tbody></table></div></div>
+    <div class="grid g2"><div class="card"><h3>Valid until</h3><p>{{app.v.valid}}</p></div><div class="card"><h3>Notes</h3><p>{{app.v.notes}}</p></div></div>
+    <div class="card row sb"><span class="muted">Job</span><button type="button" class="btn" onClick="{{app.v.jobGo}}">Open {{app.v.job}}</button></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.invoices}}" hint-placeholder-val="{{ false }}">
+<div id="page-invoices">
+  <div class="pagehead"><div class="ttl"><h1>Invoices</h1><p class="muted">What is owed, what is paid and what is late.</p></div></div>
+  <div class="tabs" role="tablist"><sc-for list="{{app.v.tabs}}" as="t" hint-placeholder-count="4"><button type="button" role="tab" class="tab" aria-selected="{{t.sel}}" onClick="{{t.go}}">{{t.k}}<sc-if value="{{t.hasN}}" hint-placeholder-val="{{ false }}"><span class="cnt">{{t.n}}</span></sc-if></button></sc-for></div>
+  <div class="card flush">
+    <sc-if value="{{app.v.none}}" hint-placeholder-val="{{ false }}"><div class="empty"><h2>No invoices here</h2><p class="muted">Nothing matches this tab.</p></div></sc-if>
+    <sc-if value="{{app.v.has}}" hint-placeholder-val="{{ true }}"><div class="tw"><table class="tbl"><thead><tr><th>Number</th><th>Customer</th><th>Due</th><th class="num">Total (GHS)</th><th class="num">Paid (GHS)</th><th class="num">Balance (GHS)</th><th>Status</th></tr></thead><tbody>
+      <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="3"><tr class="click" onClick="{{r.go}}"><td><button type="button" class="lnk" onClick="{{r.go}}">{{r.id}}</button></td><td>{{r.who}}</td><td>{{r.due}}</td><td class="num">{{r.total}}</td><td class="num">{{r.paid}}</td><td class="num b">{{r.bal}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td></tr></sc-for>
+    </tbody></table></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.invoice}}" hint-placeholder-val="{{ false }}">
+<div id="page-invoice">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to invoices</button></div><div class="row" style="margin-top:8px"><h1>{{app.v.id}}</h1><span class="{{app.v.pill}}">{{app.v.status}}</span></div><p class="muted">For {{app.v.who}}, due {{app.v.due}}</p></div>
+    <div class="row"><sc-if value="{{app.v.canSend}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn primary {{app.bz.send}}" onClick="{{app.v.send}}">Send invoice</button></sc-if><sc-if value="{{app.v.canPay}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn primary" onClick="{{app.v.rec}}">Record payment</button></sc-if></div></div>
+  <div class="stack">
+    <sc-if value="{{app.v.overdue}}" hint-placeholder-val="{{ false }}"><div class="banner" role="status">This invoice is {{app.v.days}} days overdue. Balance GHS {{app.v.bal}}.</div></sc-if>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price (GHS)</th><th class="num">Line total (GHS)</th></tr></thead><tbody>
+      <sc-for list="{{app.v.lines}}" as="l" hint-placeholder-count="3"><tr><td>{{l.d}}</td><td class="num">{{l.q}}</td><td class="num">{{l.u}}</td><td class="num">{{l.t}}</td></tr></sc-for>
+      <tr><td colspan="3" class="num muted">Subtotal</td><td class="num">{{app.v.t.sub}}</td></tr>
+      <tr><td colspan="3" class="num muted">Tax and levies</td><td class="num">{{app.v.t.tax}}</td></tr>
+      <tr><td colspan="3" class="num b">Total</td><td class="num b">{{app.v.t.total}}</td></tr>
+      <tr><td colspan="3" class="num muted">Amount paid</td><td class="num">{{app.v.paid}}</td></tr>
+      <tr><td colspan="3" class="num b">Balance</td><td class="num b" style="font-size:16px">{{app.v.bal}}</td></tr>
+    </tbody></table></div></div>
+    <div class="banner info">A PDF copy would download here. This prototype does not generate files.</div>
+    <sc-if value="{{app.v.hasJob}}" hint-placeholder-val="{{ false }}"><div class="card row sb"><span class="muted">Job</span><button type="button" class="btn" onClick="{{app.v.jobGo}}">Open {{app.v.job}}</button></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.payments}}" hint-placeholder-val="{{ false }}">
+<div id="page-payments">
+  <div class="pagehead"><div class="ttl"><h1>Payments</h1><p class="muted">Money in, including the ones that failed or were refunded.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.rec}}">Record payment</button></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Reference</th><th>Invoice</th><th>Customer</th><th class="num">Amount (GHS)</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>
+    <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="4"><tr><td class="b">{{r.id}}</td><td>{{r.inv}}</td><td>{{r.who}}</td><td class="num">{{r.amt}}</td><td>{{r.method}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td><td>{{r.at}}</td></tr></sc-for>
+  </tbody></table></div></div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1100,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { app: this.props.app || { routeIs: {}, v: { t: {} }, f: {}, errs: [], nav: {} } };
+  }
+}
+</script>
+</body>
+</html>

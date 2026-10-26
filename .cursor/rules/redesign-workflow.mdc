@@ -1,0 +1,23 @@
+---
+description: Neutek Auto Care redesign, scale, and deployment rules. Always apply.
+alwaysApply: true
+---
+
+# Redesign workflow
+
+Memory is `docs/redesign/`. At the start of a chat that references `prompt.md`, read `PROGRESS.md` first, then `PLAN.md`. If `PROGRESS.md` is missing, run the bootstrap in `prompt.md`. Do not rely on chat history.
+
+- Do not guess. If the prototype is ambiguous or conflicts with the app, log an open question in `PROGRESS.md`.
+- Preserve existing behavior unless the prototype or a scale/deploy requirement changes it. Log every behavior change.
+- Backend and infra changes need a logged reason, tests, and a safe migration or rollback path. No destructive migrations and no production data without explicit approval.
+- Do not deploy, run remote migrations, provision cloud resources, or create paid services until the user says "deploy" (Phase 10 only, and only when status is READY TO DEPLOY).
+- Follow existing conventions. Flag any new library, service, or paid component before adding it, with the reason and alternatives.
+- Replace UI incrementally. Do not delete the old component until every usage is migrated.
+- Replace prototype mock data with real API calls. Document every created or changed contract in `docs/redesign/API.md`.
+- Accessibility: keyboard access, visible focus, labels, contrast.
+- Do not claim a check passed or a scale target is met without command output. Label results measured or extrapolated. 100k is proven only after the Phase 10 staging load test.
+- No secrets in the repo. Use `.env.example` and document every config variable.
+- One phase per run unless the user said "proceed all". If a finding changes the plan, stop, log it, and ask.
+- After each step, update Last action, Next action, and the checklist in `PROGRESS.md` so a new chat can continue from the files alone.
+
+Example: a chat that finds the prototype and the API disagree on quote expiry stops, adds a blocking or non-blocking question to `PROGRESS.md`, and does not invent a rule.

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Neutek Auto Care public site</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<sc-if value="{{app.isPubPage}}" hint-placeholder-val="{{ true }}">
+<div class="nt" id="page-public">
+<header class="pubbar">
+  <div class="in" style="position:relative">
+    <button type="button" class="brand" style="background:none;border:0;cursor:pointer;padding:0" aria-label="Neutek Auto Care home" onClick="{{app.nav.home}}"><div class="mark">NT</div><div class="t" style="text-align:left"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></button>
+    <nav aria-label="Site" class="{{app.pubMenuCls}}">
+      <sc-for list="{{pubNav}}" as="n" hint-placeholder-count="5"><button type="button" aria-current="{{n.cur}}" onClick="{{n.go}}">{{n.l}}</button></sc-for>
+    </nav>
+    <div class="row" style="margin-left:auto;gap:8px;flex-wrap:nowrap">
+      <sc-if value="{{app.signedOut}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn ghost hide" onClick="{{app.nav.signin}}">Sign in</button></sc-if>
+      <sc-if value="{{app.signedIn}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn ghost hide" onClick="{{goApp}}">Open my account</button></sc-if>
+      <button type="button" class="btn primary" onClick="{{app.nav.book}}">Book service</button>
+      <button type="button" class="btn ghost icbtn pubmenu" aria-label="Menu" onClick="{{app.togglePubMenu}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main-content" tabindex="-1" style="outline:none">
+
+<sc-if value="{{app.routeIs.home}}" hint-placeholder-val="{{ true }}">
+<div id="page-home">
+  <div class="pubwrap">
+    <section class="hero">
+      <p class="b" style="color:var(--text-secondary);margin-bottom:16px">Neutek Auto Care · Spintex Road, Accra</p>
+      <h1>Your car, fixed and followed.</h1>
+      <p class="muted" style="font-size:18px;max-width:46ch;margin:20px 0 32px">Book a service online, watch your car move through the workshop, approve the quote from your phone and collect it when it is ready.</p>
+      <div class="row"><button type="button" class="btn primary" style="height:48px;padding:0 24px" onClick="{{app.nav.book}}">Book service</button><button type="button" class="btn" style="height:48px;padding:0 24px" onClick="{{app.nav.track}}">Track a car</button></div>
+    </section>
+    <section class="sec" style="padding-top:0">
+      <h2 class="big">Why drivers choose us</h2>
+      <div class="grid g4">
+        <sc-for list="{{app.v.reasons}}" as="r" hint-placeholder-count="4"><div class="card"><h2>{{r.t}}</h2><p class="muted" style="margin-top:8px">{{r.d}}</p></div></sc-for>
+      </div>
+    </section>
+    <section class="sec">
+      <div class="row sb" style="margin-bottom:24px"><h2 class="big" style="margin:0">Services and prices</h2><button type="button" class="btn" onClick="{{app.nav.services}}">See all services</button></div>
+      <div class="grid g3">
+        <sc-for list="{{app.v.services}}" as="s" hint-placeholder-count="6"><div class="card stack s"><div class="row sb"><h2>{{s.name}}</h2><span class="pill">{{s.mins}} min</span></div><div class="row sb"><span class="b" style="font-size:18px;font-variant-numeric:tabular-nums">GHS {{s.price}}</span><button type="button" class="btn sm" onClick="{{s.go}}">Book</button></div></div></sc-for>
+      </div>
+    </section>
+    <section class="sec">
+      <h2 class="big">How it works</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h2>Book</h2><p class="muted" style="margin-top:6px">Pick services and a time. Two minutes, no account needed.</p></div>
+        <div class="step"><div class="n">2</div><h2>Drop off</h2><p class="muted" style="margin-top:6px">We receive the car, note its condition and start diagnosing.</p></div>
+        <div class="step"><div class="n">3</div><h2>Approve the quote</h2><p class="muted" style="margin-top:6px">You see every line and price. Nothing starts until you say yes.</p></div>
+        <div class="step"><div class="n">4</div><h2>Collect</h2><p class="muted" style="margin-top:6px">We check quality, call you, and hand back the keys.</p></div>
+      </div>
+    </section>
+    <section class="sec" style="padding-top:0">
+      <div class="card row sb" style="background:var(--bg-brand);border-color:var(--bg-brand-subtle)">
+        <div><h2>Already dropped your car off?</h2><p class="muted" style="margin-top:4px">Enter your job number or plate to see where it is.</p></div>
+        <button type="button" class="btn primary" onClick="{{app.nav.track}}">Track a car</button>
+      </div>
+    </section>
+    <section class="sec" style="padding-top:0">
+      <h2 class="big">We work on</h2>
+      <div class="row" style="gap:12px"><sc-for list="{{app.v.makes}}" as="m" hint-placeholder-count="6"><span class="pill" style="height:36px;padding:0 20px;font-size:14px;background:#fff">{{m.m}}</span></sc-for></div>
+    </section>
+    <section class="sec" style="padding-top:0">
+      <h2 class="big">What customers say</h2>
+      <div class="grid g3"><sc-for list="{{app.v.quotes}}" as="q" hint-placeholder-count="3"><figure class="card" style="margin:0"><blockquote style="margin:0 0 12px">{{q.t}}</blockquote><figcaption class="muted sm">{{q.by}}</figcaption></figure></sc-for></div>
+    </section>
+    <section class="sec" style="padding-top:0">
+      <div class="card row sb"><div><h2 style="font-size:22px">Ready when you are.</h2><p class="muted" style="margin-top:4px">Pick a time that suits you. We will confirm it.</p></div><button type="button" class="btn primary" style="height:48px;padding:0 24px" onClick="{{app.nav.book}}">Book service</button></div>
+    </section>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.services}}" hint-placeholder-val="{{ false }}">
+<div class="pubwrap" id="page-services"><section class="sec">
+  <h1 style="font-size:36px">Services</h1><p class="muted" style="margin:8px 0 32px">Fixed prices for routine work. Anything else is quoted before we start.</p>
+  <div class="stack">
+    <sc-for list="{{app.v.groups}}" as="g" hint-placeholder-count="2">
+      <div class="stack s"><h2>{{g.cat}}</h2>
+        <sc-for list="{{g.items}}" as="s" hint-placeholder-count="2"><div class="pcard"><div style="max-width:52ch"><div class="b">{{s.name}}</div><div class="muted sm">{{s.desc}}</div></div><div class="row"><span class="pill">{{s.mins}} min</span><span class="b" style="font-variant-numeric:tabular-nums">GHS {{s.price}}</span><button type="button" class="btn sm" onClick="{{s.go}}">Book</button></div></div></sc-for>
+      </div>
+    </sc-for>
+  </div>
+</section></div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.book}}" hint-placeholder-val="{{ false }}">
+<div class="pubwrap" id="page-book"><section class="sec" style="max-width:760px;margin:0 auto">
+  <h1 style="font-size:32px">Book service</h1><p class="muted" style="margin:8px 0 24px">Four quick steps. We will confirm by phone.</p>
+  <div class="card stack s">
+    <sc-if value="{{app.v.notDone}}" hint-placeholder-val="{{ true }}">
+      <div class="row" role="list" aria-label="Steps"><sc-for list="{{app.v.steps}}" as="st" hint-placeholder-count="4"><span role="listitem" class="{{st.cls}}">{{st.n}}. {{st.l}}</span></sc-for></div>
+      <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+      <sc-if value="{{app.v.st1}}" hint-placeholder-val="{{ true }}">
+        <h2>Choose services</h2>
+        <div class="stack s"><sc-for list="{{app.v.pick}}" as="p" hint-placeholder-count="6"><button type="button" class="{{p.cls}}" aria-pressed="{{p.pressed}}" onClick="{{p.toggle}}" style="text-align:left;width:100%;justify-content:space-between"><span><span class="b" style="display:block">{{p.name}}</span><span class="faint sm">{{p.sub}}</span></span><span class="b" style="font-variant-numeric:tabular-nums">{{p.price}}</span></button></sc-for></div>
+        <div class="row sb"><span class="muted">Running total</span><span class="b" style="font-size:18px;font-variant-numeric:tabular-nums">GHS {{app.v.total}}</span></div>
+      </sc-if>
+      <sc-if value="{{app.v.st2}}" hint-placeholder-val="{{ false }}">
+        <h2>Date and time</h2><p class="muted sm">The earliest slot is two hours from now, so 24 Oct 2026 from 12:00.</p>
+        <div class="grid g2"><div class="field"><label for="bk-date">Date</label><input id="bk-date" class="input {{app.ecp.date}}" type="date" name="date" min="2026-10-24" value="{{app.f.date}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.date}}</span></div>
+        <div class="field"><label for="bk-time">Time</label><select id="bk-time" class="input {{app.ecp.time}}" name="time" value="{{app.f.time}}" onChange="{{app.inp}}"><option value="">Choose a time</option><sc-for list="{{app.v.times}}" as="t" hint-placeholder-count="3"><option value="{{t.t}}">{{t.t}}</option></sc-for></select><span class="hint err">{{app.ehp.time}}</span></div></div>
+      </sc-if>
+      <sc-if value="{{app.v.st3}}" hint-placeholder-val="{{ false }}">
+        <h2>Your details</h2>
+        <sc-if value="{{app.v.isCu}}" hint-placeholder-val="{{ false }}">
+          <div class="banner info">Signed in as Ama Mensah, so we already have your name and phone.</div>
+          <div class="field"><label for="bk-veh">Vehicle</label><select id="bk-veh" class="input" name="bveh" value="{{app.f.bveh}}" onChange="{{app.inp}}"><sc-for list="{{app.v.myVehicles}}" as="v" hint-placeholder-count="1"><option value="{{v.id}}">{{v.t}}</option></sc-for></select></div>
+        </sc-if>
+        <sc-if value="{{app.v.isGuest}}" hint-placeholder-val="{{ true }}">
+          <div class="grid g2"><div class="field"><label for="bk-name">Full name</label><input id="bk-name" class="input {{app.ecp.bname}}" name="bname" placeholder="Yaw Boateng" value="{{app.f.bname}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.bname}}</span></div>
+          <div class="field"><label for="bk-phone">Phone</label><input id="bk-phone" class="input {{app.ecp.bphone}}" name="bphone" type="tel" placeholder="055 200 1190" value="{{app.f.bphone}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.bphone}}</span></div></div>
+          <div class="field"><label for="bk-car">Car</label><input id="bk-car" class="input" name="bcar" placeholder="2014 Nissan Sentra" value="{{app.f.bcar}}" onInput="{{app.inp}}"><span class="hint">Optional, but it helps us prepare.</span></div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{app.v.st4}}" hint-placeholder-val="{{ false }}">
+        <h2>Confirm</h2>
+        <dl class="kv"><dt>Services</dt><dd><sc-for list="{{app.v.picked}}" as="p" hint-placeholder-count="1"><div class="row sb"><span>{{p.name}}</span><span class="num">{{p.price}}</span></div></sc-for></dd><dt>Total (GHS)</dt><dd class="b">{{app.v.total}}</dd><dt>When</dt><dd>{{app.v.when}}</dd><dt>Who</dt><dd>{{app.v.who}}</dd></dl>
+      </sc-if>
+      <div class="row end" style="border-top:1px solid var(--border-subtle);padding-top:16px">
+        <sc-if value="{{app.v.hasPrev}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn" onClick="{{app.prevStep}}">Back</button></sc-if>
+        <sc-if value="{{app.v.notLast}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn primary" onClick="{{app.nextStep}}">Continue</button></sc-if>
+        <sc-if value="{{app.v.st4}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn primary {{app.bz.confirm}}" onClick="{{app.confirmBooking}}">Confirm booking</button></sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{app.v.done}}" hint-placeholder-val="{{ false }}">
+      <div class="empty"><div class="ic" style="background:var(--bg-success);color:var(--text-success)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></div>
+        <h2>You are booked in</h2><p class="muted">Your booking number is <b>{{app.v.bookingNo}}</b>. We will call to confirm.</p>
+        <div class="row" style="justify-content:center;margin-top:8px"><button type="button" class="btn" onClick="{{app.newBooking}}">Book another</button><button type="button" class="btn primary" onClick="{{app.nav.track}}">Track your car</button></div></div>
+    </sc-if>
+  </div>
+</section></div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.track}}" hint-placeholder-val="{{ false }}">
+<div class="pubwrap" id="page-track"><section class="sec" style="max-width:640px;margin:0 auto">
+  <h1 style="font-size:32px">Track your car</h1><p class="muted" style="margin:8px 0 24px">Enter the job number from your receipt, or the number plate.</p>
+  <form class="card stack s" onSubmit="{{app.submitTrack}}">
+    <div class="field"><label for="tr-q">Job number or plate</label><input id="tr-q" class="input {{app.ecp.trackq}}" name="trackq" placeholder="{{app.v.trackPlaceholder}}" value="{{app.f.trackq}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.trackq}}</span></div>
+    <div class="row end"><button type="button" class="btn" onClick="{{app.trackSample}}">Use a sample</button><button type="submit" class="btn primary">Track</button></div>
+  </form>
+  <sc-if value="{{app.trackMiss}}" hint-placeholder-val="{{ false }}"><div class="card" style="margin-top:24px"><div class="empty"><h2>We could not find that</h2><p class="muted">Check the job number or plate and try again.</p></div></div></sc-if>
+</section></div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.track_job}}" hint-placeholder-val="{{ false }}">
+<div class="pubwrap" id="page-track-job"><section class="sec" style="max-width:720px;margin:0 auto">
+  <button type="button" class="btn ghost" onClick="{{app.nav.track}}" style="margin-left:-16px">Track another car</button>
+  <div class="card stack s" style="margin-top:8px">
+    <div class="row sb"><div><p class="faint sm">{{app.v.job.id}}</p><h1 style="font-size:26px">{{app.v.job.title}}</h1><p class="muted">{{app.v.job.veh}} · {{app.v.job.plate}}</p></div><span class="{{app.v.job.pill}}">{{app.v.job.status}}</span></div>
+    <sc-if value="{{app.v.job.off}}" hint-placeholder-val="{{ false }}"><div class="banner info" role="status">{{app.v.offMsg}}</div></sc-if>
+    <sc-if value="{{app.v.job.on}}" hint-placeholder-val="{{ true }}">
+      <ol class="tl"><sc-for list="{{app.v.flow}}" as="st" hint-placeholder-count="8"><li class="{{st.cls}}"><span class="dot" aria-hidden="true">{{st.mark}}</span><span>{{st.l}}</span><sc-if value="{{st.cur}}" hint-placeholder-val="{{ false }}"><span class="pill brand">Current</span></sc-if><span class="when">{{st.when}}</span></li></sc-for></ol>
+    </sc-if>
+  </div>
+</section></div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.blog}}" hint-placeholder-val="{{ false }}">
+<div class="pubwrap" id="page-blog"><section class="sec">
+  <h1 style="font-size:36px">From the workshop</h1><p class="muted" style="margin:8px 0 32px">Short, practical notes for driving in Accra.</p>
+  <div class="grid g3"><sc-for list="{{app.v.posts}}" as="p" hint-placeholder-count="3"><article class="card stack s" style="{{p.span}}"><div class="row"><span class="pill">{{p.cat}}</span><sc-if value="{{p.feat}}" hint-placeholder-val="{{ false }}"><span class="pill brand">Featured</span></sc-if></div><h2 style="font-size:20px">{{p.t}}</h2><p class="faint sm">{{p.d}} · Efua Darko</p><div><button type="button" class="btn sm" onClick="{{p.open}}">Read article</button></div></article></sc-for></div>
+</section></div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.article}}" hint-placeholder-val="{{ false }}">
+<div class="pubwrap" id="page-article"><section class="sec" style="max-width:680px;margin:0 auto">
+  <button type="button" class="btn ghost" onClick="{{app.nav.blog}}" style="margin-left:-16px">Back to blog</button>
+  <article class="stack s" style="margin-top:16px"><span class="pill" style="align-self:flex-start">{{app.v.art.cat}}</span><h1 style="font-size:34px;line-height:1.15">{{app.v.art.t}}</h1><p class="faint sm">{{app.v.art.d}} · Efua Darko, Workshop manager</p>
+    <sc-for list="{{app.v.art.paras}}" as="p" hint-placeholder-count="4"><p style="font-size:17px;line-height:1.7">{{p.b}}</p></sc-for></article>
+</section></div>
+</sc-if>
+
+</main>
+<footer class="foot"><div class="pubwrap row sb" style="align-items:flex-start;gap:24px">
+  <div><div class="b">Neutek Auto Care</div><p class="muted sm">14 Spintex Road, Accra</p></div>
+  <div><div class="b">Call us</div><p class="muted sm">030 277 4410</p></div>
+  <div><div class="b">Hours</div><p class="muted sm">Mon to Fri 07:30 to 18:00<br>Sat 08:00 to 15:00</p></div>
+</div></footer>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var app = this.props.app;
+    if (!app) return { app: { routeIs: {}, v: {}, nav: {}, f: {}, ecp: {}, ehp: {}, errs: [] }, pubNav: [], goApp: function () { } };
+    var cur = app.route === 'track-job' ? 'track' : (app.route === 'article' ? 'blog' : app.route);
+    var items = [['Home', 'home'], ['Services', 'services'], ['Book service', 'book'], ['Track', 'track'], ['Blog', 'blog']];
+    var pubNav = items.map(function (i) { return { l: i[0], cur: cur === i[1] ? 'page' : 'false', go: app.nav[i[1]] }; });
+    var goApp = app.role === 'customer' ? app.nav.portal : (app.role === 'admin' ? app.nav.dashboard : app.nav.jobs);
+    return { app: app, pubNav: pubNav, goApp: goApp };
+  }
+}
+</script>
+</body>
+</html>

@@ -33,7 +33,7 @@ export async function uploadFile(file: File, folder: UploadFolder = 'general'): 
     fileSizeBytes: file.size,
   });
 
-  const { uploadUrl, publicUrl, key } = presignRes.data.data;
+  const { uploadUrl, key } = presignRes.data.data;
 
   const uploadRes = await fetch(uploadUrl, {
     method:  'PUT',
@@ -45,8 +45,15 @@ export async function uploadFile(file: File, folder: UploadFolder = 'general'): 
     throw new UploadError(`Upload failed (HTTP ${uploadRes.status})`);
   }
 
-  await apiClient.post(ENDPOINTS.UPLOADS.CONFIRM, { key });
-  return publicUrl;
+  const confirmRes = await apiClient.post<{
+    success: boolean;
+    data: { downloadUrl?: string };
+  }>(ENDPOINTS.UPLOADS.CONFIRM, { key });
+  const downloadUrl = confirmRes.data.data?.downloadUrl;
+  if (!downloadUrl) {
+    throw new UploadError('Upload confirmed without a download URL');
+  }
+  return downloadUrl;
 }
 
 export async function compressAndUpload(

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workshop: customer care, inventory, schedule and inspection</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="ws4" style="min-height:0;background:transparent">
+
+<sc-if value="{{app.routeIs.messaging}}" hint-placeholder-val="{{ true }}">
+<div id="page-messaging">
+  <div class="pagehead"><div class="ttl"><h1>Messages</h1><p class="muted">What customers hear from the workshop, and when.</p></div>
+    <div class="seg" style="width:260px" role="group" aria-label="View"><button type="button" aria-pressed="{{app.v.isTpl}}" onClick="{{app.v.toTpl}}">Templates</button><button type="button" aria-pressed="{{app.v.isLog}}" onClick="{{app.v.toLog}}">Sent log</button></div></div>
+  <div class="stack">
+    <div class="card"><div class="sumcard">
+      <div class="fig"><span class="l">Automatic messages on</span><span class="v">{{app.v.active}}</span><span class="sm faint">of 7 templates</span></div>
+      <div class="fig"><span class="l">Sent this week</span><span class="v">{{app.v.sent}}</span><span class="sm faint">SMS and WhatsApp</span></div>
+      <div class="fig"><span class="l">Delivered</span><span class="v">{{app.v.rate}}</span><span class="sm faint">Failed ones retry by SMS</span></div>
+    </div></div>
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+    <sc-if value="{{app.v.isTpl}}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{app.v.tpls}}" as="t" hint-placeholder-count="3">
+        <div class="card stack s">
+          <div class="row sb"><div class="row" style="gap:12px"><h2>{{t.name}}</h2><span class="pill">{{t.stage}}</span><span class="{{t.onPill}}">{{t.onLbl}}</span></div>
+            <div class="row" style="gap:16px"><label class="row sm" style="gap:6px"><input type="checkbox" checked="{{t.on}}" onChange="{{t.tOn}}"> Send automatically</label><label class="row sm" style="gap:6px"><input type="checkbox" checked="{{t.wa}}" onChange="{{t.tWa}}"> WhatsApp</label><label class="row sm" style="gap:6px"><input type="checkbox" checked="{{t.sms}}" onChange="{{t.tSms}}"> SMS</label></div></div>
+          <sc-if value="{{t.viewing}}" hint-placeholder-val="{{ true }}">
+            <div class="row" style="align-items:flex-start;gap:24px;flex-wrap:wrap"><div style="flex:1;min-width:260px"><div class="faint sm" style="margin-bottom:6px">Preview</div><div class="banner info">{{t.preview}}</div></div></div>
+            <div class="row"><button type="button" class="btn sm" onClick="{{t.edit}}">Edit message</button><button type="button" class="btn sm" onClick="{{t.test}}">Send me a test</button></div>
+          </sc-if>
+          <sc-if value="{{t.editing}}" hint-placeholder-val="{{ false }}">
+            <div class="field"><label for="tpl-body">Message</label><textarea id="tpl-body" class="input {{app.ecp.tplbody}}" name="tplbody" onInput="{{app.inp}}">{{app.f.tplbody}}</textarea><span class="hint err">{{app.ehp.tplbody}}</span><span class="hint">Use {name}, {car}, {job}, {link} and {service}. They are filled in for each customer.</span></div>
+            <div class="row end"><button type="button" class="btn" onClick="{{app.cancelEdit}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveTpl}}">Save message</button></div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{app.v.isLog}}" hint-placeholder-val="{{ false }}">
+      <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Customer</th><th>Message</th><th>Channel</th><th>Status</th><th>When</th></tr></thead><tbody>
+        <sc-for list="{{app.v.log}}" as="m" hint-placeholder-count="5"><tr><td><div class="two"><b>{{m.to}}</b><span>{{m.phone}}</span></div></td><td>{{m.tpl}}</td><td>{{m.ch}}</td><td><span class="{{m.pill}}">{{m.st}}</span></td><td>{{m.at}}</td></tr></sc-for>
+      </tbody></table></div></div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.reminders}}" hint-placeholder-val="{{ false }}">
+<div id="page-reminders">
+  <div class="pagehead"><div class="ttl"><h1>Service reminders</h1><p class="muted">Bring customers back before the next service is due.</p></div>
+    <div class="row"><button type="button" class="btn primary" onClick="{{app.v.sendAll}}">Send all due reminders</button></div></div>
+  <div class="stack">
+    <div class="card"><div class="sumcard">
+      <div class="fig"><span class="l">Due or overdue now</span><span class="v">{{app.v.dueN}}</span><span class="sm faint">Waiting for a reminder</span></div>
+      <div class="fig"><span class="l">Reminders sent this month</span><span class="v">{{app.v.sentN}}</span><span class="sm faint">WhatsApp first, SMS as backup</span></div>
+      <div class="fig"><span class="l">Booked after a reminder</span><span class="v">39%</span><span class="sm"><span class="pill ok">+6 points</span> <span class="faint">on last month</span></span></div>
+    </div></div>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Customer</th><th>Vehicle</th><th>Service</th><th>Due</th><th>Status</th><th><span class="sr">Action</span></th></tr></thead><tbody>
+      <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="5"><tr>
+        <td><div class="two"><b>{{r.cust}}</b><span>{{r.phone}}</span></div></td><td><div class="two"><b>{{r.car}}</b><span>{{r.plate}}</span></div></td>
+        <td><div class="two"><b>{{r.svc}}</b><span>{{r.basis}}</span></div></td><td>{{r.due}}</td><td><span class="{{r.pill}}">{{r.st}}</span></td>
+        <td style="min-width:150px"><sc-if value="{{r.can}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn sm" onClick="{{r.send}}">Send reminder</button></sc-if><sc-if value="{{r.cant}}" hint-placeholder-val="{{ false }}"><span class="faint sm">{{r.cantTxt}}</span></sc-if></td></tr></sc-for>
+    </tbody></table></div></div>
+    <div class="card stack s"><h2>Reminder rules</h2><p class="muted sm">These apply to every customer vehicle with a service schedule.</p>
+      <sc-for list="{{app.v.rules}}" as="r" hint-placeholder-count="3"><label class="row" style="gap:10px"><input type="checkbox" checked="{{r.on}}" onChange="{{r.toggle}}"><span>{{r.l}}</span></label></sc-for></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.inventory}}" hint-placeholder-val="{{ false }}">
+<div id="page-inventory">
+  <div class="pagehead"><div class="ttl"><h1>Inventory</h1><p class="muted">Parts on the shelf, what is running low, and what each part earns.</p></div>
+    <div class="seg" style="width:260px" role="group" aria-label="Filter"><button type="button" aria-pressed="{{app.v.isAll}}" onClick="{{app.v.toAll}}">All parts</button><button type="button" aria-pressed="{{app.v.isLow}}" onClick="{{app.v.toLow}}">Needs restocking</button></div></div>
+  <div class="stack">
+    <sc-if value="{{app.v.hasLow}}" hint-placeholder-val="{{ true }}"><div class="banner warn row sb" role="status"><span><b>{{app.v.lowN}} parts</b> are at or below their minimum.</span><button type="button" class="btn sm" onClick="{{app.v.restockLow}}">Restock low items</button></div></sc-if>
+    <div class="card"><div class="sumcard">
+      <div class="fig"><span class="l">Parts tracked</span><span class="v">{{app.v.items}}</span><span class="sm faint">Across 3 suppliers</span></div>
+      <div class="fig"><span class="l">Stock value at cost (GHS)</span><span class="v">{{app.v.value}}</span></div>
+      <div class="fig"><span class="l">Average margin</span><span class="v">{{app.v.margin}}</span><span class="sm faint">Selling price over cost</span></div>
+    </div></div>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Part</th><th class="num">In stock</th><th class="num">Minimum</th><th class="num">Cost</th><th class="num">Price</th><th class="num">Margin</th><th>Status</th><th><span class="sr">Restock</span></th></tr></thead><tbody>
+      <sc-for list="{{app.v.rows}}" as="p" hint-placeholder-count="6"><tr>
+        <td><div class="two"><b>{{p.name}}</b><span>{{p.sku}} · {{p.sup}}</span></div></td><td class="num b">{{p.qty}}</td><td class="num">{{p.min}}</td><td class="num">{{p.cost}}</td><td class="num">{{p.price}}</td><td class="num">{{p.margin}}</td><td><span class="{{p.pill}}">{{p.st}}</span></td>
+        <td style="min-width:150px"><div class="row" style="gap:8px"><button type="button" class="btn sm" onClick="{{p.add5}}">+5</button><button type="button" class="btn sm" onClick="{{p.add10}}">+10</button></div></td></tr></sc-for>
+    </tbody></table></div>
+    <sc-if value="{{app.v.empty}}" hint-placeholder-val="{{ false }}"><div class="empty"><h2>Everything is stocked</h2><p class="muted">No part is at or below its minimum.</p><button type="button" class="btn" onClick="{{app.v.toAll}}">Show all parts</button></div></sc-if></div>
+    <div class="card stack s"><h2>Receive stock</h2><p class="muted sm">Add a delivery to the shelf.</p>
+      <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+      <div class="grid g2" style="gap:12px"><div class="field"><label for="rc-part">Part</label><select id="rc-part" class="input" name="rpart" value="{{app.f.rpart}}" onChange="{{app.inp}}"><sc-for list="{{app.v.parts}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+        <div class="field"><label for="rc-qty">Quantity received</label><input id="rc-qty" class="input {{app.ecp.rqty}}" name="rqty" inputmode="numeric" placeholder="10" value="{{app.f.rqty}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.rqty}}</span></div></div>
+      <div class="row end"><button type="button" class="btn primary {{app.bz.receive}}" onClick="{{app.receiveStock}}">Receive stock</button></div></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.schedule}}" hint-placeholder-val="{{ false }}">
+<div id="page-schedule">
+  <div class="pagehead"><div class="ttl"><h1>Schedule</h1><p class="muted">Who is working on what over the next week. A full day is 8 hours, Saturday is 5.</p></div></div>
+  <div class="stack">
+    <sc-if value="{{app.v.hasUn}}" hint-placeholder-val="{{ true }}"><div class="card stack s"><h2>Waiting for a technician</h2>
+      <sc-for list="{{app.v.un}}" as="j" hint-placeholder-count="1"><div class="row sb"><div><div class="b">{{j.id}}</div><div class="faint sm">{{j.title}}</div></div>
+        <div class="row" style="gap:8px"><sc-for list="{{j.assign}}" as="a" hint-placeholder-count="2"><button type="button" class="btn sm" onClick="{{a.go}}">Assign to {{a.n}}</button></sc-for></div></div></sc-for></div></sc-if>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Technician</th><sc-for list="{{app.v.days}}" as="d" hint-placeholder-count="6"><th>{{d.l}}</th></sc-for></tr></thead><tbody>
+      <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="2"><tr><td class="b" style="min-width:140px">{{r.name}}</td>
+        <sc-for list="{{r.cells}}" as="x" hint-placeholder-count="6"><td style="min-width:130px;vertical-align:top"><div class="stack s" style="gap:6px"><span class="{{x.pill}}">{{x.lbl}}</span>
+          <sc-for list="{{x.chips}}" as="ch" hint-placeholder-count="1"><button type="button" class="lnk sm" style="text-align:left" onClick="{{ch.go}}">{{ch.id}} · {{ch.hrs}} h</button></sc-for></div></td></sc-for></tr></sc-for>
+    </tbody></table></div></div>
+    <div class="card stack s"><h2>Bays right now</h2><div class="grid g2" style="gap:12px">
+      <sc-for list="{{app.v.bays}}" as="b" hint-placeholder-count="4"><div class="pcard"><div><div class="b">{{b.bay}}</div><div class="faint sm">{{b.title}}</div></div><span class="{{b.pill}}">{{b.st}}</span></div></sc-for></div></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.feedback}}" hint-placeholder-val="{{ false }}">
+<div id="page-feedback">
+  <div class="pagehead"><div class="ttl"><h1>Feedback</h1><p class="muted">What customers say after pickup. Tick the ones to show on the website.</p></div></div>
+  <div class="stack">
+    <div class="grid g2">
+      <div class="card"><div class="sumcard"><div class="fig"><span class="l">Average rating</span><span class="v">{{app.v.avg}} / 5</span><span class="sm faint">From {{app.v.n}} reviews</span></div><div class="fig"><span class="l">On the website</span><span class="v">{{app.v.feat}}</span></div></div></div>
+      <div class="card stack s"><sc-for list="{{app.v.dist}}" as="d" hint-placeholder-count="5"><div class="row" style="gap:12px"><span class="sm" style="width:64px">{{d.k}}</span><div style="flex:1;height:8px;border-radius:4px;background:var(--bg-secondary)"><div style="height:8px;border-radius:4px;background:var(--surface-brand);width:{{d.w}}"></div></div><b class="num sm" style="width:20px;text-align:right">{{d.n}}</b></div></sc-for></div>
+    </div>
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+    <sc-for list="{{app.v.rows}}" as="x" hint-placeholder-count="4"><div class="card stack s">
+      <div class="row sb"><div class="row" style="gap:12px"><b>{{x.name}}</b><span class="faint sm">{{x.job}} · {{x.at}}</span></div><span style="color:var(--surface-brand);letter-spacing:2px" role="img" aria-label="{{x.starsLbl}}">{{x.stars}}</span></div>
+      <p>{{x.text}}</p>
+      <sc-if value="{{x.hasReply}}" hint-placeholder-val="{{ false }}"><div class="banner info"><b>Your reply:</b> {{x.reply}}</div></sc-if>
+      <sc-if value="{{x.replying}}" hint-placeholder-val="{{ false }}"><div class="field"><label for="fb-rep">Reply to {{x.name}}</label><textarea id="fb-rep" class="input {{app.ecp.freply}}" name="freply" onInput="{{app.inp}}">{{app.f.freply}}</textarea><span class="hint err">{{app.ehp.freply}}</span></div><div class="row end"><button type="button" class="btn" onClick="{{app.cancelReply}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.sendReply}}">Send reply</button></div></sc-if>
+      <sc-if value="{{x.notRep}}" hint-placeholder-val="{{ true }}"><div class="row sb"><label class="row sm" style="gap:6px"><input type="checkbox" checked="{{x.feat}}" onChange="{{x.toggle}}"> Show on the website</label><button type="button" class="btn sm" onClick="{{x.open}}">{{x.btnLbl}}</button></div></sc-if>
+    </div></sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.inspection}}" hint-placeholder-val="{{ false }}">
+<div id="page-inspection">
+  <sc-if value="{{app.v.missing}}" hint-placeholder-val="{{ false }}"><div class="card"><div class="empty"><h2>We could not find that job</h2><p class="muted">Open an inspection from a job.</p><button type="button" class="btn primary" onClick="{{app.v.back}}">Back to jobs</button></div></div></sc-if>
+  <sc-if value="{{app.v.found}}" hint-placeholder-val="{{ true }}">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to job</button></div>
+    <div class="row" style="margin-top:8px"><h1>Inspection</h1><span class="pill brand">{{app.v.id}}</span></div><p class="muted">{{app.v.car}} · {{app.v.cust}}</p></div>
+    <div class="row"><button type="button" class="btn {{app.bz.save}}" onClick="{{app.saveInsp}}">Save</button><button type="button" class="btn primary {{app.bz.sendInsp}}" onClick="{{app.sendInsp}}">Send to customer</button></div></div>
+  <div class="stack">
+    <sc-if value="{{app.v.sent}}" hint-placeholder-val="{{ false }}"><div class="banner ok" role="status">This report was sent to {{app.v.cust}}. They can read it on their job page.</div></sc-if>
+    <div class="card"><div class="sumcard">
+      <div class="fig"><span class="l">Checked</span><span class="v">{{app.v.done}} / {{app.v.total}}</span></div>
+      <div class="fig"><span class="l">All good</span><span class="v">{{app.v.ok}}</span></div>
+      <div class="fig"><span class="l">Keep an eye on</span><span class="v">{{app.v.watch}}</span></div>
+      <div class="fig"><span class="l">Needs repair</span><span class="v">{{app.v.fix}}</span></div>
+    </div></div>
+    <sc-for list="{{app.v.groups}}" as="g" hint-placeholder-count="5"><div class="card stack s"><h2>{{g.g}}</h2>
+      <sc-for list="{{g.items}}" as="i" hint-placeholder-count="3"><div class="row sb"><span>{{i.l}}</span><div class="row" style="gap:6px"><button type="button" class="{{i.okC}}" aria-pressed="{{i.okP}}" onClick="{{i.ok}}">OK</button><button type="button" class="{{i.wC}}" aria-pressed="{{i.wP}}" onClick="{{i.watch}}">Watch</button><button type="button" class="{{i.fC}}" aria-pressed="{{i.fP}}" onClick="{{i.fix}}">Fix</button></div></div></sc-for></div></sc-for>
+    <div class="card stack s"><h2>Notes for the customer</h2>
+      <div class="field"><label for="in-note">Summary</label><textarea id="in-note" class="input" name="inote" placeholder="What you found, in plain words." onInput="{{app.inp}}">{{app.v.noteTxt}}</textarea></div>
+      <h3>Photos</h3>
+      <div class="row" style="gap:12px;flex-wrap:wrap"><sc-for list="{{app.v.photos}}" as="p" hint-placeholder-count="2"><div style="width:120px;height:84px;border-radius:8px;background:var(--bg-secondary);border:1px dashed var(--border-default);display:flex;align-items:center;justify-content:center" class="faint sm">{{p.n}}</div></sc-for>
+        <sc-if value="{{app.v.canAdd}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn" onClick="{{app.v.addPhoto}}">Add photo</button></sc-if></div>
+      <span class="hint">Photos are placeholders in this prototype.</span></div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1100,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { app: this.props.app || { routeIs: {}, v: {}, f: {}, ecp: {}, ehp: {}, errs: [], nav: {}, bz: {} } };
+  }
+}
+</script>
+</body>
+</html>

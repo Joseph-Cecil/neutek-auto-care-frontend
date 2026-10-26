@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customer portal screens</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="portal" style="min-height:0;background:transparent">
+
+<sc-if value="{{app.routeIs.portal}}" hint-placeholder-val="{{ true }}">
+<div id="page-portal">
+  <div class="pagehead"><div class="ttl"><h1>Hello, Ama</h1><p class="muted">Here is where things stand with your car.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.nav.book}}">Book service</button></div></div>
+  <div class="grid g2">
+    <div class="card stack s"><h2>Your car in the workshop</h2>
+      <sc-if value="{{app.v.hasCar}}" hint-placeholder-val="{{ true }}"><p style="font-size:16px">{{app.v.carText}}</p><div class="row"><span class="{{app.v.carPill}}">{{app.v.carStatus}}</span><button type="button" class="lnk" onClick="{{app.v.carGo}}">{{app.v.carId}}</button></div></sc-if>
+      <sc-if value="{{app.v.noCar}}" hint-placeholder-val="{{ false }}"><p class="muted">Nothing in the workshop right now.</p></sc-if></div>
+    <div class="card stack s"><h2>Quote waiting</h2>
+      <sc-if value="{{app.v.hasQuote}}" hint-placeholder-val="{{ true }}"><p>{{app.v.quoteText}}</p><div class="row"><button type="button" class="btn primary sm" onClick="{{app.v.quoteGo}}">Review quote</button></div></sc-if>
+      <sc-if value="{{app.v.hasQuote}}" hint-placeholder-val="{{ false }}"></sc-if>
+      <button type="button" class="lnk sm" style="align-self:flex-start" onClick="{{app.v.quotesGo}}">All quotes</button></div>
+    <div class="card stack s"><h2>Invoice overdue</h2>
+      <sc-if value="{{app.v.hasInv}}" hint-placeholder-val="{{ true }}"><p>{{app.v.invText}}</p><div class="fig"><span class="v">GHS {{app.v.invBal}}</span></div><div class="row"><button type="button" class="btn primary sm" onClick="{{app.v.pay}}">Pay</button><button type="button" class="lnk" onClick="{{app.v.invGo}}">View invoice</button></div></sc-if></div>
+    <div class="card stack s"><h2>Next booking</h2>
+      <sc-if value="{{app.v.hasBk}}" hint-placeholder-val="{{ true }}"><p>{{app.v.bkText}}</p><p class="faint sm">{{app.v.bkId}}</p></sc-if>
+      <sc-if value="{{app.v.hasBk}}" hint-placeholder-val="{{ false }}"></sc-if></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.my_jobs}}" hint-placeholder-val="{{ false }}">
+<div id="page-my-jobs">
+  <div class="pagehead"><div class="ttl"><h1>My jobs</h1><p class="muted">Every visit, with its latest status.</p></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Job</th><th>Vehicle</th><th>Status</th><th>Updated</th></tr></thead><tbody><sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="3"><tr class="click" onClick="{{r.go}}"><td><div class="two"><button type="button" class="lnk" style="text-align:left" onClick="{{r.go}}">{{r.id}}</button><span>{{r.title}}</span></div></td><td>{{r.veh}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td><td>{{r.upd}}</td></tr></sc-for></tbody></table></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.my_job}}" hint-placeholder-val="{{ false }}">
+<div id="page-my-job">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to my jobs</button></div><div class="row" style="margin-top:8px"><h1>{{app.v.id}}</h1><span class="{{app.v.pill}}">{{app.v.status}}</span></div><p class="muted">{{app.v.title}} · {{app.v.veh}}</p></div></div>
+  <div class="stack">
+    <div class="card stack s"><h2>Latest from the workshop</h2><p>{{app.v.note}}</p><sc-if value="{{app.v.hasDx}}" hint-placeholder-val="{{ false }}"><p class="muted">What we found: {{app.v.dxs}}</p></sc-if></div>
+    <div class="card"><h2 style="margin-bottom:16px">Progress</h2>
+      <sc-if value="{{app.v.off}}" hint-placeholder-val="{{ false }}"><div class="banner info">{{app.v.offMsg}}</div></sc-if>
+      <sc-if value="{{app.v.on}}" hint-placeholder-val="{{ true }}"><ol class="tl"><sc-for list="{{app.v.flow}}" as="st" hint-placeholder-count="8"><li class="{{st.cls}}"><span class="dot" aria-hidden="true">{{st.mark}}</span><span>{{st.l}}</span><sc-if value="{{st.cur}}" hint-placeholder-val="{{ false }}"><span class="pill brand">Current</span></sc-if><span class="when">{{st.when}}</span></li></sc-for></ol></sc-if></div>
+    <sc-if value="{{app.v.hasInsp}}" hint-placeholder-val="{{ false }}"><div class="card stack s"><h2>Inspection report</h2><p class="muted">{{app.v.inspNote}}</p>
+      <sc-for list="{{app.v.inspItems}}" as="i" hint-placeholder-count="2"><div class="row sb"><span>{{i.l}}</span><span class="{{i.pill}}">{{i.t}}</span></div></sc-for>
+      <p class="faint sm">{{app.v.inspOk}} other checks were fine.</p></div></sc-if>
+    <sc-if value="{{app.v.canRate}}" hint-placeholder-val="{{ false }}"><div class="card stack s"><h2>How did we do?</h2><p class="muted sm">Your rating helps us and other drivers.</p>
+      <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+      <div class="row" style="gap:6px" role="group" aria-label="Rating"><sc-for list="{{app.v.stars}}" as="s" hint-placeholder-count="5"><button type="button" class="{{s.cls}}" aria-label="{{s.label}}" aria-pressed="{{s.pressed}}" onClick="{{s.pick}}">{{s.mark}}</button></sc-for></div>
+      <div class="field"><label for="rt-text">Comment (optional)</label><textarea id="rt-text" class="input" name="rtext" placeholder="Tell us what went well or what we can improve." onInput="{{app.inp}}">{{app.f.rtext}}</textarea></div>
+      <div class="row end"><button type="button" class="btn primary {{app.bz.rate}}" onClick="{{app.v.submitRate}}">Send feedback</button></div></div></sc-if>
+    <sc-if value="{{app.v.rated}}" hint-placeholder-val="{{ false }}"><div class="banner ok" role="status">Thank you for your feedback.</div></sc-if>
+    <div class="card"><h2 style="margin-bottom:12px">Quote and invoice</h2><div class="row">
+      <sc-if value="{{app.v.hasQuote}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn" onClick="{{app.v.quote.go}}">Quote {{app.v.quote.id}} · {{app.v.quote.st}}</button></sc-if>
+      <sc-if value="{{app.v.hasInv}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn" onClick="{{app.v.inv.go}}">Invoice {{app.v.inv.id}} · {{app.v.inv.st}}</button></sc-if>
+      <sc-if value="{{app.v.noLinks}}" hint-placeholder-val="{{ false }}"><span class="muted">Nothing raised yet.</span></sc-if></div></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.vehicles}}" hint-placeholder-val="{{ false }}">
+<div id="page-vehicles">
+  <div class="pagehead"><div class="ttl"><h1>My vehicles</h1><p class="muted">Cars you can book in.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.add}}">Add vehicle</button></div></div>
+  <div class="grid g3"><sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="1"><div class="card stack s"><h2>{{r.t}}</h2><dl class="kv"><dt>Plate</dt><dd class="b">{{r.plate}}</dd><dt>Colour</dt><dd>{{r.colour}}</dd><dt>Mileage</dt><dd>{{r.km}}</dd></dl></div></sc-for></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.my_quotes}}" hint-placeholder-val="{{ false }}">
+<div id="page-my-quotes">
+  <div class="pagehead"><div class="ttl"><h1>Quotes</h1><p class="muted">Approve or turn down the work we recommend.</p></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Number</th><th>Job</th><th class="num">Total (GHS)</th><th>Valid until</th><th>Status</th></tr></thead><tbody><sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="3"><tr class="click" onClick="{{r.go}}"><td><button type="button" class="lnk" onClick="{{r.go}}">{{r.id}}</button></td><td>{{r.job}}</td><td class="num">{{r.total}}</td><td>{{r.valid}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td></tr></sc-for></tbody></table></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.my_quote}}" hint-placeholder-val="{{ false }}">
+<div id="page-my-quote">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to quotes</button></div><div class="row" style="margin-top:8px"><h1>{{app.v.id}}</h1><span class="{{app.v.pill}}">{{app.v.status}}</span></div><p class="muted">{{app.v.job}}</p></div></div>
+  <div class="stack">
+    <sc-if value="{{app.v.isApp}}" hint-placeholder-val="{{ false }}"><div class="banner ok" role="status">You approved this quote. We will start the work.</div></sc-if>
+    <sc-if value="{{app.v.isRej}}" hint-placeholder-val="{{ false }}"><div class="banner info" role="status">You rejected this quote. Your reason: {{app.v.reason}}</div></sc-if>
+    <sc-if value="{{app.v.isExp}}" hint-placeholder-val="{{ false }}"><div class="banner" role="status">This quote has expired. Call us for a new one.</div></sc-if>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price (GHS)</th><th class="num">Line total (GHS)</th></tr></thead><tbody>
+      <sc-for list="{{app.v.lines}}" as="l" hint-placeholder-count="3"><tr><td>{{l.d}}</td><td class="num">{{l.q}}</td><td class="num">{{l.u}}</td><td class="num">{{l.t}}</td></tr></sc-for>
+      <tr><td colspan="3" class="num muted">Subtotal</td><td class="num">{{app.v.t.sub}}</td></tr><tr><td colspan="3" class="num muted">Tax and levies</td><td class="num">{{app.v.t.tax}}</td></tr><tr><td colspan="3" class="num b">Total</td><td class="num b" style="font-size:16px">{{app.v.t.total}}</td></tr>
+    </tbody></table></div></div>
+    <div class="card row sb"><span class="muted">Valid until <b style="color:var(--text-primary)">{{app.v.valid}}</b></span><button type="button" class="btn sm" onClick="{{app.v.jobGo}}">See the job</button></div>
+    <sc-if value="{{app.v.hasNotes}}" hint-placeholder-val="{{ false }}"><div class="card"><h3>Notes from the workshop</h3><p>{{app.v.notes}}</p></div></sc-if>
+    <sc-if value="{{app.v.canAct}}" hint-placeholder-val="{{ true }}"><div class="card row end"><button type="button" class="btn" onClick="{{app.askReject}}">Reject</button><button type="button" class="btn primary" onClick="{{app.askApprove}}">Approve</button></div></sc-if>
+    <sc-if value="{{app.v.askApprove}}" hint-placeholder-val="{{ false }}"><div class="card stack s" style="background:var(--bg-brand)"><b>Approve {{app.v.id}} for GHS {{app.v.t.total}}?</b><p class="muted sm">We will start the work and invoice this amount.</p><div class="row end"><button type="button" class="btn" onClick="{{app.cancelAsk}}">Keep deciding</button><button type="button" class="btn primary {{app.bz.approve}}" onClick="{{app.approve}}">Approve quote</button></div></div></sc-if>
+    <sc-if value="{{app.v.askReject}}" hint-placeholder-val="{{ false }}"><div class="card stack s" style="background:var(--bg-brand)"><b>Reject {{app.v.id}} (GHS {{app.v.t.total}})?</b><div class="field"><label for="rq-r">Reason</label><input id="rq-r" class="input {{app.ecp.reason}}" name="reason" placeholder="Why are you turning it down?" value="{{app.f.reason}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.reason}}</span></div><div class="row end"><button type="button" class="btn" onClick="{{app.cancelAsk}}">Keep deciding</button><button type="button" class="btn danger {{app.bz.reject}}" onClick="{{app.reject}}">Reject quote</button></div></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.my_invoices}}" hint-placeholder-val="{{ false }}">
+<div id="page-my-invoices">
+  <div class="pagehead"><div class="ttl"><h1>Invoices</h1><p class="muted">What you owe and what you have paid.</p></div></div>
+  <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Number</th><th>Due</th><th class="num">Total (GHS)</th><th class="num">Balance (GHS)</th><th>Status</th></tr></thead><tbody><sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="1"><tr class="click" onClick="{{r.go}}"><td><button type="button" class="lnk" onClick="{{r.go}}">{{r.id}}</button></td><td>{{r.due}}</td><td class="num">{{r.total}}</td><td class="num b">{{r.bal}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td></tr></sc-for></tbody></table></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.my_invoice}}" hint-placeholder-val="{{ false }}">
+<div id="page-my-invoice">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to invoices</button></div><div class="row" style="margin-top:8px"><h1>{{app.v.id}}</h1><span class="{{app.v.pill}}">{{app.v.status}}</span></div><p class="muted">Due {{app.v.due}}</p></div>
+    <sc-if value="{{app.v.canPay}}" hint-placeholder-val="{{ true }}"><div class="row"><button type="button" class="btn primary" onClick="{{app.v.pay}}">Pay GHS {{app.v.bal}}</button></div></sc-if></div>
+  <div class="stack">
+    <sc-if value="{{app.v.overdue}}" hint-placeholder-val="{{ false }}"><div class="banner" role="status">This invoice is {{app.v.days}} days overdue.</div></sc-if>
+    <sc-if value="{{app.v.pending}}" hint-placeholder-val="{{ false }}"><div class="banner info" role="status">Payment pending. Your reference is {{app.v.ref}}. We will confirm when it clears.</div></sc-if>
+    <div class="card flush"><div class="tw"><table class="tbl"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price (GHS)</th><th class="num">Line total (GHS)</th></tr></thead><tbody>
+      <sc-for list="{{app.v.lines}}" as="l" hint-placeholder-count="1"><tr><td>{{l.d}}</td><td class="num">{{l.q}}</td><td class="num">{{l.u}}</td><td class="num">{{l.t}}</td></tr></sc-for>
+      <tr><td colspan="3" class="num b">Total</td><td class="num b">{{app.v.t.total}}</td></tr><tr><td colspan="3" class="num muted">Paid</td><td class="num">{{app.v.paid}}</td></tr><tr><td colspan="3" class="num b">Balance</td><td class="num b" style="font-size:16px">{{app.v.bal}}</td></tr>
+    </tbody></table></div></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.notifications}}" hint-placeholder-val="{{ false }}">
+<div id="page-notifications">
+  <div class="pagehead"><div class="ttl"><h1>Notifications</h1><p class="muted">Updates on your jobs, quotes and invoices.</p></div><div class="row"><sc-if value="{{app.v.anyUnread}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn" onClick="{{app.markAllRead}}">Mark all read</button></sc-if></div></div>
+  <div class="card flush"><div class="stack s" style="gap:0"><sc-for list="{{app.v.rows}}" as="n" hint-placeholder-count="3"><button type="button" class="it" style="display:flex;flex-direction:row;align-items:center;gap:12px;width:100%;padding:16px 24px;border:0;border-bottom:1px solid var(--border-subtle);background:none;cursor:pointer;text-align:left" onClick="{{n.go}}">
+    <sc-if value="{{n.unread}}" hint-placeholder-val="{{ true }}"><span class="unread" title="Unread"></span><span class="sr">Unread</span></sc-if>
+    <span style="flex:1"><span class="b" style="display:block">{{n.text}}</span><span class="faint sm">{{n.sub}}</span></span><span class="faint sm">{{n.at}}</span></button></sc-for></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.profile}}" hint-placeholder-val="{{ false }}">
+<div id="page-profile">
+  <div class="pagehead"><div class="ttl"><h1>Profile</h1><p class="muted">Your details and password.</p></div></div>
+  <div class="card stack">
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+    <section><h3>Details</h3><div class="grid g2">
+      <div class="field"><label for="pf-n">Name</label><input id="pf-n" class="input {{app.ecp.pname}}" name="pname" placeholder="Your full name" value="{{app.f.pname}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.pname}}</span></div>
+      <div class="field"><label for="pf-e">Email</label><input id="pf-e" class="input" name="pemail" type="email" placeholder="you@example.com" value="{{app.f.pemail}}" onInput="{{app.inp}}"></div>
+      <div class="field"><label for="pf-p">Phone</label><input id="pf-p" class="input" name="pphone" type="tel" placeholder="024 000 0000" value="{{app.f.pphone}}" onInput="{{app.inp}}"></div></div></section>
+    <section><h3>Change password</h3><div class="grid g3">
+      <div class="field"><label for="pf-o">Current password</label><input id="pf-o" class="input" name="pold" type="password" placeholder="Current password" value="{{app.f.pold}}" onInput="{{app.inp}}"></div>
+      <div class="field"><label for="pf-w">New password</label><input id="pf-w" class="input {{app.ecp.pnew}}" name="pnew" type="password" placeholder="At least 8 characters" value="{{app.f.pnew}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.pnew}}</span></div>
+      <div class="field"><label for="pf-w2">Confirm new password</label><input id="pf-w2" class="input {{app.ecp.pnew2}}" name="pnew2" type="password" placeholder="Type it again" value="{{app.f.pnew2}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.pnew2}}</span></div></div></section>
+    <div class="row end" style="border-top:1px solid var(--border-subtle);padding-top:16px"><sc-if value="{{app.v.saved}}" hint-placeholder-val="{{ false }}"><span class="muted sm" role="status">Saved just now</span></sc-if><button type="button" class="btn primary {{app.bz.saveProfile}}" onClick="{{app.saveProfile}}">Save changes</button></div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1100,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { app: this.props.app || { routeIs: {}, v: {}, f: {}, ecp: {}, ehp: {}, errs: [], nav: {} } };
+  }
+}
+</script>
+</body>
+</html>

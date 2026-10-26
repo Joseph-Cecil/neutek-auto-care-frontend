@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Neutek Auto Care prototype</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+<link rel="stylesheet" href="./nt-mk.css">
+<script src="./nt-data.js"></script>
+<script src="./nt-core.js"></script>
+<script src="./nt-pub.js"></script>
+<script src="./nt-ws1.js"></script>
+<script src="./nt-ws2.js"></script>
+<script src="./nt-ws3.js"></script>
+<script src="./nt-ws4.js"></script>
+<script src="./nt-cu.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="nt-root">
+<div class="lbar" style="{{app.progStyle}}" role="progressbar" aria-hidden="true"></div>
+<button type="button" class="skip" onClick="{{app.skipTo}}">Skip to content</button>
+
+<sc-if value="{{app.isAuth}}" hint-placeholder-val="{{ false }}">
+  <dc-import name="Auth" app="{{app}}" hint-size="100%,900px"></dc-import>
+</sc-if>
+
+<sc-if value="{{app.isHome}}" hint-placeholder-val="{{ true }}">
+  <dc-import name="Marketing" app="{{app}}" hint-size="100%,5200px"></dc-import>
+</sc-if>
+
+<sc-if value="{{app.shell}}" hint-placeholder-val="{{ false }}">
+<div class="shell">
+  <nav class="{{app.sideCls}}" aria-label="Primary">
+    <div class="brand"><div class="mark">NT</div><div class="t"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></div>
+    <div class="menu">
+      <sc-for list="{{app.menu}}" as="g" hint-placeholder-count="2">
+        <div class="mgrp">{{g.group}}</div>
+        <sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
+          <button type="button" class="mi {{it.cls}}" aria-current="{{it.current}}" onClick="{{it.go}}" title="{{it.label}}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{it.ic}}"></path></svg>
+            <span class="lbl">{{it.label}}</span>
+            <sc-if value="{{it.hasCount}}" hint-placeholder-val="{{ false }}"><span class="cnt">{{it.count}}</span></sc-if>
+          </button>
+        </sc-for>
+      </sc-for>
+    </div>
+    <div class="collwrap">
+      <button type="button" class="mi" aria-expanded="{{app.collExp}}" onClick="{{app.toggleCollapse}}" title="{{app.collLabel}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{app.collPath}}"></path></svg>
+        <span class="lbl">{{app.collLabel}}</span>
+      </button>
+    </div>
+  </nav>
+  <sc-if value="{{app.mobOpen}}" hint-placeholder-val="{{ false }}"><div class="scrim" style="z-index:85" onClick="{{app.toggleMob}}"></div></sc-if>
+  <div class="main">
+    <header class="topbar">
+      <div class="row" style="gap:8px;flex-wrap:nowrap;min-width:0">
+        <button type="button" class="btn ghost icbtn menubtn" aria-label="Open menu" onClick="{{app.toggleMob}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+        <nav aria-label="Breadcrumb" class="crumbs">
+          <sc-for list="{{app.crumbs}}" as="cr" hint-placeholder-count="2">
+            <sc-if value="{{cr.link}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{cr.go}}">{{cr.t}}</button><span aria-hidden="true">/</span></sc-if>
+            <sc-if value="{{cr.last}}" hint-placeholder-val="{{ false }}"><b aria-current="page">{{cr.t}}</b></sc-if>
+          </sc-for>
+        </nav>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:nowrap" onKeyDown="{{app.popKey}}">
+        <div style="position:relative">
+          <label class="sr" for="tb-search">Search</label>
+          <input id="tb-search" class="input" style="width:220px;height:36px" type="search" placeholder="Search plates, jobs, people" value="{{app.qv}}" onInput="{{app.onSearch}}" autocomplete="off">
+          <sc-if value="{{app.showSearch}}" hint-placeholder-val="{{ false }}">
+            <div class="pop" style="top:42px;left:0;width:320px" role="listbox" aria-label="Search results">
+              <sc-for list="{{app.results}}" as="r" hint-placeholder-count="2"><button type="button" class="it" onClick="{{r.go}}"><span class="b">{{r.t}}</span><span class="faint sm">{{r.sub}}</span></button></sc-for>
+              <sc-if value="{{app.noResults}}" hint-placeholder-val="{{ false }}"><div class="muted sm" style="padding:10px 12px">Nothing matches that.</div></sc-if>
+            </div>
+          </sc-if>
+        </div>
+        <div style="position:relative">
+          <button type="button" class="btn ghost icbtn" aria-label="Notifications" aria-expanded="{{app.bellOpen}}" onClick="{{app.openBell}}" style="position:relative"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"></path></svg><sc-if value="{{app.hasBell}}" hint-placeholder-val="{{ true }}"><span class="dot-n">{{app.bellCount}}</span></sc-if></button>
+          <sc-if value="{{app.popIs.bell}}" hint-placeholder-val="{{ false }}">
+            <div class="pop" style="top:46px;right:0;width:320px">
+              <div class="b" style="padding:8px 12px">Unread</div>
+              <sc-for list="{{app.bell}}" as="n" hint-placeholder-count="2"><button type="button" class="it" onClick="{{n.go}}"><span class="b">{{n.text}}</span><span class="faint sm">{{n.sub}}</span></button></sc-for>
+              <sc-if value="{{app.noBell}}" hint-placeholder-val="{{ false }}"><div class="muted sm" style="padding:10px 12px">You are all caught up.</div></sc-if>
+            </div>
+          </sc-if>
+        </div>
+        <div style="position:relative">
+          <button type="button" class="acct" aria-haspopup="menu" aria-expanded="{{app.acctOpen}}" onClick="{{app.openAcct}}"><span class="avatar" aria-hidden="true">{{app.me.ini}}</span><span class="who"><span class="b" style="display:block;line-height:1.2">{{app.me.name}}</span><span class="faint sm">{{app.me.title}}</span></span></button>
+          <sc-if value="{{app.popIs.acct}}" hint-placeholder-val="{{ false }}">
+            <div class="pop" style="top:50px;right:0;min-width:200px" role="menu">
+              <sc-if value="{{app.isCustomer}}" hint-placeholder-val="{{ false }}"><button type="button" class="it" role="menuitem" onClick="{{app.nav.profile}}"><span class="b">Profile</span></button></sc-if>
+              <button type="button" class="it" role="menuitem" onClick="{{app.signout}}"><span class="b">Sign out</span></button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </header>
+    <sc-if value="{{app.popOpen}}" hint-placeholder-val="{{ false }}"><div style="position:fixed;inset:0;z-index:50" onClick="{{app.closePop}}"></div></sc-if>
+    <main class="page" id="main-content" tabindex="-1" style="outline:none">
+      <sc-if value="{{app.showSkel}}" hint-placeholder-val="{{ false }}"><dc-import name="Skeleton" app="{{app}}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{app.grp.w1}}" hint-placeholder-val="{{ true }}"><dc-import name="Workshop1" app="{{app}}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{app.grp.w2}}" hint-placeholder-val="{{ false }}"><dc-import name="Workshop2" app="{{app}}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{app.grp.w3}}" hint-placeholder-val="{{ false }}"><dc-import name="Workshop3" app="{{app}}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{app.grp.w4}}" hint-placeholder-val="{{ false }}"><dc-import name="Workshop4" app="{{app}}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{app.grp.cu}}" hint-placeholder-val="{{ false }}"><dc-import name="Portal" app="{{app}}" hint-size="100%,700px"></dc-import></sc-if>
+    </main>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.hasDlg}}" hint-placeholder-val="{{ false }}">
+  <div class="scrim" onKeyDown="{{app.dlgKey}}">
+    <div class="dlg" data-dlg="1" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="dlg-title" style="outline:none">
+      <dc-import name="Dialogs" app="{{app}}" hint-size="100%,300px"></dc-import>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{app.hasDrawer}}" hint-placeholder-val="{{ false }}">
+  <div class="scrim" style="z-index:80" onClick="{{app.closeDrawer}}"></div>
+  <aside class="drawer" data-drawer="1" tabindex="-1" role="dialog" aria-modal="true" aria-label="Customer details" onKeyDown="{{app.drawerKey}}" style="outline:none">
+    <div class="row sb"><h2>{{app.dr.name}}</h2><button type="button" class="btn ghost icbtn" aria-label="Close" onClick="{{app.closeDrawer}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <section><h3>Contact</h3><dl class="kv"><dt>Phone</dt><dd>{{app.dr.phone}}</dd><dt>Email</dt><dd>{{app.dr.email}}</dd><dt>Area</dt><dd>{{app.dr.area}}</dd></dl></section>
+    <section><h3>Vehicles</h3><div class="stack s"><sc-for list="{{app.dr.vehicles}}" as="v" hint-placeholder-count="1"><div class="pcard"><div><div class="b">{{v.t}}</div><div class="faint sm">{{v.plate}}</div></div><span class="muted sm">{{v.km}}</span></div></sc-for></div></section>
+    <section><h3>Jobs</h3><div class="stack s"><sc-for list="{{app.dr.jobs}}" as="j" hint-placeholder-count="1"><button type="button" class="pcard" style="text-align:left;cursor:pointer;width:100%" onClick="{{j.go}}"><div><div class="b">{{j.id}}</div><div class="faint sm">{{j.title}}</div></div><span class="{{j.pill}}">{{j.status}}</span></button></sc-for><sc-if value="{{app.dr.noJobs}}" hint-placeholder-val="{{ false }}"><p class="muted">No jobs yet.</p></sc-if></div></section>
+  </aside>
+</sc-if>
+
+<sc-if value="{{app.hasToast}}" hint-placeholder-val="{{ false }}"><div class="toast" role="status">{{app.toast}}</div></sc-if>
+<dc-import name="Public" app="{{app}}" hint-size="100%,900px" style="font-size: 14px; font-family: &quot;Plus Jakarta Sans&quot;, system-ui, sans-serif; font-weight: 400; font-style: normal; line-height: 1.5; letter-spacing: normal; color: rgb(28, 25, 23); text-align: start; text-transform: none; white-space: normal"></dc-import></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { route: 'home', param: '', role: '', acct: '', f: {}, errs: [], tab: {}, dlg: null, drawer: null, pop: '', toast: '', q: '', ask: '', mob: false, loading: false, pubmenu: false, step: 1, booked: '', forgotSent: false, collapsed: false, busy: {}, prog: { w: 0, o: 0 }, loadingPage: false };
+  }
+  parseHash() {
+    var h = '';
+    try { h = location.hash.slice(1); } catch (e) { }
+    var p = h.split('/');
+    return { route: p[0] || 'home', param: p[1] ? decodeURIComponent(p[1]) : '' };
+  }
+  componentDidMount() {
+    var self = this, acct = '';
+    try { acct = sessionStorage.getItem('nt-acct') || ''; } catch (e) { }
+    var A = window.NT.ACCOUNTS[acct];
+    var h = this.parseHash(), coll = false;
+    try { coll = sessionStorage.getItem('nt-coll') === '1'; } catch (e) { }
+    this.setState({ role: A ? A.role : '', acct: A ? acct : '', route: h.route, param: h.param, collapsed: coll });
+    window.NT.beginLoad(this, h.route);
+    this._hc = function () {
+      var n = self.parseHash();
+      if (n.route !== self.state.route || n.param !== self.state.param) { self.setState({ route: n.route, param: n.param, pop: '', mob: false, dlg: null, drawer: null, ask: '', errs: [] }); window.NT.beginLoad(self, n.route); }
+    };
+    window.addEventListener('hashchange', this._hc);
+  }
+  componentWillUnmount() { window.removeEventListener('hashchange', this._hc); }
+  componentDidUpdate(prev, prevState) {
+    if (this.state.drawer && !(prevState && prevState.drawer)) {
+      setTimeout(function () { var d = document.querySelector('[data-drawer]'); if (d) d.focus(); }, 0);
+    }
+    if (this.state.dlg && !(prevState && prevState.dlg)) {
+      setTimeout(function () { var d = document.querySelector('[data-dlg]'); if (d) d.focus(); }, 0);
+    }
+  }
+  renderVals() {
+    var app = window.NT.core(this);
+    app.skipTo = function () { var m = document.getElementById('main-content'); if (m) m.focus(); };
+    app.openBell = app.openPop('bell'); app.openAcct = app.openPop('acct');
+    app.bellOpen = this.state.pop === 'bell' ? 'true' : 'false'; app.acctOpen = this.state.pop === 'acct' ? 'true' : 'false';
+    app.popOpen = !!this.state.pop && this.state.pop !== 'search';
+    var G = { w1: 'dashboard bookings jobs job-new job', w2: 'customers quotes quote invoices invoice payments', w3: 'services-admin fleet fleet-account blog-admin blog-edit analytics users', w4: 'messaging reminders inventory schedule feedback inspection', cu: 'portal my-jobs my-job vehicles my-quotes my-quote my-invoices my-invoice notifications profile' };
+    app.grp = {}; Object.keys(G).forEach(function (k) { app.grp[k] = !app.showSkel && G[k].split(' ').indexOf(app.route) >= 0; });
+    app.crumbs.forEach(function (c, i) { c.last = !c.link; });
+    return { app: app };
+  }
+}
+</script>
+</body>
+</html>
