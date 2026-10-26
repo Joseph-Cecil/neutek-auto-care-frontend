@@ -233,9 +233,17 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Shell motion stops when the user asks for less motion. */
   .nt-loading::after,
   .btn-pending::after {
-    animation-duration: 1.8s;
+    animation: none;
+  }
+  .nt-shell *,
+  .nt-ui * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

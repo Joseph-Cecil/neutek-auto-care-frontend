@@ -331,7 +331,7 @@ export function AppShell({
                   onFocus={() => setPop('search')}
                 />
                 {ready ? (
-                  <div className="pop searchpop" role="listbox" aria-label="Search results">
+                  <div className="pop searchpop" aria-label="Search results">
                     {shown.map((hit) => (
                       <button key={hit.key} type="button" className="it" onClick={() => go(hit.href)}>
                         <span className="b">{hit.title}</span>
