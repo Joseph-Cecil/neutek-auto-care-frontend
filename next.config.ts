@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Next 16 rewrites AGENTS.md on `next dev`. This repo already tracks that file.
+  agentRules: false,
+
   // ─── Images ──────────────────────────────────────────────
   images: {
     remotePatterns: [
