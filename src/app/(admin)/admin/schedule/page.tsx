@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { TopProgress } from '@/components/ui/top-progress';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
@@ -31,14 +31,10 @@ export default function AdminSchedulePage() {
   const data = board.data;
   const waiting = board.isPending && !data;
   const failed = board.isError && !data;
-  const [day, setDay] = useState('');
-
-  useEffect(() => {
-    if (!data?.days.length) return;
-    if (!day || !data.days.some((item) => item.date === day)) {
-      setDay(data.days[0].date);
-    }
-  }, [data, day]);
+  const [dayPick, setDayPick] = useState<string | null>(null);
+  const day = data?.days.length
+    ? (dayPick && data.days.some((item) => item.date === dayPick) ? dayPick : data.days[0].date)
+    : '';
 
   return (
     <>
@@ -154,7 +150,7 @@ export default function AdminSchedulePage() {
                           className="tab"
                           role="tab"
                           aria-selected={day === item.date}
-                          onClick={() => setDay(item.date)}
+                          onClick={() => setDayPick(item.date)}
                         >
                           {item.label}
                         </button>
