@@ -80,13 +80,13 @@ export default function PortalBookingsPage() {
           ) : (
             <div className="stack s">
               {bookings.map((booking) => (
-                <div key={booking.id} className="card row sb" style={{ alignItems: 'center' }}>
+                <div key={booking.id} className="card row sb m-stack" style={{ alignItems: 'center' }}>
                   <div>
                     <div className="b">{booking.booking_number}</div>
                     <div className="muted sm">{formatDateTime(booking.scheduled_at)}</div>
                     <div className="faint sm">{booking.service_ids.length} service{booking.service_ids.length === 1 ? '' : 's'}</div>
                   </div>
-                  <div className="row" style={{ gap: 8 }}>
+                  <div className="row action-stack" style={{ gap: 8 }}>
                     <span className={pill(booking.status)}>{booking.status.replace('_', ' ')}</span>
                     <Link
                       href={

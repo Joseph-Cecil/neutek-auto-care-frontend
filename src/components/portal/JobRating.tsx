@@ -56,12 +56,13 @@ export function JobRating({ jobId, status }: { jobId: string; status: JobStatus 
           <p className="muted">How was the work on this job?</p>
           {error ? <div className="errsum" role="alert">{error}</div> : null}
           {submit.isError ? <div className="banner" role="alert">It was not saved. Try again.</div> : null}
-          <div className="row" role="group" aria-label="Star rating">
+          <div className="row" role="group" aria-label="Star rating" style={{ gap: 8 }}>
             {[1, 2, 3, 4, 5].map((value) => (
               <button
                 key={value}
                 type="button"
-                className={value <= score ? 'btn sm primary' : 'btn sm'}
+                className={value <= score ? 'btn primary' : 'btn'}
+                style={{ minWidth: 44, minHeight: 44, padding: 0 }}
                 aria-pressed={score === value}
                 aria-label={`${value} star${value > 1 ? 's' : ''}`}
                 onClick={() => setScore(value)}

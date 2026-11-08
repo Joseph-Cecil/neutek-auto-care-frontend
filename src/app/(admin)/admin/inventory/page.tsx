@@ -151,7 +151,7 @@ export default function AdminInventoryPage() {
                 </div>
               ) : (
                 <div className="card flush">
-                  <div className="tw">
+                  <div className="tw desk-only">
                     <table className="tbl">
                       <thead>
                         <tr>
@@ -190,6 +190,26 @@ export default function AdminInventoryPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                  <div className="mlist" role="list">
+                    {rows.map((row) => (
+                      <div key={row.id} className="mrow" role="listitem">
+                        <div className="mrow-body">
+                          <span className="b">{row.name}</span>
+                          <span className="muted sm">{row.sku} · {row.supplier}</span>
+                          <span className="muted sm">
+                            Stock {row.quantity} (min {row.minimum}) · Margin {row.margin_percent}%
+                          </span>
+                          <span className="row" style={{ marginTop: 4 }}>
+                            <span className={statusPill(row.stock_status)}>{STATUS_LABEL[row.stock_status]}</span>
+                          </span>
+                        </div>
+                        <div className="mrow-act">
+                          <button type="button" className="btn sm" disabled={receive.isPending} onClick={() => receive.mutate({ id: row.id, quantity: 5 })}>+5</button>
+                          <button type="button" className="btn sm" disabled={receive.isPending} onClick={() => receive.mutate({ id: row.id, quantity: 10 })}>+10</button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -152,7 +153,7 @@ export default function AdminFleetPage() {
       ) : (
         <div className="stack">
           <div className="card flush">
-            <div className="tw">
+            <div className="tw desk-only">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -196,6 +197,27 @@ export default function AdminFleetPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="mlist" role="list">
+              {accounts.map((account) => (
+                <div key={account.id} className="mrow" role="listitem">
+                  <div className="mrow-body">
+                    <span className="b">{account.company_name}</span>
+                    <span className="muted sm">{account.contact_name} · {formatPhone(account.phone)}</span>
+                    <span className="muted sm">
+                      Limit GHS {ghsAmount(account.credit_limit_pesewas)} · Outstanding GHS {ghsAmount(account.outstanding_balance_pesewas)}
+                    </span>
+                    <span className="row" style={{ marginTop: 4 }}>
+                      <span className={account.is_active ? 'pill ok' : 'pill'}>
+                        {account.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="mrow-act">
+                    <Link href={'/admin/fleet/' + account.id} className="btn sm primary">Open</Link>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <Pager page={page} totalPages={totalPages} onPageChange={setPage} />

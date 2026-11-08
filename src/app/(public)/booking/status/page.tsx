@@ -102,12 +102,14 @@ function BookingStatusForm() {
           ) : null}
           {status.data ? (
             <>
-              <div className="row sb" style={{ alignItems: 'center' }}>
+              <div className="stack s">
                 <div>
                   <div className="faint sm">Booking</div>
                   <div className="b" style={{ fontSize: 20 }}>{status.data.bookingNumber}</div>
                 </div>
-                <span className={statusPill(status.data.status)}>{statusLabel(status.data.status)}</span>
+                <span className={statusPill(status.data.status)} style={{ alignSelf: 'flex-start', whiteSpace: 'normal' }}>
+                  {statusLabel(status.data.status)}
+                </span>
               </div>
               <dl className="kv">
                 <dt>Scheduled</dt>

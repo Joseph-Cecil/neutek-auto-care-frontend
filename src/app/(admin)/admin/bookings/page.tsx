@@ -146,7 +146,7 @@ export default function AdminBookingsPage() {
       ) : null}
       {bookings.length > 0 ? (
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -221,6 +221,64 @@ export default function AdminBookingsPage() {
                 })}
               </tbody>
             </table>
+          </div>
+          <div className="mlist" role="list">
+            {bookings.map((booking) => {
+              const customer = bookingCustomerLabel(booking);
+              return (
+                <div key={booking.id} className="mrow" role="listitem">
+                  <div className="mrow-body">
+                    <span className="b">{booking.booking_number}</span>
+                    <span className="muted sm">{customer.name} · {customer.phone}</span>
+                    <span className="muted sm">{formatDateTime(booking.scheduled_at)} · {booking.service_ids.length} service(s)</span>
+                    <span className="row" style={{ marginTop: 4 }}>
+                      <span className={STATUS_PILL[booking.status]}>{STATUS_LABEL[booking.status]}</span>
+                    </span>
+                  </div>
+                  <div className="mrow-act">
+                    {booking.status === 'pending' ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn sm primary"
+                          disabled={confirming}
+                          onClick={() => updateBooking({ id: booking.id, body: { status: 'confirmed' } })}
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          className="btn sm danger"
+                          onClick={() => {
+                            setCancelId(booking.id);
+                            setReason('');
+                            setReasonError('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : null}
+                    {booking.status === 'confirmed' && booking.job_id ? (
+                      <Link href={`/admin/jobs/${booking.job_id}`} className="btn sm">
+                        View job
+                      </Link>
+                    ) : null}
+                    {booking.status === 'confirmed' && !booking.job_id && booking.customer_id ? (
+                      <Link
+                        href={`/admin/jobs/create?bookingId=${encodeURIComponent(booking.id)}`}
+                        className="btn sm primary"
+                      >
+                        Open job
+                      </Link>
+                    ) : null}
+                    {booking.status === 'confirmed' && !booking.job_id && !booking.customer_id ? (
+                      <span className="hint">Link a customer before opening a job.</span>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}

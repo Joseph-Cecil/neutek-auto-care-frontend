@@ -190,7 +190,7 @@ export default function AdminFleetDetailPage() {
               </button>
             </div>
           ) : (
-            <div className="tw">
+            <div className="tw desk-only">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -211,6 +211,19 @@ export default function AdminFleetDetailPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="mlist" role="list">
+              {vehicles.map((vehicle) => (
+                <div key={vehicle.id} className="mrow" role="listitem">
+                  <div className="mrow-body">
+                    <span className="b">{vehicle.vehicle_id}</span>
+                    <span className="muted sm">
+                      {vehicle.driver_name || 'No driver'} · {vehicle.driver_phone ? formatPhone(vehicle.driver_phone) : 'No phone'}
+                    </span>
+                    {vehicle.notes ? <span className="faint sm">{vehicle.notes}</span> : null}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

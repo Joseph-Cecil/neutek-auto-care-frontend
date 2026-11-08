@@ -470,6 +470,15 @@
   padding: 48px 16px;
 }
 
+.nt-ui .empty .btn {
+  margin-top: 8px;
+  min-height: 44px;
+}
+
+.nt-ui .banner[role='alert'] {
+  word-break: break-word;
+}
+
 .nt-ui .empty .ic {
   width: 48px;
   height: 48px;
@@ -1055,12 +1064,19 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
   background: var(--bg-page);
 }
 
 .authwrap .authvisual {
   display: none;
+}
+
+.authwrap .authmain {
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  place-items: center;
 }
 
 @media (min-width: 960px) {
@@ -1082,6 +1098,7 @@
   }
 
   .authwrap.split .authmain {
+    max-width: none;
     display: grid;
     place-items: center;
     padding: 40px 32px;
@@ -1389,6 +1406,15 @@
   }
 }
 
+/* Marketing home mobile menu (R-PUB-HOME-01) */
+.mk .nav .mkmenu {
+  display: none;
+}
+
+.mk .nav .mknav {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .mk .hero-grid {
     grid-template-columns: 1fr;
@@ -1399,6 +1425,56 @@
   .mk .nav .links,
   .mk .nav .hide {
     display: none;
+  }
+
+  .mk .nav .mkmenu {
+    display: inline-flex;
+  }
+
+  .mk .nav .mknav.open {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    flex-direction: column;
+    padding: 8px 16px 16px;
+    border-bottom: 1px solid var(--border-default);
+    gap: 2px;
+    z-index: 30;
+  }
+
+  .mk .nav .mknav.open a {
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .mk .nav .mknav.open a:hover,
+  .mk .nav .mknav.open a[aria-current='page'] {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .mk .nav .in {
+    position: relative;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .mk .hero-ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mk .hero-ctas .btnL {
+    width: 100%;
+    justify-content: center;
   }
 
   .mk .band {
@@ -1414,5 +1490,362 @@
     inset: auto !important;
     margin-top: 16px;
     animation: none;
+  }
+
+  .mk .foot .row.sb {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ——— Mobile UX foundations (docs/mobile-ux) ——— */
+
+.nt-ui .phone-only {
+  display: none;
+}
+
+.nt-ui .mlist {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* Always-on stacked list (notifications and similar card feeds) */
+.nt-ui .mlist.always {
+  display: flex;
+  padding: 0;
+  gap: 8px;
+}
+
+.nt-ui .tabs-select {
+  display: none;
+}
+
+.nt-ui .mrow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r2);
+  background: var(--bg-primary);
+  text-decoration: none;
+  color: inherit;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.nt-ui .mrow:hover,
+.nt-ui .mrow:focus-visible {
+  background: var(--bg-hover);
+  outline: none;
+}
+
+.nt-ui .mrow .mrow-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.nt-ui .mrow .mrow-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nt-ui .mrow .mrow-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.nt-ui .mrow .mrow-act .btn {
+  min-height: 44px;
+}
+
+.nt-ui .sticky-cta {
+  display: none;
+}
+
+.nt-ui .book-progress {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .nt-ui .desk-only {
+    display: none !important;
+  }
+
+  .nt-ui .phone-only {
+    display: block;
+  }
+
+  .nt-ui .phone-only.stack {
+    display: flex;
+  }
+
+  .nt-ui .action-stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nt-ui .action-stack > .btn,
+  .nt-ui .action-stack > a.btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nt-ui .tabs-select {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin-bottom: 16px;
+  }
+
+  .nt-ui .tabs.tabs-many {
+    display: none;
+  }
+
+  .nt-ui .grid.g4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nt-ui .search-row {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .nt-ui .search-row .input {
+    flex: 1;
+    min-width: 0;
+    max-width: none !important;
+    width: auto;
+  }
+
+  .nt-ui .card.row.sb.m-stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nt-ui .filters-collapsible {
+    display: grid;
+    gap: 12px;
+  }
+
+  .nt-ui .form-sticky-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    background: #fff;
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-subtle);
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .nt-ui .form-sticky-actions .btn.primary {
+    flex: 1;
+    min-height: 48px;
+  }
+
+  .nt-ui .avatar-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nt-ui .mlist {
+    display: flex;
+  }
+
+  .nt-ui .btn.sm {
+    min-height: 44px;
+    height: auto;
+    padding: 10px 14px;
+  }
+
+  .nt-ui .pagehead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .nt-ui .pagehead > .row {
+    width: 100%;
+  }
+
+  .nt-ui .pagehead > .row > .btn.primary {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .nt-ui .tabs {
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+
+  .nt-ui .tab {
+    min-height: 44px;
+    padding: 12px 14px;
+  }
+
+  .nt-ui .kv {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+
+  .nt-ui .kv dt {
+    margin-top: 8px;
+  }
+
+  .nt-ui .kv dt:first-child {
+    margin-top: 0;
+  }
+
+  .nt-ui .scrim {
+    align-items: flex-end;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nt-ui .dlg {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(92vh, 100%);
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px max(16px, env(safe-area-inset-bottom));
+  }
+
+  .nt-ui .dlg .dlg-body {
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .nt-ui .dlg .dlg-foot,
+  .nt-ui .dlg > .row.end,
+  .nt-ui .dlg > .row.sb:last-child {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding-top: 12px;
+    margin-top: auto;
+  }
+
+  .nt-ui .drawer {
+    width: 100%;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .nt-ui .tl li {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .nt-ui .tl .when {
+    margin-left: 0;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .nt-ui .sticky-cta {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    gap: 8px;
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg-page) 70%, transparent);
+  }
+
+  .nt-ui .sticky-cta .btn {
+    flex: 1;
+    min-height: 48px;
+  }
+
+  .nt-ui .book-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    flex-wrap: nowrap;
+    background: #fff;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .nt-ui .book-foot .btn {
+    min-height: 48px;
+    flex: 1;
+  }
+
+  .nt-ui .book-progress {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .nt-ui .book-steps-pills {
+    display: none;
+  }
+
+  .nt-ui .pcard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nt-ui .pcard .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .nt-ui .pubbar .in {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .nt-ui .article-body img,
+  .nt-ui .article-body table,
+  .nt-ui .article-body pre {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .nt-ui .article-body table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .authcard .row.sb,
+  .authcard .row.end {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .authcard .row.sb .btn.primary,
+  .authcard .row.end .btn.primary {
+    width: 100%;
+    min-height: 48px;
+    order: -1;
+  }
+}
+
+.nt-ui .pubnav .pub-account {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .nt-ui .pubnav.open a.pub-account {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 12px;
+    font-weight: 600;
   }
 }

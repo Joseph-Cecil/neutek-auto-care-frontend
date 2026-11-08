@@ -100,22 +100,22 @@ export default function AdminMessagesPage() {
                       const open = editing === row.id;
                       return (
                         <div className="card stack s" key={row.id}>
-                          <div className="row sb">
+                          <div className="stack s">
                             <div className="row" style={{ gap: 12 }}>
                               <h2>{row.name}</h2>
                               <span className="pill">{row.stage}</span>
                               <span className={row.automatic ? 'pill ok' : 'pill'}>{row.automatic ? 'Automatic' : 'Off'}</span>
                             </div>
-                            <div className="row" style={{ gap: 16, flexWrap: 'wrap' }}>
-                              <label className="row sm" style={{ gap: 6 }}>
+                            <div className="row action-stack" style={{ gap: 12 }}>
+                              <label className="row sm" style={{ gap: 8, minHeight: 44 }}>
                                 <input type="checkbox" checked={row.automatic} onChange={(event) => toggle(row, 'automatic', event.target.checked)} />
                                 Send automatically
                               </label>
-                              <label className="row sm" style={{ gap: 6 }}>
+                              <label className="row sm" style={{ gap: 8, minHeight: 44 }}>
                                 <input type="checkbox" checked={row.whatsapp_enabled} onChange={(event) => toggle(row, 'whatsapp', event.target.checked)} />
                                 WhatsApp
                               </label>
-                              <label className="row sm" style={{ gap: 6 }}>
+                              <label className="row sm" style={{ gap: 8, minHeight: 44 }}>
                                 <input type="checkbox" checked={row.sms_enabled} onChange={(event) => toggle(row, 'sms', event.target.checked)} />
                                 SMS
                               </label>
@@ -166,7 +166,7 @@ export default function AdminMessagesPage() {
               ) : (
                 <div className="stack">
                   <div className="card flush">
-                    <div className="tw">
+                    <div className="tw desk-only">
                       <table className="tbl">
                         <thead>
                           <tr>
@@ -194,6 +194,20 @@ export default function AdminMessagesPage() {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                    <div className="mlist" role="list">
+                      {logRows.map((row) => (
+                        <div key={row.id} className="mrow" role="listitem">
+                          <div className="mrow-body">
+                            <span className="b">{row.recipient_name}</span>
+                            <span className="muted sm">{row.recipient_phone || '—'} · {row.template_name}</span>
+                            <span className="muted sm">{formatDateTime(row.created_at)}</span>
+                            <span className="row" style={{ marginTop: 4 }}>
+                              <span className="pill">Recorded</span>
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                   {(log.data?.totalPages ?? 1) > 1 ? (

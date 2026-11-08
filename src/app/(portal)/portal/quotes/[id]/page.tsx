@@ -138,7 +138,7 @@ function QuoteBody({
           </div>
         ) : null}
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -178,6 +178,29 @@ function QuoteBody({
               </tbody>
             </table>
           </div>
+          <div className="mlist" role="list">
+            {lines.map((line) => (
+              <div key={line.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">{line.description}</span>
+                  <span className="muted sm">
+                    Qty {line.quantity} · GHS {ghsAmount(line.unit_price_pesewas)} each
+                  </span>
+                  <span className="b num" style={{ textAlign: 'left' }}>GHS {ghsAmount(line.total_pesewas)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="mrow" role="listitem">
+              <div className="mrow-body">
+                <span className="muted sm">Subtotal GHS {ghsAmount(quote.subtotal_pesewas)}</span>
+                <span className="muted sm">Tax GHS {ghsAmount(quote.tax_pesewas)}</span>
+                {quote.discount_pesewas > 0 ? (
+                  <span className="muted sm">Discount - GHS {ghsAmount(quote.discount_pesewas)}</span>
+                ) : null}
+                <span className="b">Total GHS {total}</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="card row sb">
           <span className="muted">Valid until <b>{formatDate(quote.valid_until)}</b></span>
@@ -190,10 +213,16 @@ function QuoteBody({
           </div>
         ) : null}
         {canAct && !ask ? (
-          <div className="card row end">
-            <button type="button" className="btn" disabled={pending} onClick={() => setAsk('reject')}>Reject</button>
-            <button type="button" className="btn primary" disabled={pending} onClick={() => setAsk('approve')}>Approve</button>
-          </div>
+          <>
+            <div className="card row end desk-only">
+              <button type="button" className="btn" disabled={pending} onClick={() => setAsk('reject')}>Reject</button>
+              <button type="button" className="btn primary" disabled={pending} onClick={() => setAsk('approve')}>Approve</button>
+            </div>
+            <div className="sticky-cta">
+              <button type="button" className="btn" disabled={pending} onClick={() => setAsk('reject')}>Reject</button>
+              <button type="button" className="btn primary" disabled={pending} onClick={() => setAsk('approve')}>Approve</button>
+            </div>
+          </>
         ) : null}
         {canAct && ask === 'approve' ? (
           <div className="card stack s">

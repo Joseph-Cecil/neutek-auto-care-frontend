@@ -57,7 +57,7 @@ export default function PortalInvoicesPage() {
           ) : (
             <div className="stack">
               <div className="card flush">
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -116,6 +116,34 @@ export default function PortalInvoicesPage() {
                       })}
                     </tbody>
                   </table>
+                </div>
+                <div className="mlist" role="list">
+                  {invoices.map((invoice) => {
+                    const href = `/portal/invoices/${invoice.id}`;
+                    const remaining = invoice.total_pesewas - invoice.amount_paid_pesewas;
+                    const canPay = invoice.status === 'sent' || invoice.status === 'partially_paid' || invoice.status === 'overdue';
+                    return (
+                      <div key={invoice.id} className="mrow" role="listitem">
+                        <div className="mrow-top">
+                          <div className="mrow-body">
+                            <span className="b">{invoice.invoice_number}</span>
+                            <span className="muted sm">
+                              Balance GHS {ghsAmount(remaining)} · Due {formatDate(invoice.due_date)}
+                            </span>
+                            <span className="row" style={{ marginTop: 4 }}>
+                              <span className={invoicePill(invoice.status)}>{invoiceLabel(invoice.status)}</span>
+                              {canPay ? <span className="pill brand">Pay now</span> : null}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mrow-act">
+                          <Link href={href} className="btn sm primary">
+                            {canPay ? 'Pay / open' : 'Open'}
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {totalPages > 1 ? (

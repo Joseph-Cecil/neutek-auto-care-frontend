@@ -143,7 +143,7 @@ export default function AdminPaymentsPage() {
                   <p className="muted">Money in will show here.</p>
                 </div>
               ) : (
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -181,6 +181,24 @@ export default function AdminPaymentsPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="mlist" role="list">
+                  {payments.map((payment) => (
+                    <div key={payment.id} className="mrow" role="listitem">
+                      <div className="mrow-body">
+                        <span className="b">{payment.payment_reference}</span>
+                        <span className="muted sm">
+                          {money(payment.amount_pesewas)} · {statusLabel(payment.method)} · {formatDateTime(payment.created_at)}
+                        </span>
+                        <span className="row" style={{ marginTop: 4 }}>
+                          <span className={paymentPill(payment.status)}>{statusLabel(payment.status)}</span>
+                        </span>
+                      </div>
+                      <div className="mrow-act">
+                        <Link href={`/admin/invoices/${payment.invoice_id}`} className="btn sm">Open invoice</Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

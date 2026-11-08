@@ -57,7 +57,7 @@ export default function PortalQuotesPage() {
           ) : (
             <div className="stack">
               <div className="card flush">
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -122,6 +122,31 @@ export default function PortalQuotesPage() {
                       })}
                     </tbody>
                   </table>
+                </div>
+                <div className="mlist" role="list">
+                  {quotes.map((quote) => {
+                    const href = `/portal/quotes/${quote.id}`;
+                    return (
+                      <div key={quote.id} className="mrow" role="listitem">
+                        <div className="mrow-top">
+                          <div className="mrow-body">
+                            <span className="b">{quote.quote_number}</span>
+                            <span className="muted sm">GHS {ghsAmount(quote.total_pesewas)} · Valid {formatDate(quote.valid_until)}</span>
+                            <span className="row" style={{ marginTop: 4 }}>
+                              <span className={quotePill(quote.status)}>{quoteLabel(quote.status)}</span>
+                              {quote.status === 'sent' ? <span className="pill brand">Action required</span> : null}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mrow-act">
+                          <Link href={href} className="btn sm primary">
+                            {quote.status === 'sent' ? 'Review' : 'Open'}
+                          </Link>
+                          <Link href={`/portal/jobs/${quote.job_id}`} className="btn sm ghost">View job</Link>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {totalPages > 1 ? (

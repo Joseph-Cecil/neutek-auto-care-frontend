@@ -133,7 +133,10 @@ function BookingContent() {
   return (
     <div className="card stack s">
       <TopProgress active={services.isLoading || create.isPending} />
-      <div className="row" role="list" aria-label="Steps">
+      <p className="book-progress" aria-live="polite">
+        Step {step + 1} of {STEPS.length} · {STEPS[step]}
+      </p>
+      <div className="row book-steps-pills" role="list" aria-label="Steps">
         {STEPS.map((label, index) => (
           <span key={label} role="listitem" className={index === step ? 'pill brand' : 'pill'}>
             {index + 1}. {label}
@@ -248,7 +251,7 @@ function BookingContent() {
           </dl>
         </>
       ) : null}
-      <div className="row end" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
+      <div className="row end book-foot" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
         {step > 0 ? <button type="button" className="btn" onClick={() => setStep((value) => value - 1)}>Back</button> : null}
         {step < 3 ? <button type="button" className="btn primary" onClick={next}>Continue</button> : null}
         {step === 3 ? (

@@ -255,7 +255,7 @@ export function RaiseDocumentForm({
           <label htmlFor="raise-notes">Notes (optional)</label>
           <textarea id="raise-notes" className="input" value={notes} onChange={(event) => setNotes(event.target.value)} />
         </div>
-        <div className="row end">
+        <div className="row end form-sticky-actions">
           <button type="submit" className={pending ? 'btn primary nt-loading' : 'btn primary'} disabled={pending}>
             {kind === 'quote' ? 'Save quote' : 'Save invoice'}
           </button>

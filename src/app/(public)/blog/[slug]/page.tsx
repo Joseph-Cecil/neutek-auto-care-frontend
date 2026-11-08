@@ -43,6 +43,7 @@ export default function BlogPostPage() {
           <h1 style={{ fontSize: 34, lineHeight: 1.15 }}>{post.title}</h1>
           <p className="faint sm">{formatDate(post.published_at ?? post.created_at)}</p>
           <div
+            className="article-body"
             style={{ fontSize: 17, lineHeight: 1.7, display: 'flex', flexDirection: 'column', gap: 16 }}
             dangerouslySetInnerHTML={{ __html: post.content }}
           />

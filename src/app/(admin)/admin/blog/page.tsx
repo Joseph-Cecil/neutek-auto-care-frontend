@@ -139,7 +139,7 @@ export default function AdminBlogPage() {
       ) : (
         <div className="stack">
           <div className="card flush">
-            <div className="tw">
+            <div className="tw desk-only">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -188,6 +188,29 @@ export default function AdminBlogPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="mlist" role="list">
+              {posts.map((post) => {
+                const category = categories.data?.find((item) => item.id === post.category_id)?.name;
+                return (
+                  <div key={post.id} className="mrow" role="listitem">
+                    <div className="mrow-body">
+                      <span className="b">{post.title}</span>
+                      <span className="muted sm">{category ?? '—'} · {formatDate(post.published_at ?? post.created_at)}</span>
+                      <span className="row" style={{ marginTop: 4 }}>
+                        <span className={statusPill(post.status)}>{statusLabel(post.status)}</span>
+                      </span>
+                    </div>
+                    <div className="mrow-act">
+                      {post.status === 'published' ? (
+                        <a className="btn sm" href={'/blog/' + post.slug} target="_blank" rel="noreferrer">View</a>
+                      ) : null}
+                      <Link className="btn sm primary" href={'/admin/blog/' + post.id}>Edit</Link>
+                      <button type="button" className="btn sm danger" onClick={() => setDeleteId(post.id)}>Delete</button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <Pager page={page} totalPages={totalPages} onPageChange={setPage} />

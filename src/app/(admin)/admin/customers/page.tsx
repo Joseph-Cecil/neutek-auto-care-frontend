@@ -288,7 +288,7 @@ export default function AdminCustomersPage() {
       ) : null}
       {customers.length > 0 ? (
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -315,6 +315,23 @@ export default function AdminCustomersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="mlist" role="list">
+            {customers.map((customer) => (
+              <div key={customer.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">{fullName(customer.first_name, customer.last_name)}</span>
+                  <span className="muted sm">{formatPhone(customer.phone)} · {customer.email || 'No email'}</span>
+                  <span className="row" style={{ marginTop: 4, gap: 8 }}>
+                    {customer.is_fleet_customer ? <span className="pill brand">Fleet</span> : null}
+                    <span className="faint sm">Joined {formatDate(customer.created_at)}</span>
+                  </span>
+                </div>
+                <div className="mrow-act">
+                  <button type="button" className="btn sm primary" onClick={() => setSelected(customer)}>Open</button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}

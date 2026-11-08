@@ -116,7 +116,7 @@ export default function AdminQuotesPage() {
                   <p className="muted">Quotes will show here as they move through.</p>
                 </div>
               ) : (
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -151,6 +151,24 @@ export default function AdminQuotesPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="mlist" role="list">
+                  {quotes.map((quote) => (
+                    <div key={quote.id} className="mrow" role="listitem">
+                      <div className="mrow-body">
+                        <span className="b">{quote.quote_number}</span>
+                        <span className="muted sm">
+                          {money(quote.total_pesewas)} · Valid {formatDate(quote.valid_until)}
+                        </span>
+                        <span className="row" style={{ marginTop: 4 }}>
+                          <span className={quotePill(quote.status)}>{statusLabel(quote.status)}</span>
+                        </span>
+                      </div>
+                      <div className="mrow-act">
+                        <Link href={`/admin/quotes/${quote.id}`} className="btn sm primary">Open</Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

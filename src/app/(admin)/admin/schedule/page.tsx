@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { TopProgress } from '@/components/ui/top-progress';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
@@ -30,6 +31,14 @@ export default function AdminSchedulePage() {
   const data = board.data;
   const waiting = board.isPending && !data;
   const failed = board.isError && !data;
+  const [day, setDay] = useState('');
+
+  useEffect(() => {
+    if (!data?.days.length) return;
+    if (!day || !data.days.some((item) => item.date === day)) {
+      setDay(data.days[0].date);
+    }
+  }, [data, day]);
 
   return (
     <>
@@ -50,27 +59,52 @@ export default function AdminSchedulePage() {
                 <div className="card stack s">
                   <h2>Waiting for a technician</h2>
                   {data.technicians.length === 0 ? <p className="muted">Add a technician before these jobs can be assigned.</p> : null}
-                  {data.unassigned.map((job) => (
-                    <div className="row sb" key={job.id}>
-                      <div>
-                        <div className="b">{job.jobNumber}</div>
-                        <div className="faint sm">{job.title}</div>
+                  <div className="stack s desk-only">
+                    {data.unassigned.map((job) => (
+                      <div className="row sb" key={job.id}>
+                        <div>
+                          <div className="b">{job.jobNumber}</div>
+                          <div className="faint sm">{job.title}</div>
+                        </div>
+                        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                          {data.technicians.map((tech) => (
+                            <button
+                              key={tech.id}
+                              type="button"
+                              className="btn sm"
+                              disabled={assign.isPending}
+                              onClick={() => assign.mutate({ jobId: job.id, technicianId: tech.id })}
+                            >
+                              Assign to {tech.name.split(' ')[0]}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                        {data.technicians.map((tech) => (
-                          <button
-                            key={tech.id}
-                            type="button"
-                            className="btn sm"
-                            disabled={assign.isPending}
-                            onClick={() => assign.mutate({ jobId: job.id, technicianId: tech.id })}
-                          >
-                            Assign to {tech.name.split(' ')[0]}
-                          </button>
-                        ))}
+                    ))}
+                  </div>
+                  <div className="mlist" role="list">
+                    {data.unassigned.map((job) => (
+                      <div key={job.id} className="mrow" role="listitem">
+                        <div className="mrow-body">
+                          <span className="b">{job.jobNumber}</span>
+                          <span className="muted sm">{job.title}</span>
+                        </div>
+                        <div className="mrow-act">
+                          {data.technicians.map((tech) => (
+                            <button
+                              key={tech.id}
+                              type="button"
+                              className="btn sm"
+                              disabled={assign.isPending}
+                              onClick={() => assign.mutate({ jobId: job.id, technicianId: tech.id })}
+                            >
+                              {tech.name.split(' ')[0]}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ) : null}
               {data.technicians.length === 0 ? (
@@ -79,37 +113,83 @@ export default function AdminSchedulePage() {
                   <p className="muted">An active technician shows on this week.</p>
                 </div>
               ) : (
-                <div className="card flush">
-                  <div className="tw">
-                    <table className="tbl">
-                      <thead>
-                        <tr>
-                          <th>Technician</th>
-                          {data.days.map((day) => <th key={day.date}>{day.label}</th>)}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.technicians.map((tech) => (
-                          <tr key={tech.id}>
-                            <td className="b">{tech.name}</td>
-                            {tech.cells.map((cell) => (
-                              <td key={cell.date} style={{ verticalAlign: 'top' }}>
-                                <div className="stack s">
+                <>
+                  <div className="card flush desk-only">
+                    <div className="tw">
+                      <table className="tbl">
+                        <thead>
+                          <tr>
+                            <th>Technician</th>
+                            {data.days.map((item) => <th key={item.date}>{item.label}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.technicians.map((tech) => (
+                            <tr key={tech.id}>
+                              <td className="b">{tech.name}</td>
+                              {tech.cells.map((cell) => (
+                                <td key={cell.date} style={{ verticalAlign: 'top' }}>
+                                  <div className="stack s">
+                                    <span className={toneClass(cell.tone)}>{cell.label}</span>
+                                    {cell.jobs.map((job) => (
+                                      <Link key={`${cell.date}-${job.id}`} className="lnk sm" href={`/admin/jobs/${job.id}`}>
+                                        {job.jobNumber} · {job.hours} h
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div className="phone-only stack">
+                    <div className="tabs" role="tablist" aria-label="Schedule day">
+                      {data.days.map((item) => (
+                        <button
+                          key={item.date}
+                          type="button"
+                          className="tab"
+                          role="tab"
+                          aria-selected={day === item.date}
+                          onClick={() => setDay(item.date)}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mlist" role="list">
+                      {data.technicians.map((tech) => {
+                        const cell = tech.cells.find((item) => item.date === day);
+                        return (
+                          <div key={tech.id} className="mrow" role="listitem">
+                            <div className="mrow-body">
+                              <span className="b">{tech.name}</span>
+                              {cell ? (
+                                <span className="row" style={{ marginTop: 4 }}>
                                   <span className={toneClass(cell.tone)}>{cell.label}</span>
+                                </span>
+                              ) : null}
+                              {cell?.jobs.length ? (
+                                <div className="stack s" style={{ marginTop: 8 }}>
                                   {cell.jobs.map((job) => (
-                                    <Link key={`${cell.date}-${job.id}`} className="lnk sm" href={`/admin/jobs/${job.id}`}>
+                                    <Link key={job.id} className="lnk" href={`/admin/jobs/${job.id}`}>
                                       {job.jobNumber} · {job.hours} h
                                     </Link>
                                   ))}
                                 </div>
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              ) : (
+                                <span className="faint sm">No jobs this day</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
               <div className="card stack s">
                 <h2>Bays right now</h2>

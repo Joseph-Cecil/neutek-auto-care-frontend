@@ -65,14 +65,19 @@ export default function PortalDashboardPage() {
               ) : activeJobs.length === 0 ? (
                 <p className="muted">Nothing in the workshop right now.</p>
               ) : (
-                <div className="stack s">
+                <div className="mlist always" role="list">
                   {activeJobs.map((job) => (
-                    <div key={job.id} className="row sb">
-                      <div>
-                        <div className="b">{job.title}</div>
-                        <Link href={'/portal/jobs/' + job.id} className="b">{job.job_number}</Link>
+                    <div key={job.id} className="mrow" role="listitem">
+                      <div className="mrow-body">
+                        <span className="b">{job.title || job.job_number}</span>
+                        <span className="muted sm">{job.job_number}</span>
+                        <span className="row" style={{ marginTop: 4 }}>
+                          <span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span>
+                        </span>
                       </div>
-                      <span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span>
+                      <div className="mrow-act">
+                        <Link href={'/portal/jobs/' + job.id} className="btn sm primary">Open</Link>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -93,13 +98,15 @@ export default function PortalDashboardPage() {
               ) : notifications.length === 0 ? (
                 <p className="muted">You&apos;re all caught up.</p>
               ) : (
-                <div className="stack s">
+                <div className="mlist always" role="list">
                   {notifications.map((n) => (
-                    <div key={n.id}>
-                      <div className="b">{n.title}</div>
-                      <p className="muted sm">{n.body}</p>
-                      <p className="faint sm">{timeAgo(n.created_at)}</p>
-                    </div>
+                    <Link key={n.id} href="/portal/notifications" className="mrow" role="listitem">
+                      <div className="mrow-body">
+                        <span className="b">{n.title}</span>
+                        <span className="muted sm">{n.body}</span>
+                        <span className="faint sm">{timeAgo(n.created_at)}</span>
+                      </div>
+                    </Link>
                   ))}
                 </div>
               )}

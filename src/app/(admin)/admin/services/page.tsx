@@ -209,7 +209,7 @@ export default function AdminServicesPage() {
             </div>
           ) : null}
           <div className="card flush">
-            <div className="tw">
+            <div className="tw desk-only">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -275,6 +275,55 @@ export default function AdminServicesPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="mlist" role="list">
+              {services.map((service) => {
+                const asking = askId === service.id;
+                const categoryName = categories.find((category) => category.id === service.category_id)?.name ?? '—';
+                return (
+                  <div key={service.id} className="mrow" role="listitem">
+                    <div className="mrow-body">
+                      <span className="b">{service.name}</span>
+                      <span className="muted sm">
+                        {categoryName} · GHS {ghsAmount(service.base_price_pesewas)} · {formatDuration(service.estimated_duration_minutes)}
+                      </span>
+                      <span className="row" style={{ marginTop: 4 }}>
+                        <span className={service.is_active ? 'pill ok' : 'pill'}>{service.is_active ? 'Active' : 'Inactive'}</span>
+                      </span>
+                    </div>
+                    <div className="mrow-act">
+                      {asking ? (
+                        <>
+                          <button type="button" className="btn sm" onClick={() => setAskId(null)}>Keep active</button>
+                          <button
+                            type="button"
+                            className={updating ? 'btn sm danger nt-loading' : 'btn sm danger'}
+                            data-variant="danger"
+                            disabled={updating}
+                            onClick={() => setActive(service, false)}
+                          >
+                            Deactivate
+                          </button>
+                        </>
+                      ) : service.is_active ? (
+                        <>
+                          <button type="button" className="btn sm" onClick={() => setEditSvc(service)}>Edit</button>
+                          <button type="button" className="btn sm danger" onClick={() => setAskId(service.id)}>Deactivate</button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className={updating ? 'btn sm nt-loading' : 'btn sm primary'}
+                          disabled={updating}
+                          onClick={() => setActive(service, true)}
+                        >
+                          Reactivate
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

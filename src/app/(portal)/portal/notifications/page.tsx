@@ -74,40 +74,43 @@ export default function PortalNotificationsPage() {
             </div>
           ) : (
             <div className="stack">
-              <div className="card">
-                <div className="stack">
+              <div className="mlist always" role="list">
                   {notifications.map((note) => {
                     const href = noteHref(note);
                     return (
-                      <div key={note.id} className="row sb">
-                        <div>
-                          <div className="row">
+                      <div key={note.id} className="mrow" role="listitem">
+                        <div className="mrow-body">
+                          <span className="row">
                             {!note.is_read ? <span className="pill brand">Unread</span> : null}
-                            {href ? (
-                              <Link href={href} className="b" onClick={() => { if (!note.is_read) markRead(note.id); }}>
-                                {note.title}
-                              </Link>
-                            ) : (
-                              <span className="b">{note.title}</span>
-                            )}
-                          </div>
+                            <span className="b">{note.title}</span>
+                          </span>
                           <p className="muted sm">{note.body}</p>
                           <p className="faint sm">{timeAgo(note.created_at)}</p>
                         </div>
-                        {!note.is_read ? (
-                          <button
-                            type="button"
-                            className="btn sm ghost"
-                            disabled={markingOne}
-                            onClick={() => markRead(note.id)}
-                          >
-                            Mark read
-                          </button>
-                        ) : null}
+                        <div className="mrow-act">
+                          {href ? (
+                            <Link
+                              href={href}
+                              className="btn sm primary"
+                              onClick={() => { if (!note.is_read) markRead(note.id); }}
+                            >
+                              Open
+                            </Link>
+                          ) : null}
+                          {!note.is_read ? (
+                            <button
+                              type="button"
+                              className="btn sm"
+                              disabled={markingOne}
+                              onClick={() => markRead(note.id)}
+                            >
+                              Mark read
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                     );
                   })}
-                </div>
               </div>
               {totalPages > 1 ? (
                 <div className="row sb">

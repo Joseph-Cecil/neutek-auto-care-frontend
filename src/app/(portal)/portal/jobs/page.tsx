@@ -113,7 +113,7 @@ function PortalJobsContent() {
           ) : (
             <div className="stack">
               <div className="card flush">
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -140,6 +140,23 @@ function PortalJobsContent() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="mlist" role="list">
+                  {jobs.map((job) => (
+                    <div key={job.id} className="mrow" role="listitem">
+                      <div className="mrow-body">
+                        <span className="b">{job.job_number}</span>
+                        {job.title ? <span className="muted sm">{job.title}</span> : null}
+                        <span className="row" style={{ marginTop: 4 }}>
+                          <span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span>
+                        </span>
+                        <span className="faint sm">Updated {formatDate(job.updated_at)}</span>
+                      </div>
+                      <div className="mrow-act">
+                        <Link href={'/portal/jobs/' + job.id} className="btn sm primary">Open</Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               {totalPages > 1 ? (

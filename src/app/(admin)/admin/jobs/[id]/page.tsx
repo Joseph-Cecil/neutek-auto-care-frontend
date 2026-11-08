@@ -125,19 +125,52 @@ export default function AdminJobDetailPage() {
           <p className="muted">{job.title}</p>
         </div>
         {nextStatuses.length > 0 ? (
-          <div className="row">
-            {nextStatuses.map((status) => (
-              <button
-                key={status}
-                type="button"
-                className={status === 'cancelled' || status === 'quote_rejected' ? 'btn sm danger' : 'btn sm'}
-                disabled={transitioning}
-                onClick={() => { setTargetStatus(status); setShowTransition(true); }}
-              >
-                {getStatusMeta(status).label}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="row desk-only">
+              {nextStatuses.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  className={status === 'cancelled' || status === 'quote_rejected' ? 'btn sm danger' : 'btn sm'}
+                  disabled={transitioning}
+                  onClick={() => { setTargetStatus(status); setShowTransition(true); }}
+                >
+                  {getStatusMeta(status).label}
+                </button>
+              ))}
+            </div>
+            <div className="phone-only stack action-stack" style={{ width: '100%' }}>
+              {(() => {
+                const primary = nextStatuses.find((status) => status !== 'cancelled' && status !== 'quote_rejected');
+                const rest = nextStatuses.filter((status) => status !== primary);
+                return (
+                  <>
+                    {primary ? (
+                      <button
+                        type="button"
+                        className="btn primary"
+                        disabled={transitioning}
+                        onClick={() => { setTargetStatus(primary); setShowTransition(true); }}
+                      >
+                        {getStatusMeta(primary).label}
+                      </button>
+                    ) : null}
+                    {rest.map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        className={status === 'cancelled' || status === 'quote_rejected' ? 'btn danger' : 'btn'}
+                        disabled={transitioning}
+                        onClick={() => { setTargetStatus(status); setShowTransition(true); }}
+                      >
+                        {getStatusMeta(status).label}
+                      </button>
+                    ))}
+                  </>
+                );
+              })()}
+            </div>
+          </>
         ) : (
           <p className="muted sm">No further status moves.</p>
         )}
@@ -204,7 +237,7 @@ export default function AdminJobDetailPage() {
       </div>
       <div className="card stack s">
         <h2>Quote and invoice</h2>
-        <div className="row">
+        <div className="row action-stack">
           <Link href={`/admin/quotes/create?job=${id}`} className="btn sm primary">New quote</Link>
           <Link href={`/admin/invoices/create?job=${id}`} className="btn sm">New invoice</Link>
           <Link href={`/admin/quotes?jobId=${id}`} className="btn sm">View quotes</Link>
@@ -223,7 +256,7 @@ export default function AdminJobDetailPage() {
           <p className="muted" style={{ padding: '0 24px 20px' }}>No history yet</p>
         ) : null}
         {history && history.length > 0 ? (
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -244,6 +277,22 @@ export default function AdminJobDetailPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : null}
+        {history && history.length > 0 ? (
+          <div className="mlist" role="list">
+            {[...history].reverse().map((entry) => (
+              <div key={entry.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">
+                    {entry.from_status ? getStatusMeta(entry.from_status).label : '—'}
+                    {' → '}
+                    {getStatusMeta(entry.to_status).label}
+                  </span>
+                  <span className="muted sm">{entry.notes || 'No note'} · {formatDateTime(entry.created_at)}</span>
+                </div>
+              </div>
+            ))}
           </div>
         ) : null}
       </div>

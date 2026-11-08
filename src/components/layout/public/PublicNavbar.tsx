@@ -38,6 +38,15 @@ export function PublicNavbar() {
               {link.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <Link href={accountHref} className="pub-account" onClick={() => setOpen(false)}>
+              Open my account
+            </Link>
+          ) : (
+            <Link href="/login" className="pub-account" onClick={() => setOpen(false)}>
+              Sign in
+            </Link>
+          )}
         </nav>
         <div className="row" style={{ marginLeft: 'auto', gap: 8, flexWrap: 'nowrap' }}>
           {isAuthenticated ? (

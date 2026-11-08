@@ -294,7 +294,7 @@ export default function PortalVehiclesPage() {
                       </>
                     ) : null}
                   </dl>
-                  <div className="row">
+                  <div className="row action-stack">
                     <Link href={`/portal/jobs?vehicleId=${vehicle.id}`} className="btn sm">Service history</Link>
                     <button type="button" className="btn sm" onClick={() => setEditVehicle(vehicle)}>Edit</button>
                     <button type="button" className="btn sm danger" onClick={() => setDeleteId(vehicle.id)}>Remove</button>

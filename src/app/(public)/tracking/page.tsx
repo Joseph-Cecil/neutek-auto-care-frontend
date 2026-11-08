@@ -49,7 +49,7 @@ export default function TrackingPage() {
             <input id="tr-phone" className="input" inputMode="numeric" autoComplete="off" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="4410" />
             <span className="hint">The workshop asks for this so a job number alone is not enough.</span>
           </div>
-          <div className="row end">
+          <div className="row end action-stack">
             <button type="submit" className="btn primary">Track</button>
           </div>
         </form>

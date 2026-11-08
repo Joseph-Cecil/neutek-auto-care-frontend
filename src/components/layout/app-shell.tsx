@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -171,6 +171,9 @@ export function AppShell({
   const [pop, setPop] = useState<'' | 'search' | 'bell' | 'acct'>('');
   const [q, setQ] = useState('');
   const [debounced, setDebounced] = useState('');
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchSheetInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(q.trim()), 250);
@@ -185,10 +188,38 @@ export function AppShell({
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (target.closest('.popwrap')) return;
+      if (target.closest('.searchsheet')) return;
+      if (target.closest('.searchbtn')) return;
       setPop('');
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [pop]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
+        menuBtnRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (pop !== 'search') return;
+    const id = window.requestAnimationFrame(() => {
+      const mobile = window.matchMedia('(max-width: 900px)').matches;
+      (mobile ? searchSheetInputRef.current : searchInputRef.current)?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
   }, [pop]);
 
   const ready = debounced.length > 1 && pop === 'search';
@@ -293,6 +324,11 @@ export function AppShell({
     setPop('');
   }
 
+  function closeMenu() {
+    setMobileOpen(false);
+    menuBtnRef.current?.focus();
+  }
+
   function go(href: string) {
     setPop('');
     setQ('');
@@ -303,6 +339,25 @@ export function AppShell({
   function toggleCollapse() {
     writeCollapsed(!collapsed);
   }
+
+  function renderSearchHits() {
+    return (
+      <>
+        {shown.map((hit) => (
+          <button key={hit.key} type="button" className="it" onClick={() => go(hit.href)}>
+            <span className="b">{hit.title}</span>
+            <span className="faint sm">{hit.subtitle}</span>
+          </button>
+        ))}
+        {shown.length === 0 && searchPending ? <div className="muted sm pad">Searching…</div> : null}
+        {shown.length === 0 && !searchPending && searchFailed ? <div className="muted sm pad">Could not search.</div> : null}
+        {shown.length === 0 && !searchPending && !searchFailed ? <div className="muted sm pad">Nothing matches that.</div> : null}
+      </>
+    );
+  }
+
+  const lastCrumb = crumbs[crumbs.length - 1];
+  const parentCrumb = crumbs.length > 1 ? crumbs[crumbs.length - 2] : null;
 
   return (
     <div className="nt-shell">
@@ -349,36 +404,64 @@ export function AppShell({
           </div>
         </nav>
         {mobileOpen ? (
-          <button type="button" className="scrim navscrim" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
+          <button type="button" className="scrim navscrim" aria-label="Close menu" onClick={closeMenu} />
         ) : null}
         <div className="main">
           <header className="topbar" onKeyDown={(event) => { if (event.key === 'Escape') closePop(); }}>
             <div className="row nowrap">
-              <button type="button" className="btn ghost icbtn menubtn" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
+              <button
+                ref={menuBtnRef}
+                type="button"
+                className="btn ghost icbtn menubtn"
+                aria-label="Open menu"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen(true)}
+              >
                 <IconPath d="M4 7h16M4 12h16M4 17h16" />
               </button>
               <nav aria-label="Breadcrumb" className="crumbs">
-                {crumbs.map((crumb, index) => {
-                  const last = index === crumbs.length - 1;
-                  return (
-                    <span key={`${crumb.label}-${index}`} className="crumb">
-                      {last || !crumb.href ? (
-                        <b aria-current="page">{crumb.label}</b>
-                      ) : (
-                        <>
-                          <Link href={crumb.href}>{crumb.label}</Link>
-                          <span aria-hidden="true">/</span>
-                        </>
-                      )}
-                    </span>
-                  );
-                })}
+                <span className="crumb-full">
+                  {crumbs.map((crumb, index) => {
+                    const last = index === crumbs.length - 1;
+                    return (
+                      <span key={`${crumb.label}-${index}`} className="crumb">
+                        {last || !crumb.href ? (
+                          <b aria-current="page">{crumb.label}</b>
+                        ) : (
+                          <>
+                            <Link href={crumb.href}>{crumb.label}</Link>
+                            <span aria-hidden="true">/</span>
+                          </>
+                        )}
+                      </span>
+                    );
+                  })}
+                </span>
+                <span className="crumb-short">
+                  {parentCrumb?.href ? (
+                    <>
+                      <Link href={parentCrumb.href}>{parentCrumb.label}</Link>
+                      <span aria-hidden="true">/</span>
+                    </>
+                  ) : null}
+                  <b aria-current="page">{lastCrumb?.label}</b>
+                </span>
               </nav>
             </div>
             <div className="row nowrap">
+              <button
+                type="button"
+                className="btn ghost icbtn searchbtn"
+                aria-label="Search"
+                aria-expanded={pop === 'search'}
+                onClick={() => setPop((value) => value === 'search' ? '' : 'search')}
+              >
+                <IconPath d="M11 5a6 6 0 1 0 3.7 10.7L21 21" />
+              </button>
               <div className="popwrap search">
                 <label className="sr" htmlFor="tb-search">Search</label>
                 <input
+                  ref={searchInputRef}
                   id="tb-search"
                   className="input"
                   type="search"
@@ -390,15 +473,7 @@ export function AppShell({
                 />
                 {ready ? (
                   <div className="pop searchpop" aria-label="Search results">
-                    {shown.map((hit) => (
-                      <button key={hit.key} type="button" className="it" onClick={() => go(hit.href)}>
-                        <span className="b">{hit.title}</span>
-                        <span className="faint sm">{hit.subtitle}</span>
-                      </button>
-                    ))}
-                    {shown.length === 0 && searchPending ? <div className="muted sm pad">Searching…</div> : null}
-                    {shown.length === 0 && !searchPending && searchFailed ? <div className="muted sm pad">Could not search.</div> : null}
-                    {shown.length === 0 && !searchPending && !searchFailed ? <div className="muted sm pad">Nothing matches that.</div> : null}
+                    {renderSearchHits()}
                   </div>
                 ) : null}
               </div>
@@ -467,6 +542,33 @@ export function AppShell({
               </div>
             </div>
           </header>
+          {pop === 'search' ? (
+            <div className="searchsheet" role="search">
+              <div className="row nowrap">
+                <label className="sr" htmlFor="tb-search-sheet">Search</label>
+                <input
+                  ref={searchSheetInputRef}
+                  id="tb-search-sheet"
+                  className="input"
+                  type="search"
+                  placeholder="Search plates, jobs, people"
+                  value={q}
+                  autoComplete="off"
+                  onChange={(event) => setQ(event.target.value)}
+                />
+                <button type="button" className="btn ghost icbtn" aria-label="Close search" onClick={closePop}>
+                  <IconPath d="M6 6l12 12M18 6L6 18" />
+                </button>
+              </div>
+              {ready ? (
+                <div className="pop searchpop" aria-label="Search results">
+                  {renderSearchHits()}
+                </div>
+              ) : (
+                <div className="muted sm pad">Type at least 2 characters.</div>
+              )}
+            </div>
+          ) : null}
           <main className="page nt-ui" id="main-content" tabIndex={-1}>
             {blocked ? (
               <div className="denied">

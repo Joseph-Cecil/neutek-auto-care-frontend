@@ -85,7 +85,7 @@ function InvoiceBody({
           </div>
           <p className="muted">Due {formatDate(invoice.due_date)}</p>
         </div>
-        <div className="row">
+        <div className="row desk-only">
           {invoice.pdf_url?.startsWith('http') ? (
             <a href={invoice.pdf_url} className="btn sm" target="_blank" rel="noopener noreferrer">Download PDF</a>
           ) : null}
@@ -117,7 +117,7 @@ function InvoiceBody({
           <p className="muted sm">You will be redirected to Paystack&apos;s secure checkout.</p>
         ) : null}
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -167,11 +167,53 @@ function InvoiceBody({
               </tbody>
             </table>
           </div>
+          <div className="mlist" role="list">
+            {lines.map((line) => (
+              <div key={line.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">{line.description}</span>
+                  <span className="muted sm">
+                    Qty {line.quantity} · GHS {ghsAmount(line.unit_price_pesewas)} each
+                  </span>
+                  <span className="b" style={{ textAlign: 'left' }}>GHS {ghsAmount(line.total_pesewas)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="mrow" role="listitem">
+              <div className="mrow-body">
+                <span className="muted sm">Subtotal GHS {ghsAmount(invoice.subtotal_pesewas)}</span>
+                {invoice.tax_pesewas > 0 ? (
+                  <span className="muted sm">Tax GHS {ghsAmount(invoice.tax_pesewas)}</span>
+                ) : null}
+                {invoice.discount_pesewas > 0 ? (
+                  <span className="muted sm">Discount - GHS {ghsAmount(invoice.discount_pesewas)}</span>
+                ) : null}
+                <span className="muted sm">Paid GHS {ghsAmount(invoice.amount_paid_pesewas)}</span>
+                <span className="b">Balance GHS {ghsAmount(remaining)}</span>
+              </div>
+            </div>
+          </div>
         </div>
         {invoice.notes ? (
           <div className="card stack s">
             <h2>Notes</h2>
             <p>{invoice.notes}</p>
+          </div>
+        ) : null}
+        {invoice.pdf_url?.startsWith('http') ? (
+          <a href={invoice.pdf_url} className="btn phone-only" target="_blank" rel="noopener noreferrer">Download PDF</a>
+        ) : null}
+        {canPay ? (
+          <div className="sticky-cta">
+            <button
+              type="button"
+              className={paying ? 'btn primary nt-loading' : 'btn primary'}
+              data-variant="primary"
+              disabled={paying}
+              onClick={onPay}
+            >
+              Pay GHS {ghsAmount(remaining)}
+            </button>
           </div>
         ) : null}
       </div>

@@ -213,7 +213,7 @@ export default function AdminJobsPage() {
       ) : null}
       {jobs.length > 0 ? (
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -241,6 +241,24 @@ export default function AdminJobsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="mlist" role="list">
+            {jobs.map((job) => (
+              <div key={job.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">{job.job_number}</span>
+                  <span className="muted sm">{job.title}</span>
+                  <span className="row" style={{ marginTop: 4, gap: 8 }}>
+                    <span className={jobPill(job.status)}>{getStatusMeta(job.status).label}</span>
+                    <span className={priorityPill(job.priority)}>{job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}</span>
+                  </span>
+                  <span className="faint sm">Created {formatDate(job.created_at)}</span>
+                </div>
+                <div className="mrow-act">
+                  <Link href={`/admin/jobs/${job.id}`} className="btn sm primary">Open</Link>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}

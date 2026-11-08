@@ -418,7 +418,7 @@ function AdminCreateJobContent() {
             />
           </div>
         </section>
-        <div className="row end">
+        <div className="row end form-sticky-actions">
           <Link href="/admin/jobs" className="btn">Cancel</Link>
           <button
             type="submit"

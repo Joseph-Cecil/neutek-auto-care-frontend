@@ -108,7 +108,7 @@ export default function PortalProfilePage() {
       </div>
       <div className="card stack">
         {saved ? <div className="banner ok" role="status">The profile was saved.</div> : null}
-        <div className="row">
+        <div className="row avatar-row">
           {user?.avatar_url ? (
             <img
               src={user.avatar_url}
@@ -126,7 +126,7 @@ export default function PortalProfilePage() {
           </div>
           <button
             type="button"
-            className={uploadingAvatar ? 'btn sm nt-loading' : 'btn sm'}
+            className={uploadingAvatar ? 'btn nt-loading' : 'btn'}
             disabled={uploadingAvatar}
             onClick={() => avatarRef.current?.click()}
           >
@@ -171,7 +171,7 @@ export default function PortalProfilePage() {
               {details.formState.errors.phone ? <span className="hint err">{details.formState.errors.phone.message}</span> : null}
             </div>
           </div>
-          <div className="row end">
+          <div className="row end action-stack">
             <button
               type="submit"
               className={saving ? 'btn primary nt-loading' : 'btn primary'}
@@ -210,7 +210,7 @@ export default function PortalProfilePage() {
               {password.formState.errors.confirmPassword ? <span className="hint err">{password.formState.errors.confirmPassword.message}</span> : null}
             </div>
           </div>
-          <div className="row end">
+          <div className="row end action-stack">
             <button
               type="submit"
               className={changing ? 'btn primary nt-loading' : 'btn primary'}
