@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useForm, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
@@ -294,6 +295,7 @@ export default function PortalVehiclesPage() {
                     ) : null}
                   </dl>
                   <div className="row">
+                    <Link href={`/portal/jobs?vehicleId=${vehicle.id}`} className="btn sm">Service history</Link>
                     <button type="button" className="btn sm" onClick={() => setEditVehicle(vehicle)}>Edit</button>
                     <button type="button" className="btn sm danger" onClick={() => setDeleteId(vehicle.id)}>Remove</button>
                   </div>

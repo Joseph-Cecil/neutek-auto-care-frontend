@@ -35,10 +35,11 @@ export const ENDPOINTS = {
     BY_ID:      (id: string) => `/services/${id}`,
   },
   BOOKINGS: {
-    LIST:   '/bookings',
-    CREATE: '/bookings',
-    BY_ID:  (id: string) => `/bookings/${id}`,
-    CANCEL: (id: string) => `/bookings/${id}/cancel`,
+    LIST:      '/bookings',
+    CREATE:    '/bookings',
+    BY_ID:     (id: string) => `/bookings/${id}`,
+    BY_NUMBER: (bookingNumber: string) => `/bookings/number/${bookingNumber}`,
+    CANCEL:    (id: string) => `/bookings/${id}/cancel`,
   },
   JOBS: {
     LIST:       '/jobs',

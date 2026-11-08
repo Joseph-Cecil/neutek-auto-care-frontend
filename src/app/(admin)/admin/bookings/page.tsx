@@ -1,12 +1,32 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useAdminBookings, useCancelBooking, useUpdateBooking } from '@/hooks/useAdminBookings';
 import { formatDateTime } from '@/lib/utils/date';
-import { formatPhone } from '@/lib/utils/format';
-import type { BookingStatus } from '@/lib/dto';
+import { formatPhone, fullName } from '@/lib/utils/format';
+import type { Booking, BookingStatus } from '@/lib/dto';
+
+function bookingCustomerLabel(booking: Booking): { name: string; phone: string } {
+  if (booking.walk_in_name) {
+    return {
+      name: booking.walk_in_name,
+      phone: booking.walk_in_phone ? formatPhone(booking.walk_in_phone) : '—',
+    };
+  }
+  if (booking.customer_first_name || booking.customer_last_name) {
+    return {
+      name: fullName(booking.customer_first_name ?? '', booking.customer_last_name ?? ''),
+      phone: booking.customer_phone ? formatPhone(booking.customer_phone) : '—',
+    };
+  }
+  if (booking.customer_id) {
+    return { name: 'Registered customer', phone: booking.customer_phone ? formatPhone(booking.customer_phone) : '—' };
+  }
+  return { name: 'Walk-in', phone: booking.walk_in_phone ? formatPhone(booking.walk_in_phone) : '—' };
+}
 
 const STATUS_TABS: { label: string; value: BookingStatus | undefined }[] = [
   { label: 'All', value: undefined },
@@ -139,45 +159,66 @@ export default function AdminBookingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((booking) => (
+                {bookings.map((booking) => {
+                  const customer = bookingCustomerLabel(booking);
+                  return (
                   <tr key={booking.id}>
                     <td className="b">{booking.booking_number}</td>
                     <td>
                       <div className="two">
-                        <b>{booking.walk_in_name || 'Registered customer'}</b>
-                        <span>{booking.walk_in_phone ? formatPhone(booking.walk_in_phone) : '—'}</span>
+                        <b>{customer.name}</b>
+                        <span>{customer.phone}</span>
                       </div>
                     </td>
                     <td>{booking.service_ids.length} service(s)</td>
                     <td>{formatDateTime(booking.scheduled_at)}</td>
                     <td><span className={STATUS_PILL[booking.status]}>{STATUS_LABEL[booking.status]}</span></td>
                     <td>
-                      {booking.status === 'pending' ? (
-                        <div className="row">
-                          <button
-                            type="button"
-                            className="btn sm"
-                            disabled={confirming}
-                            onClick={() => updateBooking({ id: booking.id, body: { status: 'confirmed' } })}
+                      <div className="row">
+                        {booking.status === 'pending' ? (
+                          <>
+                            <button
+                              type="button"
+                              className="btn sm"
+                              disabled={confirming}
+                              onClick={() => updateBooking({ id: booking.id, body: { status: 'confirmed' } })}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              type="button"
+                              className="btn sm danger"
+                              onClick={() => {
+                                setCancelId(booking.id);
+                                setReason('');
+                                setReasonError('');
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : null}
+                        {booking.status === 'confirmed' && booking.job_id ? (
+                          <Link href={`/admin/jobs/${booking.job_id}`} className="btn sm">
+                            View job {booking.job_number}
+                          </Link>
+                        ) : null}
+                        {booking.status === 'confirmed' && !booking.job_id && booking.customer_id ? (
+                          <Link
+                            href={`/admin/jobs/create?bookingId=${encodeURIComponent(booking.id)}`}
+                            className="btn sm primary"
                           >
-                            Confirm
-                          </button>
-                          <button
-                            type="button"
-                            className="btn sm danger"
-                            onClick={() => {
-                              setCancelId(booking.id);
-                              setReason('');
-                              setReasonError('');
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : null}
+                            Open job
+                          </Link>
+                        ) : null}
+                        {booking.status === 'confirmed' && !booking.job_id && !booking.customer_id ? (
+                          <span className="hint">Link a customer before opening a job.</span>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

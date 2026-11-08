@@ -12,11 +12,14 @@ import {
 import { timeAgo } from '@/lib/utils/date';
 import type { Notification } from '@/lib/dto';
 
-function jobHref(note: Notification): string | null {
+function noteHref(note: Notification): string | null {
   const meta = note.metadata ?? note.data;
   if (!meta || typeof meta !== 'object') return null;
-  const jobId = (meta as Record<string, unknown>).jobId;
-  return typeof jobId === 'string' && jobId ? '/portal/jobs/' + jobId : null;
+  const data = meta as Record<string, unknown>;
+  if (typeof data.jobId === 'string' && data.jobId) return '/portal/jobs/' + data.jobId;
+  if (typeof data.invoiceId === 'string' && data.invoiceId) return '/portal/invoices/' + data.invoiceId;
+  if (typeof data.quoteId === 'string' && data.quoteId) return '/portal/quotes/' + data.quoteId;
+  return null;
 }
 
 export default function PortalNotificationsPage() {
@@ -74,7 +77,7 @@ export default function PortalNotificationsPage() {
               <div className="card">
                 <div className="stack">
                   {notifications.map((note) => {
-                    const href = jobHref(note);
+                    const href = noteHref(note);
                     return (
                       <div key={note.id} className="row sb">
                         <div>

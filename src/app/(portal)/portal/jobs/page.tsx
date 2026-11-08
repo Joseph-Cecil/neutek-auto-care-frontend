@@ -1,10 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useJobs } from '@/hooks/useJobs';
+import { useCustomerVehicles } from '@/hooks/useVehicles';
+import { useMyCustomer } from '@/hooks/useCustomers';
 import { formatDate } from '@/lib/utils/date';
 import { getStatusMeta } from '@/lib/utils/jobStatus';
 import type { JobStatus } from '@/lib/dto';
@@ -26,15 +29,21 @@ function jobPill(status: JobStatus): string {
   return 'pill';
 }
 
-export default function PortalJobsPage() {
+function PortalJobsContent() {
+  const params = useSearchParams();
+  const vehicleId = params.get('vehicleId') ?? undefined;
   const [status, setStatus] = useState<JobStatus | undefined>(undefined);
   const [page, setPage] = useState(1);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const customer = useMyCustomer();
+  const vehicles = useCustomerVehicles(customer.data?.id ?? '');
+  const vehicle = (vehicles.data ?? []).find((item) => item.id === vehicleId);
 
   const { data, isLoading, isError } = useJobs({
     page,
     limit: 10,
     status,
+    vehicleId,
   });
 
   const jobs       = data?.data       ?? [];
@@ -56,11 +65,16 @@ export default function PortalJobsPage() {
         <>
           <div className="pagehead">
             <div className="ttl">
-              <h1>My jobs</h1>
-              <p className="muted">Every visit, with its latest status.</p>
+              <h1>{vehicle ? `History · ${vehicle.license_plate}` : 'My jobs'}</h1>
+              <p className="muted">
+                {vehicle
+                  ? `${vehicle.year} ${vehicle.make} ${vehicle.model} — every workshop visit for this plate.`
+                  : 'Every visit, with its latest status.'}
+              </p>
               {!isError && data ? <p className="faint sm">{total} {total === 1 ? 'job' : 'jobs'}</p> : null}
             </div>
             <div className="row">
+              {vehicleId ? <Link href="/portal/jobs" className="btn">All jobs</Link> : null}
               <Link href="/booking" className="btn primary">Book service</Link>
             </div>
           </div>
@@ -142,5 +156,13 @@ export default function PortalJobsPage() {
         </>
       )}
     </>
+  );
+}
+
+export default function PortalJobsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton kind="list" />}>
+      <PortalJobsContent />
+    </Suspense>
   );
 }

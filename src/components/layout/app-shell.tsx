@@ -11,6 +11,7 @@ import { vehicleDal } from '@/lib/dal/vehicle.dal';
 import { queryKeys } from '@/lib/api/queryKeys';
 import type { Customer, Job, Notification, UserRole, Vehicle } from '@/lib/dto';
 import { useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
+import { NeutekLogo } from '@/components/brand/NeutekLogo';
 import { useLogout } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth.store';
 import { filterNavByRole, type NavSection } from '@/config/navigation';
@@ -102,11 +103,20 @@ function noteMeta(note: Notification): Record<string, unknown> | null {
 }
 
 function notificationHref(note: Notification, area: 'workshop' | 'customer'): string {
-  const jobId = noteMeta(note)?.jobId;
+  const meta = noteMeta(note);
+  const jobId = meta?.jobId;
   if (typeof jobId === 'string' && jobId) {
     return area === 'workshop' ? `/admin/jobs/${jobId}` : `/portal/jobs/${jobId}`;
   }
-  return '/portal/notifications';
+  const invoiceId = meta?.invoiceId;
+  if (typeof invoiceId === 'string' && invoiceId) {
+    return area === 'workshop' ? `/admin/invoices/${invoiceId}` : `/portal/invoices/${invoiceId}`;
+  }
+  const quoteId = meta?.quoteId;
+  if (typeof quoteId === 'string' && quoteId) {
+    return area === 'workshop' ? `/admin/quotes/${quoteId}` : `/portal/quotes/${quoteId}`;
+  }
+  return area === 'workshop' ? '/admin/dashboard' : '/portal/notifications';
 }
 
 interface Crumb {
@@ -164,6 +174,20 @@ export function AppShell({
     const timer = window.setTimeout(() => setDebounced(q.trim()), 250);
     return () => window.clearTimeout(timer);
   }, [q]);
+
+  // Close popovers on outside pointerdown without a full-screen overlay.
+  // A transparent fixed dismiss layer was eating the first click on selects/filters.
+  useEffect(() => {
+    if (!pop) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.popwrap')) return;
+      setPop('');
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [pop]);
 
   const ready = debounced.length > 1 && pop === 'search';
   const canSearchPeople = area === 'workshop' && (role === 'admin' || role === 'super_admin');
@@ -248,10 +272,7 @@ export function AppShell({
       <a className="skip" href="#main-content">Skip to content</a>
       <div className="shell">
         <nav className={sideClass} aria-label="Primary">
-          <Link href={home} className="brand" onClick={() => setMobileOpen(false)}>
-            <span className="mark">NT</span>
-            <span className="t"><span className="b">Neutek</span><span className="faint sm">Auto Care</span></span>
-          </Link>
+          <NeutekLogo href={home} onClick={() => setMobileOpen(false)} />
           <div className="menu">
             {menu.map((section) => (
               <div key={section.title}>
@@ -409,7 +430,6 @@ export function AppShell({
               </div>
             </div>
           </header>
-          {pop ? <button type="button" className="dismiss" aria-label="Close" onClick={closePop} /> : null}
           <main className="page nt-ui" id="main-content" tabIndex={-1}>
             {blocked ? (
               <div className="denied">

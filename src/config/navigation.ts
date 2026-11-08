@@ -18,6 +18,7 @@ export const portalNavigation: NavSection[] = [
     { title: 'Dashboard', href: '/portal/dashboard', icon: 'LayoutDashboard' },
   ]},
   { title: 'My Vehicle', items: [
+    { title: 'My Bookings', href: '/portal/bookings',  icon: 'Calendar' },
     { title: 'My Jobs',     href: '/portal/jobs',      icon: 'Wrench' },
     { title: 'My Vehicles', href: '/portal/vehicles',  icon: 'Car' },
     { title: 'Quotes',      href: '/portal/quotes',    icon: 'FileText' },

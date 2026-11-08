@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { NeutekLogo } from '@/components/brand/NeutekLogo';
 import { useAuthStore } from '@/stores/auth.store';
 import { homeForRole } from '@/lib/utils/permissions';
 
@@ -10,7 +11,8 @@ const LINKS = [
   { href: '/home', label: 'Home' },
   { href: '/services', label: 'Services' },
   { href: '/booking', label: 'Book service' },
-  { href: '/tracking', label: 'Track' },
+  { href: '/booking/status', label: 'Check booking' },
+  { href: '/tracking', label: 'Track job' },
   { href: '/blog', label: 'Blog' },
 ];
 
@@ -24,13 +26,7 @@ export function PublicNavbar() {
   return (
     <header className="pubbar">
       <div className="in">
-        <Link href="/home" className="brandlink" aria-label="Neutek Auto Care home">
-          <span className="mark">NT</span>
-          <span>
-            <span className="b" style={{ display: 'block', lineHeight: 1.1 }}>Neutek</span>
-            <span className="faint sm">Auto Care</span>
-          </span>
-        </Link>
+        <NeutekLogo className="brandlink" priority />
         <nav aria-label="Site" className={open ? 'pubnav open' : 'pubnav'}>
           {LINKS.map((link) => (
             <Link

@@ -14,7 +14,7 @@ export function NtToaster() {
           color: '#1C1917',
           border: '1px solid #E7E2DA',
           borderRadius: '8px',
-          boxShadow: '0 8px 24px rgba(28, 25, 23, 0.12)',
+          boxShadow: '0 8px 24px rgba(8, 31, 65, 0.12)',
           padding: '12px 20px',
           fontFamily: 'var(--font-jakarta), system-ui, sans-serif',
         },

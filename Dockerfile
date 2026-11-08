@@ -1,6 +1,5 @@
 # Production image. Serves `next start` on port 3001.
-# NEXT_PUBLIC_* values are inlined at build time. Override the ARGs for a real host.
-# No registry push. Local tags only.
+# NEXT_PUBLIC_* values are inlined at build time. Pass them as Docker build args in Dokploy.
 
 FROM node:20-alpine AS build
 
@@ -12,12 +11,21 @@ RUN npm ci
 
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:13000/api/v1
-ARG NEXT_PUBLIC_WS_URL=http://127.0.0.1:13000
-ARG NEXT_PUBLIC_APP_URL=http://127.0.0.1:13001
+ARG NEXT_PUBLIC_API_URL=https://api.skulcore.com/api/v1
+ARG NEXT_PUBLIC_WS_URL=https://api.skulcore.com
+ARG NEXT_PUBLIC_APP_URL=https://autocare.skulcore.com
+ARG NEXT_PUBLIC_APP_NAME=Neutek Auto Care
+ARG NEXT_PUBLIC_APP_ENV=production
+ARG NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=
+ARG NEXT_PUBLIC_SENTRY_DSN=
+
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
+ENV NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=$NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
@@ -29,6 +37,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3001
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 

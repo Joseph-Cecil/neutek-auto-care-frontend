@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { WorkshopPhoto } from '@/components/media/WorkshopPhoto';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useServices, useServiceCategories } from '@/hooks/useServices';
-import { formatDuration, ghsAmount } from '@/lib/utils/format';
 
 export default function ServicesPage() {
   const categories = useServiceCategories();
@@ -22,9 +22,15 @@ export default function ServicesPage() {
     <div className="pubwrap">
       <TopProgress active={services.isLoading || categories.isLoading} />
       <section className="sec">
+        <WorkshopPhoto
+          image="wheelAssist"
+          style={{ minHeight: 280, marginBottom: 28 }}
+          caption="Book a service, then approve the quote"
+          priority
+        />
         <h1 style={{ fontSize: 36 }}>Services</h1>
         <p className="muted" style={{ margin: '8px 0 32px' }}>
-          Fixed prices for routine work. Anything else is quoted before we start.
+          Choose what you need. Pricing is quoted after inspection, and nothing starts until you approve.
         </p>
         {failed ? (
           <div className="banner" role="alert">Could not load services. Refresh the page and try again.</div>
@@ -44,8 +50,7 @@ export default function ServicesPage() {
                       {service.description ? <div className="muted sm">{service.description}</div> : null}
                     </div>
                     <div className="row">
-                      <span className="pill">{formatDuration(service.estimated_duration_minutes)}</span>
-                      <span className="b" style={{ fontVariantNumeric: 'tabular-nums' }}>GHS {ghsAmount(service.base_price_pesewas)}</span>
+                      <span className="pill">Quote after inspection</span>
                       <Link href={`/booking?service=${service.id}`} className="btn sm">Book</Link>
                     </div>
                   </div>

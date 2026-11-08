@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { WorkshopPhoto } from '@/components/media/WorkshopPhoto';
 
 export default function TrackingPage() {
   const router = useRouter();
@@ -28,6 +29,11 @@ export default function TrackingPage() {
   return (
     <div className="pubwrap">
       <section className="sec" style={{ maxWidth: 640, margin: '0 auto' }}>
+        <WorkshopPhoto
+          image="focusedTech"
+          style={{ minHeight: 220, marginBottom: 24 }}
+          caption="Follow every step while we work"
+        />
         <h1 style={{ fontSize: 32 }}>Track your car</h1>
         <p className="muted" style={{ margin: '8px 0 24px' }}>
           Enter the job number from your receipt, and the last 4 digits of the phone on the job.

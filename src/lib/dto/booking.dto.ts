@@ -19,6 +19,12 @@ export interface Booking {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  /** Present on staff list responses */
+  customer_first_name?: string | null;
+  customer_last_name?: string | null;
+  customer_phone?: string | null;
+  job_id?: string | null;
+  job_number?: string | null;
 }
 
 export interface CreateBookingRequest {
@@ -45,4 +51,16 @@ export interface ListBookingsParams {
   customerId?: string;
   from?: string;
   to?: string;
+}
+
+/** Public booking lookup (BK-… + phone last 4). */
+export interface PublicBookingStatus {
+  bookingNumber: string;
+  status: BookingStatus;
+  scheduledAt: string;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
+  serviceCount: number;
+  jobNumber: string | null;
+  walkInName: string | null;
 }

@@ -1,10 +1,12 @@
+import { NeutekLogo } from '@/components/brand/NeutekLogo';
+
 export function PublicFooter() {
   return (
     <footer className="foot">
       <div className="pubwrap row sb" style={{ alignItems: 'flex-start', gap: 24 }}>
         <div>
-          <div className="b">Neutek Auto Care</div>
-          <p className="muted sm">14 Spintex Road, Accra</p>
+          <NeutekLogo className="brandlink" />
+          <p className="muted sm" style={{ marginTop: 8 }}>14 Spintex Road, Accra</p>
         </div>
         <div>
           <div className="b">Call us</div>
@@ -12,11 +14,7 @@ export function PublicFooter() {
         </div>
         <div>
           <div className="b">Hours</div>
-          <p className="muted sm">
-            Mon to Fri 07:30 to 18:00
-            <br />
-            Sat 08:00 to 15:00
-          </p>
+          <p className="muted sm">Open 24 hours, every day</p>
         </div>
       </div>
     </footer>

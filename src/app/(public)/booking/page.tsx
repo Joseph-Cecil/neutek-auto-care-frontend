@@ -3,18 +3,19 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { WorkshopPhoto } from '@/components/media/WorkshopPhoto';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useServices } from '@/hooks/useServices';
 import { useCreateBooking } from '@/hooks/useBooking';
 import { useMyCustomer } from '@/hooks/useCustomers';
 import { useCustomerVehicles } from '@/hooks/useVehicles';
 import { useAuthStore } from '@/stores/auth.store';
-import { formatDuration, ghsAmount } from '@/lib/utils/format';
 import type { Booking } from '@/lib/dto';
 
 const STEPS = ['Services', 'Date and time', 'Your details', 'Confirm'];
-const SLOTS = Array.from({ length: 20 }, (_, index) => {
-  const minutes = 8 * 60 + index * 30;
+/** 24-hour slots in 30-minute steps. */
+const SLOTS = Array.from({ length: 48 }, (_, index) => {
+  const minutes = index * 30;
   const hour = Math.floor(minutes / 60);
   const minute = minutes % 60;
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -53,7 +54,6 @@ function BookingContent() {
 
   const rows = services.data?.data ?? [];
   const chosen = rows.filter((service) => selected.includes(service.id));
-  const total = chosen.reduce((sum, service) => sum + service.base_price_pesewas, 0);
   const signedIn = Boolean(isAuthenticated && customer.data);
   const slots = date !== clock.today
     ? SLOTS
@@ -103,15 +103,27 @@ function BookingContent() {
   };
 
   if (booking) {
+    const phoneDigits = (signedIn && customer.data?.phone
+      ? customer.data.phone
+      : phone
+    ).replace(/\D/g, '');
+    const last4 = phoneDigits.slice(-4);
+    const statusHref = last4.length === 4
+      ? `/booking/status?number=${encodeURIComponent(booking.booking_number)}&phone=${last4}`
+      : `/booking/status?number=${encodeURIComponent(booking.booking_number)}`;
+
     return (
       <div className="card">
         <div className="empty">
           <div className="ic" style={{ background: 'var(--bg-success)', color: 'var(--text-success)' }}>✓</div>
-          <h2>You are booked in</h2>
-          <p className="muted">Your booking number is <b>{booking.booking_number}</b>. We will call to confirm.</p>
-          <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+          <h2>Booking received</h2>
+          <p className="muted">
+            Your booking number is <b>{booking.booking_number}</b>. Save it — you will need it to check status.
+            We will call to confirm the slot. Live job tracking starts after the workshop opens the job.
+          </p>
+          <div className="row" style={{ justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+            <Link href={statusHref} className="btn primary">Check booking status</Link>
             <button type="button" className="btn" onClick={() => { setBooking(null); setStep(0); setSelected([]); }}>Book another</button>
-            <Link href="/tracking" className="btn primary">Track your car</Link>
           </div>
         </div>
       </div>
@@ -138,6 +150,7 @@ function BookingContent() {
       {step === 0 ? (
         <>
           <h2>Choose services</h2>
+          <p className="muted sm">Prices are quoted after inspection. Nothing starts until you approve.</p>
           {services.isError && !services.data ? <div className="banner" role="alert">Could not load services.</div> : null}
           {services.isLoading ? <p className="muted">Loading services.</p> : null}
           {!services.isLoading && rows.length === 0 && !services.isError ? <p className="muted">No services are available to book.</p> : null}
@@ -148,23 +161,21 @@ function BookingContent() {
                 <button key={service.id} type="button" className={on ? 'chk on' : 'chk'} aria-pressed={on} onClick={() => toggle(service.id)}>
                   <span>
                     <span className="b" style={{ display: 'block' }}>{service.name}</span>
-                    <span className="faint sm">{formatDuration(service.estimated_duration_minutes)}</span>
+                    {service.description ? <span className="faint sm">{service.description}</span> : null}
                   </span>
-                  <span className="b" style={{ marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>GHS {ghsAmount(service.base_price_pesewas)}</span>
                 </button>
               );
             })}
           </div>
           <div className="row sb">
-            <span className="muted">Running total</span>
-            <span className="b" style={{ fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>GHS {ghsAmount(total)}</span>
+            <span className="muted">{selected.length} selected</span>
           </div>
         </>
       ) : null}
       {step === 1 ? (
         <>
           <h2>Date and time</h2>
-          <p className="muted sm">The earliest time is two hours from now.</p>
+          <p className="muted sm">Open 24 hours. The earliest slot is two hours from now.</p>
           <div className="grid g2">
             <div className="field">
               <label htmlFor="bk-date">Date</label>
@@ -210,9 +221,9 @@ function BookingContent() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="bk-car">Car</label>
-                <input id="bk-car" className="input" value={car} onChange={(event) => setCar(event.target.value)} placeholder="2014 Nissan Sentra" />
-                <span className="hint">Optional, but it helps us prepare.</span>
+                <label htmlFor="bk-car">Car / plate</label>
+                <input id="bk-car" className="input" value={car} onChange={(event) => setCar(event.target.value)} placeholder="2014 Nissan Sentra · GR-1234-23" />
+                <span className="hint">Optional, but a plate helps us prepare and find history later.</span>
               </div>
             </>
           )}
@@ -225,11 +236,11 @@ function BookingContent() {
             <dt>Services</dt>
             <dd>
               {chosen.map((service) => (
-                <div key={service.id} className="row sb"><span>{service.name}</span><span className="num">GHS {ghsAmount(service.base_price_pesewas)}</span></div>
+                <div key={service.id}>{service.name}</div>
               ))}
             </dd>
-            <dt>Total (GHS)</dt>
-            <dd className="b">{ghsAmount(total)}</dd>
+            <dt>Pricing</dt>
+            <dd>Quoted after inspection. Nothing starts until you approve.</dd>
             <dt>When</dt>
             <dd>{date} {time}</dd>
             <dt>Who</dt>
@@ -254,8 +265,17 @@ export default function BookingPage() {
   return (
     <div className="pubwrap">
       <section className="sec" style={{ maxWidth: 760, margin: '0 auto' }}>
+        <WorkshopPhoto
+          image="engineTeam"
+          style={{ minHeight: 240, marginBottom: 24 }}
+          caption="Book in, then follow the work"
+        />
         <h1 style={{ fontSize: 32 }}>Book service</h1>
-        <p className="muted" style={{ margin: '8px 0 24px' }}>Four quick steps. We will confirm by phone.</p>
+        <p className="muted" style={{ margin: '8px 0 24px' }}>
+          Four quick steps. Open 24 hours. We will call to confirm.
+          {' '}
+          <Link href="/booking/status">Already booked? Check status</Link>
+        </p>
         <Suspense fallback={<p className="muted">Loading the form.</p>}>
           <BookingContent />
         </Suspense>

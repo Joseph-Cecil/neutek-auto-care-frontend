@@ -145,7 +145,7 @@ export default function AdminJobsPage() {
               id="jf-q"
               className="input"
               type="search"
-              placeholder="Job number or title"
+              placeholder="Job number, title, or plate"
               value={draft}
               onChange={(event) => {
                 setDraft(event.target.value);

@@ -42,7 +42,7 @@ const tooltipStyle = {
   background: '#fff',
   border: '1px solid #e7e5e4',
   borderRadius: '8px',
-  color: '#1c1917',
+  color: '#0f172a',
 };
 
 function durationLabel(minutes: number) {
@@ -191,17 +191,17 @@ export default function AdminAnalyticsPage() {
                   }))}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
-                  <XAxis dataKey="period" tick={{ fill: '#78716c', fontSize: 11 }} tickLine={false} />
+                  <XAxis dataKey="period" tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} />
                   <YAxis
                     yAxisId="revenue"
-                    tick={{ fill: '#78716c', fontSize: 11 }}
+                    tick={{ fill: '#64748b', fontSize: 11 }}
                     tickLine={false}
                     tickFormatter={(value: number) => 'GHS ' + value.toLocaleString()}
                   />
                   <YAxis
                     yAxisId="jobs"
                     orientation="right"
-                    tick={{ fill: '#78716c', fontSize: 11 }}
+                    tick={{ fill: '#64748b', fontSize: 11 }}
                     tickLine={false}
                   />
                   <Tooltip
@@ -319,14 +319,14 @@ export default function AdminAnalyticsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" horizontal={false} />
                     <XAxis
                       type="number"
-                      tick={{ fill: '#78716c', fontSize: 10 }}
+                      tick={{ fill: '#64748b', fontSize: 10 }}
                       tickLine={false}
                       tickFormatter={(value: number) => 'GHS ' + value.toLocaleString()}
                     />
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fill: '#78716c', fontSize: 10 }}
+                      tick={{ fill: '#64748b', fontSize: 10 }}
                       tickLine={false}
                       width={100}
                     />

@@ -11,33 +11,34 @@
   --color-popover: hsl(0 0% 100%);
   --color-popover-foreground: hsl(220 47% 11%);
 
-  --color-primary: hsl(220 100% 50%);
+  --color-primary: hsl(216 72% 16%);
   --color-primary-foreground: hsl(0 0% 100%);
 
-  --color-secondary: hsl(220 20% 96%);
-  --color-secondary-foreground: hsl(220 47% 11%);
+  --color-secondary: hsl(214 32% 96%);
+  --color-secondary-foreground: hsl(216 72% 16%);
 
-  --color-muted: hsl(220 20% 96%);
-  --color-muted-foreground: hsl(220 10% 46%);
+  --color-muted: hsl(214 28% 95%);
+  --color-muted-foreground: hsl(215 16% 42%);
 
-  --color-accent: hsl(220 40% 94%);
-  --color-accent-foreground: hsl(220 47% 11%);
+  --color-accent: hsl(34 78% 95%);
+  --color-accent-foreground: hsl(216 72% 16%);
 
   --color-destructive: hsl(0 84% 60%);
   --color-destructive-foreground: hsl(0 0% 100%);
 
-  --color-border: hsl(220 20% 90%);
-  --color-input: hsl(220 20% 90%);
-  --color-ring: hsl(220 100% 50%);
+  --color-border: hsl(214 24% 88%);
+  --color-input: hsl(214 24% 88%);
+  --color-ring: hsl(34 78% 48%);
 
   /* ── Neutek brand ────────────────────────────────────── */
-  --color-neutek-dark-blue: #0a1628;
-  --color-neutek-navy: #0f2044;
-  --color-neutek-electric-blue: #0066ff;
+  --color-neutek-dark-blue: #081f41;
+  --color-neutek-navy: #0b2148;
+  --color-neutek-electric-blue: #1f6feb;
   --color-neutek-sky: #3b9eff;
   --color-neutek-steel: #1e3a5f;
   --color-neutek-silver: #8b9dc3;
-  --color-neutek-off-white: #f0f4ff;
+  --color-neutek-orange: #e8912d;
+  --color-neutek-off-white: #f3f6fb;
 
   --radius: 0.625rem;
 
@@ -45,22 +46,24 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
 
-  /* Prototype tokens. Existing semantic colors above stay in place. */
-  --color-nt-bg-page: #f4f1eb;
+  /* Neutek Autocare theme — navy primary, orange accent */
+  --color-nt-bg-page: #f3f6fb;
   --color-nt-bg-primary: #ffffff;
-  --color-nt-bg-secondary: #f5f1ea;
-  --color-nt-bg-tertiary: #faf7f2;
-  --color-nt-bg-hover: #f8f1e8;
-  --color-nt-bg-brand: #fff1e8;
-  --color-nt-bg-brand-subtle: #ffdcc8;
-  --color-nt-surface-brand: #c2410c;
-  --color-nt-surface-brand-hover: #9a3412;
-  --color-nt-text-primary: #1c1917;
-  --color-nt-text-secondary: #57534e;
-  --color-nt-text-tertiary: #78716c;
+  --color-nt-bg-secondary: #eef3f9;
+  --color-nt-bg-tertiary: #f7f9fc;
+  --color-nt-bg-hover: #e8eef6;
+  --color-nt-bg-brand: #fff4e8;
+  --color-nt-bg-brand-subtle: #f8e2c8;
+  --color-nt-surface-brand: #0b2148;
+  --color-nt-surface-brand-hover: #081a38;
+  --color-nt-accent: #e8912d;
+  --color-nt-accent-hover: #d17a1a;
+  --color-nt-text-primary: #0f172a;
+  --color-nt-text-secondary: #475569;
+  --color-nt-text-tertiary: #64748b;
   --color-nt-text-on-brand: #ffffff;
-  --color-nt-border-default: #e7e2da;
-  --color-nt-border-subtle: #f0ebe3;
+  --color-nt-border-default: #d7e0eb;
+  --color-nt-border-subtle: #e8eef5;
   --color-nt-bg-success: #ecfdf3;
   --color-nt-text-success: #067647;
   --color-nt-bg-warning: #fef9c3;
@@ -69,7 +72,7 @@
   --color-nt-text-danger: #b42318;
   --color-nt-surface-danger: #b42318;
   --color-nt-text-on-danger: #ffffff;
-  --shadow-nt: 0 8px 24px rgba(28, 25, 23, 0.12);
+  --shadow-nt: 0 8px 24px rgba(8, 31, 65, 0.12);
 
   /* ── Animations ─────────────────────────────────────── */
   --animate-fade-in: fade-in 0.3s ease-out;
@@ -186,8 +189,8 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(28, 25, 23, 0.25);
-  border-top-color: #1c1917;
+  border: 2px solid rgba(8, 31, 65, 0.25);
+  border-top-color: #0b2148;
   animation: ntspin 0.7s linear infinite;
 }
 
@@ -270,7 +273,7 @@ body {
 
 /* ── Utilities ───────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(to right, #0066ff, #3b9eff);
+  background: linear-gradient(to right, #0b2148, #e8912d);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -279,9 +282,9 @@ body {
 .hero-gradient {
   background: linear-gradient(
     135deg,
-    hsl(222 47% 7%) 0%,
-    hsl(220 50% 12%) 50%,
-    hsl(222 47% 7%) 100%
+    #061531 0%,
+    #0b2148 48%,
+    #122c51 100%
   );
 }
 
@@ -340,8 +343,15 @@ body {
 }
 .nt-shell .brand { display: flex; align-items: center; gap: 12px; padding: 4px; text-decoration: none; color: inherit; }
 .nt-shell .mark {
-  width: 36px; height: 36px; border-radius: 8px; background: var(--color-nt-surface-brand);
+  width: 36px; height: 36px; border-radius: 8px; background: #081f41;
   color: var(--color-nt-text-on-brand); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none;
+  overflow: hidden; padding: 0;
+}
+.nt-shell .mark img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.nt-shell .brand .logo-lockup {
+  height: 40px; width: auto; display: block; border-radius: 8px;
 }
 .nt-shell .brand .t { display: flex; flex-direction: column; }
 .nt-shell .b { font-weight: 600; }
@@ -360,7 +370,7 @@ body {
 .nt-shell .mi[aria-current="page"] { background: var(--color-nt-bg-brand); color: var(--color-nt-text-primary); font-weight: 600; }
 .nt-shell .mi[aria-current="page"]::before {
   content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px;
-  background: var(--color-nt-surface-brand);
+  background: var(--color-nt-accent);
 }
 .nt-shell .mi .cnt { margin-left: auto; font-size: 12px; background: var(--color-nt-bg-secondary); border-radius: 999px; padding: 1px 8px; font-weight: 600; }
 .nt-shell .sidebar.collapsed { width: 72px; padding: 16px 8px; }
@@ -371,7 +381,7 @@ body {
 .nt-shell .sidebar.collapsed .mi { justify-content: center; padding: 8px; }
 .nt-shell .sidebar.collapsed .mi.has::after {
   content: ''; position: absolute; top: 7px; right: 9px; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--color-nt-surface-brand);
+  background: var(--color-nt-accent);
 }
 .nt-shell .sidebar.collapsed .brand { justify-content: center; }
 .nt-shell .collwrap { border-top: 1px solid var(--color-nt-border-subtle); padding-top: 8px; }
@@ -417,7 +427,7 @@ body {
 .nt-shell .pop {
   position: absolute; top: 46px; right: 0; z-index: 70; min-width: 260px; padding: 8px;
   background: #fff; border: 1px solid var(--color-nt-border-default); border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(28, 25, 23, .12);
+  box-shadow: 0 8px 24px rgba(8, 31, 65, .12);
 }
 .nt-shell .searchpop { top: 42px; left: 0; right: auto; width: 320px; }
 .nt-shell .bellpop { width: 320px; }
@@ -431,12 +441,12 @@ body {
 .nt-shell .pad { padding: 10px 12px; }
 .nt-shell .pad-h { padding: 8px 12px; }
 .nt-shell .dot-n {
-  position: absolute; top: 4px; right: 4px; background: var(--color-nt-surface-brand);
+  position: absolute; top: 4px; right: 4px; background: var(--color-nt-accent);
   color: var(--color-nt-text-on-brand); font-size: 10px; font-weight: 700; min-width: 16px; height: 16px;
   border-radius: 8px; display: grid; place-items: center; padding: 0 4px;
 }
 .nt-shell .dismiss { position: fixed; inset: 0; z-index: 50; border: 0; background: transparent; cursor: default; }
-.nt-shell .scrim { position: fixed; inset: 0; background: rgba(28, 25, 23, .5); z-index: 80; border: 0; }
+.nt-shell .scrim { position: fixed; inset: 0; background: rgba(8, 31, 65, .5); z-index: 80; border: 0; }
 .nt-shell .navscrim { z-index: 85; display: none; }
 .nt-shell .denied { display: flex; flex-direction: column; gap: 12px; padding: 24px 0; }
 .nt-shell .denied h1 { font-size: 24px; line-height: 1.25; margin: 0; font-weight: 700; }
