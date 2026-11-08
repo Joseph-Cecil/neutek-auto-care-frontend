@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TopProgress } from '@/components/ui/top-progress';
@@ -11,7 +11,7 @@ import { useCustomer, useCustomers } from '@/hooks/useCustomers';
 import { formatDateTime } from '@/lib/utils/date';
 import { formatPhone, fullName } from '@/lib/utils/format';
 import { createJobSchema, type CreateJobFormData } from '@/lib/validations/job.schema';
-import type { JobPriority } from '@/lib/dto';
+import type { Booking, JobPriority } from '@/lib/dto';
 
 const PRIORITIES: { label: string; value: JobPriority }[] = [
   { label: 'Low', value: 'low' },
@@ -19,6 +19,16 @@ const PRIORITIES: { label: string; value: JobPriority }[] = [
   { label: 'High', value: 'high' },
   { label: 'Urgent', value: 'urgent' },
 ];
+
+function applyBookingDefaults(booking: Booking) {
+  return {
+    customerId: booking.customer_id ?? '',
+    vehicleId: booking.vehicle_id ?? '',
+    serviceIds: booking.service_ids ?? [],
+    title: `Booking ${booking.booking_number}`,
+    intakeNotes: booking.notes ?? '',
+  };
+}
 
 function AdminCreateJobContent() {
   const router = useRouter();
@@ -28,7 +38,10 @@ function AdminCreateJobContent() {
   const { mutate: createJob, isPending, isError } = useCreateJob();
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
-  const [bookingId, setBookingId] = useState(bookingFromUrl);
+  // null = follow URL; string = user override (including '')
+  const [bookingOverride, setBookingOverride] = useState<string | null>(null);
+  const bookingId = bookingOverride ?? bookingFromUrl;
+
   const [customerId, setCustomerId] = useState('');
   const [customerLabel, setCustomerLabel] = useState('');
   const [vehicleId, setVehicleId] = useState('');
@@ -44,15 +57,12 @@ function AdminCreateJobContent() {
   const [vehModel, setVehModel] = useState('');
   const [vehYear, setVehYear] = useState(String(new Date().getFullYear()));
   const [vehPlate, setVehPlate] = useState('');
+  const [appliedBookingId, setAppliedBookingId] = useState('');
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSearch(draft.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [draft]);
-
-  useEffect(() => {
-    setBookingId(bookingFromUrl);
-  }, [bookingFromUrl]);
 
   const customers = useCustomers({ search: search || undefined, limit: 8 });
   const vehicles = useCustomerVehicles(customerId);
@@ -64,30 +74,38 @@ function AdminCreateJobContent() {
   const matches = customers.data?.data ?? [];
   const vehicleRows = vehicles.data ?? [];
   const openBookings = (confirmedBookings.data?.data ?? []).filter((row) => !row.job_id);
-  const hydratedBooking = useRef<string>('');
 
-  useEffect(() => {
-    const booking = linkedBooking.data;
-    if (!booking || booking.id !== bookingId) return;
-    if (hydratedBooking.current === booking.id) return;
-    hydratedBooking.current = booking.id;
-    if (booking.customer_id) setCustomerId(booking.customer_id);
-    if (booking.vehicle_id) setVehicleId(booking.vehicle_id);
-    else setVehicleId('');
-    setServiceIds(booking.service_ids ?? []);
-    setTitle(`Booking ${booking.booking_number}`);
-    if (booking.notes) setIntakeNotes(booking.notes);
-  }, [linkedBooking.data, bookingId]);
+  const booking = linkedBooking.data && linkedBooking.data.id === bookingId
+    ? linkedBooking.data
+    : undefined;
 
-  useEffect(() => {
-    if (!bookingId) hydratedBooking.current = '';
-  }, [bookingId]);
+  // Adjust local form defaults when a new booking is selected / loaded (React-supported pattern).
+  if (booking && booking.id !== appliedBookingId) {
+    const defaults = applyBookingDefaults(booking);
+    setAppliedBookingId(booking.id);
+    setCustomerId(defaults.customerId);
+    setVehicleId(defaults.vehicleId);
+    setServiceIds(defaults.serviceIds);
+    setTitle(defaults.title);
+    setIntakeNotes(defaults.intakeNotes);
+    setCustomerLabel('');
+  } else if (!bookingId && appliedBookingId) {
+    setAppliedBookingId('');
+  }
 
-  useEffect(() => {
-    const customer = customerFromBooking.data;
-    if (!customer || customer.id !== customerId) return;
-    setCustomerLabel(fullName(customer.first_name, customer.last_name));
-  }, [customerFromBooking.data, customerId]);
+  const resolvedCustomerLabel = customerLabel
+    || (customerFromBooking.data && customerFromBooking.data.id === customerId
+      ? fullName(customerFromBooking.data.first_name, customerFromBooking.data.last_name)
+      : '');
+
+  const chooseBooking = (next: string) => {
+    setBookingOverride(next);
+    if (!next) {
+      setAppliedBookingId('');
+      return;
+    }
+    setVehicleId('');
+  };
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -188,13 +206,13 @@ function AdminCreateJobContent() {
           <p className="muted sm">
             Confirm the slot under Bookings first. Then open the job from there, or pick a confirmed booking here.
           </p>
-          {linkedBooking.data && bookingId === linkedBooking.data.id ? (
+          {booking ? (
             <div className="banner" role="status">
-              Linked to <b>{linkedBooking.data.booking_number}</b>
+              Linked to <b>{booking.booking_number}</b>
               {' · '}
-              {formatDateTime(linkedBooking.data.scheduled_at)}
+              {formatDateTime(booking.scheduled_at)}
               {' · '}
-              {linkedBooking.data.service_ids.length} service(s)
+              {booking.service_ids.length} service(s)
             </div>
           ) : null}
           <div className="field" style={{ maxWidth: 480 }}>
@@ -203,17 +221,12 @@ function AdminCreateJobContent() {
               id="nj-bk"
               className="input"
               value={bookingId}
-              onChange={(event) => {
-                const next = event.target.value;
-                setBookingId(next);
-                if (!next) return;
-                setVehicleId('');
-              }}
+              onChange={(event) => chooseBooking(event.target.value)}
             >
               <option value="">No booking link</option>
-              {bookingId && !openBookings.some((row) => row.id === bookingId) && linkedBooking.data ? (
-                <option value={linkedBooking.data.id}>
-                  {linkedBooking.data.booking_number} · {formatDateTime(linkedBooking.data.scheduled_at)}
+              {bookingId && !openBookings.some((row) => row.id === bookingId) && booking ? (
+                <option value={booking.id}>
+                  {booking.booking_number} · {formatDateTime(booking.scheduled_at)}
                 </option>
               ) : null}
               {openBookings.map((row) => {
@@ -238,7 +251,7 @@ function AdminCreateJobContent() {
 
         <section className="stack s">
           <h2>Customer</h2>
-          {customerId ? <p>Selected <span className="b">{customerLabel || 'Customer'}</span></p> : null}
+          {customerId ? <p>Selected <span className="b">{resolvedCustomerLabel || 'Customer'}</span></p> : null}
           <div className="field">
             <label htmlFor="nj-q">Search customers</label>
             <input
@@ -248,13 +261,13 @@ function AdminCreateJobContent() {
               placeholder="Name or phone"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              disabled={Boolean(bookingId && linkedBooking.data?.customer_id)}
+              disabled={Boolean(bookingId && booking?.customer_id)}
             />
           </div>
           {customers.isError && !customers.data ? (
             <div className="banner" role="alert">Could not load customers.</div>
           ) : null}
-          {draft.trim() && !(bookingId && linkedBooking.data?.customer_id) ? (
+          {draft.trim() && !(bookingId && booking?.customer_id) ? (
             draft.trim() !== search || customers.isFetching ? (
               <p className="hint">Searching customers.</p>
             ) : matches.length === 0 ? (
@@ -272,7 +285,8 @@ function AdminCreateJobContent() {
                         setCustomerId(customer.id);
                         setCustomerLabel(name);
                         setVehicleId('');
-                        setBookingId('');
+                        setBookingOverride('');
+                        setAppliedBookingId('');
                       }}
                     >
                       <span className="b">{name}</span>
