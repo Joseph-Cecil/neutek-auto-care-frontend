@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   description: 'Smart Diagnostics. ECU Repair. Complete Auto Care.',
   keywords: ['auto care', 'car repair', 'ECU repair', 'diagnostics', 'Ghana', 'Accra'],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://neutekautocare.com'),
+  icons: {
+    icon: [{ url: '/brand/logo-mark.png', type: 'image/png' }],
+    apple: [{ url: '/brand/logo-mark.png', type: 'image/png' }],
+    shortcut: '/brand/logo-mark.png',
+  },
   robots: { index: true, follow: true },
 };
 
