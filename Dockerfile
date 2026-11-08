@@ -11,8 +11,8 @@ RUN npm ci
 
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=https://api.skulcore.com/api/v1
-ARG NEXT_PUBLIC_WS_URL=https://api.skulcore.com
+ARG NEXT_PUBLIC_API_URL=https://auto-care-backend.skulcore.com/api/v1
+ARG NEXT_PUBLIC_WS_URL=https://auto-care-backend.skulcore.com
 ARG NEXT_PUBLIC_APP_URL=https://autocare.skulcore.com
 ARG NEXT_PUBLIC_APP_NAME=Neutek Auto Care
 ARG NEXT_PUBLIC_APP_ENV=production
