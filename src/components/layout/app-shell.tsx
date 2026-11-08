@@ -6,7 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { bookingDal } from '@/lib/dal/booking.dal';
 import { customerDal } from '@/lib/dal/customer.dal';
+import { invoiceDal } from '@/lib/dal/invoice.dal';
 import { jobDal } from '@/lib/dal/job.dal';
+import { quoteDal } from '@/lib/dal/quote.dal';
 import { vehicleDal } from '@/lib/dal/vehicle.dal';
 import { queryKeys } from '@/lib/api/queryKeys';
 import type { Customer, Job, Notification, UserRole, Vehicle } from '@/lib/dto';
@@ -212,6 +214,26 @@ export function AppShell({
     queryFn: async () => (await bookingDal.list({ status: 'pending', limit: 1, page: 1 })).data,
     enabled: area === 'workshop',
   });
+  const quotesNeedingAction = useQuery({
+    queryKey: queryKeys.quotes.actionCount(area === 'customer' ? 'sent' : 'draft'),
+    queryFn: async () => (
+      await quoteDal.list({ status: area === 'customer' ? 'sent' : 'draft', limit: 1, page: 1 })
+    ).data,
+  });
+  const invoicesSent = useQuery({
+    queryKey: queryKeys.invoices.actionCount('sent'),
+    queryFn: async () => (await invoiceDal.list({ status: 'sent', limit: 1, page: 1 })).data,
+    enabled: area === 'customer',
+  });
+  const invoicesPartial = useQuery({
+    queryKey: queryKeys.invoices.actionCount('partially_paid'),
+    queryFn: async () => (await invoiceDal.list({ status: 'partially_paid', limit: 1, page: 1 })).data,
+    enabled: area === 'customer',
+  });
+  const invoicesOverdue = useQuery({
+    queryKey: queryKeys.invoices.actionCount('overdue'),
+    queryFn: async () => (await invoiceDal.list({ status: 'overdue', limit: 1, page: 1 })).data,
+  });
   const notes = useNotifications({ isRead: false, limit: 8, page: 1 });
 
   const hits: Hit[] = [];
@@ -247,10 +269,25 @@ export function AppShell({
   const searchFailed = searchQueries.every((item) => item.isError);
 
   const unread = notes.data?.data ?? [];
+  const unreadTotal = notes.data?.total ?? unread.length;
   const pendingCount = pendingBookings.data?.total ?? 0;
+  const quoteActionCount = quotesNeedingAction.data?.total ?? 0;
+  const invoiceActionCount = area === 'customer'
+    ? (invoicesSent.data?.total ?? 0)
+      + (invoicesPartial.data?.total ?? 0)
+      + (invoicesOverdue.data?.total ?? 0)
+    : (invoicesOverdue.data?.total ?? 0);
   const name = fullName(user?.firstName, user?.lastName);
   const crumbs = crumbsFor(pathname, area, home);
   const sideClass = `sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' open' : ''}`;
+
+  function navBadgeCount(href: string): number {
+    if (href === '/admin/bookings') return pendingCount;
+    if (href === '/admin/quotes' || href === '/portal/quotes') return quoteActionCount;
+    if (href === '/admin/invoices' || href === '/portal/invoices') return invoiceActionCount;
+    if (href === '/portal/notifications') return unreadTotal;
+    return 0;
+  }
 
   function closePop() {
     setPop('');
@@ -279,19 +316,19 @@ export function AppShell({
                 <div className="mgrp">{section.title}</div>
                 {section.items.map((item) => {
                   const current = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                  const count = item.href === '/admin/bookings' ? pendingCount : 0;
+                  const count = navBadgeCount(item.href);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={`mi${count > 0 ? ' has' : ''}`}
                       aria-current={current ? 'page' : undefined}
-                      title={item.title}
+                      title={count > 0 ? `${item.title} (${count})` : item.title}
                       onClick={() => setMobileOpen(false)}
                     >
                       <Icon name={item.icon} />
                       <span className="lbl">{item.title}</span>
-                      {count > 0 ? <span className="cnt">{count}</span> : null}
+                      {count > 0 ? <span className="cnt">{count > 99 ? '99+' : count}</span> : null}
                     </Link>
                   );
                 })}

@@ -11,14 +11,6 @@ import { applyServerErrors } from '@/lib/utils/errors';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
 import { homeForRole } from '@/lib/utils/permissions';
 
-const SAMPLES = [
-  { email: 'admin@neutekautocare.com', name: 'Kofi Mensah', note: 'Workshop manager', pill: 'Admin' },
-  { email: 'tech@neutekautocare.com', name: 'Kwame Asante', note: 'Technician', pill: 'Technician' },
-  { email: 'customer@test.com', name: 'Ama Boateng', note: 'Customer', pill: 'Customer' },
-] as const;
-
-const SAMPLE_PASSWORD = 'Admin@12345';
-
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading, user } = useCurrentUser();
@@ -126,25 +118,6 @@ export default function LoginPage() {
             Create an account
           </Link>
         </div>
-      </div>
-      <div className="card stack s">
-        <h2>Try a sample account</h2>
-        <p className="muted sm">These sign in to the seeded workshop accounts.</p>
-        {SAMPLES.map((sample) => (
-          <button
-            key={sample.email}
-            type="button"
-            className="btn"
-            style={{ justifyContent: 'space-between' }}
-            disabled={isPending}
-            onClick={() => login({ email: sample.email, password: SAMPLE_PASSWORD })}
-          >
-            <span>
-              {sample.name} <span className="faint sm">{sample.note}</span>
-            </span>
-            <span className="pill">{sample.pill}</span>
-          </button>
-        ))}
       </div>
       <div className="row">
         <Link href="/home" className="lnk">
