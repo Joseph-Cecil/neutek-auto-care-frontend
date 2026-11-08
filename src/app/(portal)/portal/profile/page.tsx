@@ -1,22 +1,15 @@
 'use client';
 
-import { useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useRef, useState } from 'react';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Camera, Shield } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input }  from '@/components/ui/input';
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from '@/components/ui/form';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { ChangePasswordForm } from '@/components/auth/ChangePasswordForm';
+import { toast } from 'sonner';
 import { useUpdateProfile, useUpdateAvatar } from '@/hooks/useUser';
+import { useChangePassword } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth.store';
 import { fullName, getInitials } from '@/lib/utils/format';
-import { toast } from 'sonner';
+import { changePasswordSchema, type ChangePasswordFormData } from '@/lib/validations/auth.schema';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
@@ -25,17 +18,26 @@ const profileSchema = z.object({
 });
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+function errorMessages(errors: FieldErrors): string[] {
+  return Object.values(errors).flatMap((error) => {
+    if (!error || typeof error !== 'object' || !('message' in error)) return [];
+    return typeof error.message === 'string' ? [error.message] : [];
+  });
+}
+
 export default function PortalProfilePage() {
-  const user      = useAuthStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
   const avatarRef = useRef<HTMLInputElement>(null);
+  const hydrated = useRef(false);
+  const [saved, setSaved] = useState(false);
 
-  const { mutate: updateProfile, isPending: saving }       = useUpdateProfile();
-  const { mutate: updateAvatar,  isPending: uploadingAvatar } = useUpdateAvatar();
+  const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
+  const { mutate: updateAvatar, isPending: uploadingAvatar } = useUpdateAvatar();
 
-  const name     = fullName(user?.firstName, user?.lastName);
+  const name = fullName(user?.firstName, user?.lastName);
   const initials = getInitials(name);
 
-  const form = useForm<ProfileFormData>({
+  const details = useForm<ProfileFormData>({
     resolver:      zodResolver(profileSchema),
     defaultValues: {
       firstName: user?.firstName ?? '',
@@ -44,16 +46,43 @@ export default function PortalProfilePage() {
     },
   });
 
+  const password = useForm<ChangePasswordFormData>({
+    resolver:      zodResolver(changePasswordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  const { mutate: changePassword, isPending: changing } = useChangePassword<ChangePasswordFormData>({
+    setError:  password.setError,
+    onSuccess: () => password.reset(),
+  });
+
+  useEffect(() => {
+    if (!user || hydrated.current) return;
+    hydrated.current = true;
+    details.reset({
+      firstName: user.firstName ?? '',
+      lastName:  user.lastName ?? '',
+      phone:     '',
+    });
+  }, [user, details]);
+
   const onSubmit = (data: ProfileFormData) => {
+    setSaved(false);
     updateProfile({
       firstName: data.firstName,
       lastName:  data.lastName,
       phone:     data.phone || undefined,
+    }, {
+      onSuccess: () => setSaved(true),
     });
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const onPassword = (data: ChangePasswordFormData) => {
+    changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword });
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     const maxSize = 10 * 1024 * 1024;
@@ -63,137 +92,148 @@ export default function PortalProfilePage() {
     }
 
     updateAvatar(file);
-    e.target.value = '';
+    event.target.value = '';
   };
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold lg:text-3xl">Profile</h1>
-        <p className="mt-1 text-muted-foreground">Manage your account information</p>
-      </div>
+  const detailErrors = errorMessages(details.formState.errors);
+  const passwordErrors = errorMessages(password.formState.errors);
 
-      {/* Avatar */}
-      <Card>
-        <CardContent className="flex items-center gap-4 p-6">
-          <div className="relative">
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={name}
-                className="h-20 w-20 rounded-full object-cover ring-2 ring-primary/20"
-              />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground ring-2 ring-primary/20">
-                {initials}
-              </div>
-            )}
-            <button
-              onClick={() => avatarRef.current?.click()}
-              disabled={uploadingAvatar}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 disabled:opacity-50"
-              aria-label="Change avatar"
-            >
-              {uploadingAvatar
-                ? <LoadingSpinner size="sm" />
-                : <Camera className="h-3.5 w-3.5" />}
-            </button>
-          </div>
+  return (
+    <>
+      <div className="pagehead">
+        <div className="ttl">
+          <h1>Profile</h1>
+          <p className="muted">Your details and password.</p>
+        </div>
+      </div>
+      <div className="card stack">
+        {saved ? <div className="banner ok" role="status">The profile was saved.</div> : null}
+        <div className="row">
+          {user?.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt=""
+              width={64}
+              height={64}
+              style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <span className="pill brand">{initials}</span>
+          )}
           <div>
-            <p className="font-semibold text-lg">{name}</p>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
-            <p className="mt-0.5 text-xs capitalize text-muted-foreground">{user?.role}</p>
+            <div className="b">{name}</div>
+            <div className="muted sm">{user?.email}</div>
           </div>
+          <button
+            type="button"
+            className={uploadingAvatar ? 'btn sm nt-loading' : 'btn sm'}
+            disabled={uploadingAvatar}
+            onClick={() => avatarRef.current?.click()}
+          >
+            Change photo
+          </button>
           <input
             ref={avatarRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            className="hidden"
+            hidden
             onChange={handleAvatarChange}
           />
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Profile form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <User className="h-4 w-4 text-primary" /> Personal Information
-          </CardTitle>
-          <CardDescription>Update your name and contact details</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <FormField control={form.control} name="firstName" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="lastName" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-
-              <FormItem>
-                <FormLabel>Email address</FormLabel>
-                <Input value={user?.email ?? ''} disabled className="opacity-60" />
-                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-              </FormItem>
-
-              <FormField control={form.control} name="phone" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone number <span className="text-muted-foreground">(optional)</span></FormLabel>
-                  <FormControl>
-                    <Input {...field} type="tel" placeholder="0XX XXX XXXX" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <Button type="submit" disabled={saving} className="w-full sm:w-auto">
-                {saving && <LoadingSpinner size="sm" className="mr-2" />}
-                Save Changes
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {/* Change password */}
-      <ChangePasswordForm />
-
-      {/* Account info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Shield className="h-4 w-4 text-primary" /> Account Security
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Email verified</span>
-            <span className={user?.email_verified ? 'text-green-500' : 'text-amber-500'}>
-              {user?.email_verified ? 'Verified' : 'Not verified'}
-            </span>
+        <form onSubmit={details.handleSubmit(onSubmit)} className="stack">
+          <h2>Details</h2>
+          {details.formState.isSubmitted && detailErrors.length > 0 ? (
+            <div className="errsum" role="alert">
+              <b>Fix these fields</b>
+              <ul>{detailErrors.map((message) => <li key={message}>{message}</li>)}</ul>
+            </div>
+          ) : null}
+          <div className="grid g2">
+            <div className="field">
+              <label htmlFor="profile-first">First name</label>
+              <input id="profile-first" className="input" autoComplete="given-name" {...details.register('firstName')} />
+              {details.formState.errors.firstName ? <span className="hint err">{details.formState.errors.firstName.message}</span> : null}
+            </div>
+            <div className="field">
+              <label htmlFor="profile-last">Last name</label>
+              <input id="profile-last" className="input" {...details.register('lastName')} />
+              {details.formState.errors.lastName ? <span className="hint err">{details.formState.errors.lastName.message}</span> : null}
+            </div>
+            <div className="field">
+              <label htmlFor="profile-email">Email</label>
+              <input id="profile-email" className="input" type="email" value={user?.email ?? ''} disabled />
+              <span className="hint">Email cannot be changed</span>
+            </div>
+            <div className="field">
+              <label htmlFor="profile-phone">Phone</label>
+              <input id="profile-phone" className="input" type="tel" placeholder="024 000 0000" {...details.register('phone')} />
+              {details.formState.errors.phone ? <span className="hint err">{details.formState.errors.phone.message}</span> : null}
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Account status</span>
-            <span className="text-green-500">Active</span>
+          <div className="row end">
+            <button
+              type="submit"
+              className={saving ? 'btn primary nt-loading' : 'btn primary'}
+              data-variant="primary"
+              disabled={saving}
+            >
+              Save changes
+            </button>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Role</span>
-            <span className="capitalize">{user?.role}</span>
+        </form>
+
+        <form onSubmit={password.handleSubmit(onPassword)} className="stack">
+          <h2>Change password</h2>
+          {password.formState.isSubmitted && passwordErrors.length > 0 ? (
+            <div className="errsum" role="alert">
+              <b>Fix these fields</b>
+              <ul>{passwordErrors.map((message) => <li key={message}>{message}</li>)}</ul>
+            </div>
+          ) : null}
+          <div className="grid g3">
+            <div className="field">
+              <label htmlFor="profile-current-password">Current password</label>
+              <input id="profile-current-password" className="input" type="password" autoComplete="current-password" placeholder="Current password" {...password.register('currentPassword')} />
+              {password.formState.errors.currentPassword ? <span className="hint err">{password.formState.errors.currentPassword.message}</span> : null}
+            </div>
+            <div className="field">
+              <label htmlFor="profile-new-password">New password</label>
+              <input id="profile-new-password" className="input" type="password" autoComplete="new-password" placeholder="At least 8 characters" {...password.register('newPassword')} />
+              {password.formState.errors.newPassword ? <span className="hint err">{password.formState.errors.newPassword.message}</span> : (
+                <span className="hint">At least 8 characters, with upper and lower case, a number, and a special character.</span>
+              )}
+            </div>
+            <div className="field">
+              <label htmlFor="profile-confirm-password">Confirm new password</label>
+              <input id="profile-confirm-password" className="input" type="password" autoComplete="new-password" placeholder="Type it again" {...password.register('confirmPassword')} />
+              {password.formState.errors.confirmPassword ? <span className="hint err">{password.formState.errors.confirmPassword.message}</span> : null}
+            </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="row end">
+            <button
+              type="submit"
+              className={changing ? 'btn primary nt-loading' : 'btn primary'}
+              data-variant="primary"
+              disabled={changing}
+            >
+              Change password
+            </button>
+          </div>
+        </form>
+
+        <div className="stack s">
+          <h2>Account</h2>
+          <dl className="kv">
+            <dt>Email verified</dt>
+            <dd>{user?.email_verified ? <span className="pill ok">Verified</span> : <span className="pill warn">Not verified</span>}</dd>
+            <dt>Account status</dt>
+            <dd><span className="pill ok">Active</span></dd>
+            <dt>Role</dt>
+            <dd className="b">{user?.role ?? '—'}</dd>
+          </dl>
+        </div>
+      </div>
+    </>
   );
 }

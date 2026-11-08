@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+out
+coverage
+tsconfig.tsbuildinfo
+npm-debug.log
+
+# The clickable prototype is reference material, not part of the app image.
+Neutek Auto Care (clickable prototype)
+
+.env
+.env.*
+!.env.example

@@ -9,6 +9,14 @@ export function pesewasToGHS(pesewas: number): string {
   return GHS_FORMATTER.format(pesewas / 100);
 }
 
+/** Prototype money line: digits only, two places. Callers prefix GHS. */
+export function ghsAmount(pesewas: number): string {
+  return (pesewas / 100).toLocaleString('en-GH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function pesewasToFloat(pesewas: number): number {
   return pesewas / 100;
 }

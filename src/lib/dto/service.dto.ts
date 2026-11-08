@@ -30,7 +30,9 @@ export interface CreateServiceRequest {
   estimatedDurationMinutes: number;
 }
 
-export type UpdateServiceRequest = Partial<CreateServiceRequest>;
+export type UpdateServiceRequest = Partial<CreateServiceRequest> & {
+  isActive?: boolean;
+};
 
 export interface ListServicesParams {
   page?: number;

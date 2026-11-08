@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { userDal }   from '@/lib/dal/user.dal';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { getErrorMessage } from '@/lib/utils/errors';
-import type { ListUsersParams } from '@/lib/dto';
+import { notify } from '@/lib/notify';
+import type { InviteUserRequest, ListUsersParams } from '@/lib/dto';
 
 export function useAdminUsers(params?: ListUsersParams) {
   return useQuery({
@@ -26,5 +27,17 @@ export function useAdminDeleteUser() {
       qc.invalidateQueries({ queryKey: queryKeys.users.all });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
+export function useInviteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: InviteUserRequest) => userDal.invite(body),
+    onSuccess: () => {
+      notify('success', 'Account created. No email was sent.');
+      void qc.invalidateQueries({ queryKey: queryKeys.users.all });
+    },
+    onError: (error) => notify('error', error),
   });
 }

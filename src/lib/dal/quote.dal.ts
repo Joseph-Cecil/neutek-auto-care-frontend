@@ -16,4 +16,6 @@ export const quoteDal = {
     apiClient.post<ApiResponse<null>>(ENDPOINTS.QUOTES.APPROVE(id)),
   reject:  (id: string, body?: RejectQuoteRequest) =>
     apiClient.post<ApiResponse<null>>(ENDPOINTS.QUOTES.REJECT(id), body ?? {}),
+  send: (id: string) =>
+    apiClient.post<ApiResponse<Quote>>(ENDPOINTS.QUOTES.SEND(id)),
 };

@@ -1,7 +1,7 @@
 import apiClient from '@/lib/api/client';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import type {
-  ApiResponse, PaginatedResponse, Booking,
+  ApiResponse, PaginatedResponse, Booking, PublicBookingStatus,
   CreateBookingRequest, UpdateBookingRequest, ListBookingsParams,
 } from '@/lib/dto';
 
@@ -12,8 +12,12 @@ export const bookingDal = {
     apiClient.post<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.CREATE, body),
   getById: (id: string) =>
     apiClient.get<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.BY_ID(id)),
+  getByNumber: (bookingNumber: string, phoneLast4: string) =>
+    apiClient.get<ApiResponse<PublicBookingStatus>>(ENDPOINTS.BOOKINGS.BY_NUMBER(bookingNumber), {
+      params: { phoneLast4 },
+    }),
   update:  (id: string, body: UpdateBookingRequest) =>
     apiClient.patch<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.BY_ID(id), body),
-  cancel:  (id: string) =>
-    apiClient.post<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.CANCEL(id)),
+  cancel:  (id: string, reason: string) =>
+    apiClient.post<ApiResponse<Booking>>(ENDPOINTS.BOOKINGS.CANCEL(id), { reason }),
 };

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Neutek Auto Care dialogs</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="dialogs" style="min-height:0;background:transparent;display:flex;flex-direction:column;gap:16px">
+
+<sc-if value="{{app.dlgIs.status}}" hint-placeholder-val="{{ true }}">
+  <h2 id="dlg-title">Move job to {{app.dx.status.to}}</h2>
+  <p class="muted">This changes the job from <b>{{app.dx.status.from}}</b> to <b>{{app.dx.status.to}}</b> and adds a line to its history.</p>
+  <div class="field"><label for="dl-note">Note (optional)</label><textarea id="dl-note" class="input" name="snote" placeholder="Anything the next person should know" onInput="{{app.inp}}">{{app.f.snote}}</textarea></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button>
+    <sc-if value="{{app.dx.status.safe}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn primary {{app.bz.confirmStatus}}" onClick="{{app.confirmStatus}}">Move to {{app.dx.status.to}}</button></sc-if>
+    <sc-if value="{{app.dx.status.danger}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn danger {{app.bz.confirmStatus}}" onClick="{{app.confirmStatus}}">Move to {{app.dx.status.to}}</button></sc-if></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.diag}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Add diagnostic</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="field"><label for="dg-sum">Summary</label><input id="dg-sum" class="input {{app.ecp.dsum}}" name="dsum" placeholder="One line on what is wrong" value="{{app.f.dsum}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.dsum}}</span></div>
+  <div class="field"><label for="dg-find">Findings</label><textarea id="dg-find" class="input" name="dfind" placeholder="What you measured or saw" onInput="{{app.inp}}">{{app.f.dfind}}</textarea></div>
+  <div class="field"><label for="dg-rec">Recommendations</label><textarea id="dg-rec" class="input" name="drec" placeholder="What we should do next" onInput="{{app.inp}}">{{app.f.drec}}</textarea></div>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="dg-p1">Photo 1 caption</label><input id="dg-p1" class="input" name="dp1" placeholder="Front left bush" value="{{app.f.dp1}}" onInput="{{app.inp}}"></div><div class="field"><label for="dg-p2">Photo 2 caption</label><input id="dg-p2" class="input" name="dp2" placeholder="Tyre wear" value="{{app.f.dp2}}" onInput="{{app.inp}}"></div></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveDiag}}">Save diagnostic</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.cust}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Add customer</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="field"><label for="ac-name">Full name</label><input id="ac-name" class="input {{app.ecp.cname}}" name="cname" placeholder="Efe Quartey" value="{{app.f.cname}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.cname}}</span></div>
+  <div class="field"><label for="ac-phone">Phone</label><input id="ac-phone" class="input {{app.ecp.cphone}}" name="cphone" type="tel" placeholder="024 000 0000" value="{{app.f.cphone}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.cphone}}</span></div>
+  <div class="field"><label for="ac-email">Email</label><input id="ac-email" class="input" name="cemail" type="email" placeholder="Optional" value="{{app.f.cemail}}" onInput="{{app.inp}}"></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveCust}}">Add customer</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.rec}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Record payment</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <sc-if value="{{app.dx.rec.free}}" hint-placeholder-val="{{ false }}"><div class="field"><label for="rp-inv">Invoice</label><select id="rp-inv" class="input {{app.ecp.rinv}}" name="rinv" value="{{app.f.rinv}}" onChange="{{app.dx.rec.pick}}"><option value="">Choose an open invoice</option><sc-for list="{{app.dx.rec.invoices}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}">{{o.l}}</option></sc-for></select><span class="hint err">{{app.ehp.rinv}}</span></div></sc-if>
+  <sc-if value="{{app.dx.rec.fixed}}" hint-placeholder-val="{{ true }}"><p class="muted">Invoice <b>{{app.dx.rec.inv}}</b></p></sc-if>
+  <sc-if value="{{app.dx.rec.hasInv}}" hint-placeholder-val="{{ true }}"><div class="banner info">Balance on {{app.dx.rec.inv}} is GHS {{app.dx.rec.bal}}.</div></sc-if>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="rp-method">Method</label><select id="rp-method" class="input" name="rmethod" value="{{app.f.rmethod}}" onChange="{{app.inp}}"><sc-for list="{{app.dx.rec.methods}}" as="o" hint-placeholder-count="5"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+  <div class="field"><label for="rp-amt">Amount (GHS)</label><input id="rp-amt" class="input {{app.ecp.ramt}}" name="ramt" inputmode="decimal" placeholder="0.00" value="{{app.f.ramt}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.ramt}}</span></div></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.confirmRec}}" onClick="{{app.confirmRec}}">Record GHS {{app.dx.rec.amt}}</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.svc}}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{app.dx.svc.edit}}" hint-placeholder-val="{{ false }}"><h2 id="dlg-title">Edit service</h2></sc-if>
+  <sc-if value="{{app.dx.svc.add}}" hint-placeholder-val="{{ true }}"><h2 id="dlg-title">Add service</h2></sc-if>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="field"><label for="sv-name">Name</label><input id="sv-name" class="input {{app.ecp.vname}}" name="vname" placeholder="Cabin filter" value="{{app.f.vname}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.vname}}</span></div>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="sv-cat">Category</label><select id="sv-cat" class="input" name="vcat" value="{{app.f.vcat}}" onChange="{{app.inp}}"><sc-for list="{{app.dx.svc.cats}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+  <div class="field"><label for="sv-mins">Duration (minutes)</label><input id="sv-mins" class="input {{app.ecp.vmins}}" name="vmins" inputmode="numeric" placeholder="45" value="{{app.f.vmins}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.vmins}}</span></div></div>
+  <div class="field"><label for="sv-price">Price (GHS)</label><input id="sv-price" class="input {{app.ecp.vprice}}" name="vprice" inputmode="decimal" placeholder="0.00" value="{{app.f.vprice}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.vprice}}</span></div>
+  <div class="field"><label for="sv-desc">Description</label><textarea id="sv-desc" class="input" name="vdesc" placeholder="One line customers will read" onInput="{{app.inp}}">{{app.f.vdesc}}</textarea></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveSvc}}">Save service</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.fveh}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Add fleet vehicle</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="fv-plate">Plate</label><input id="fv-plate" class="input {{app.ecp.fplate}}" name="fplate" placeholder="GS 9005-24" value="{{app.f.fplate}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.fplate}}</span></div>
+  <div class="field"><label for="fv-model">Make and model</label><input id="fv-model" class="input {{app.ecp.fmodel}}" name="fmodel" placeholder="Toyota HiAce" value="{{app.f.fmodel}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.fmodel}}</span></div>
+  <div class="field"><label for="fv-driver">Driver</label><input id="fv-driver" class="input" name="fdriver" placeholder="Driver name" value="{{app.f.fdriver}}" onInput="{{app.inp}}"></div>
+  <div class="field"><label for="fv-dphone">Driver phone</label><input id="fv-dphone" class="input" name="fdphone" type="tel" placeholder="054 000 0000" value="{{app.f.fdphone}}" onInput="{{app.inp}}"></div></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveFleetVeh}}">Add vehicle</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.fsched}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Add maintenance schedule</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="field"><label for="fs-van">Vehicle</label><select id="fs-van" class="input" name="svid" value="{{app.f.svid}}" onChange="{{app.inp}}"><sc-for list="{{app.dx.fleet.vans}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+  <div class="field"><label for="fs-sv">Service</label><input id="fs-sv" class="input {{app.ecp.sservice}}" name="sservice" placeholder="Oil and filter" value="{{app.f.sservice}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.sservice}}</span></div>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="fs-km">Every (km)</label><input id="fs-km" class="input {{app.ecp.skm}}" name="skm" inputmode="numeric" placeholder="5000" value="{{app.f.skm}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.skm}}</span></div><div class="field"><label for="fs-days">Or every (days)</label><input id="fs-days" class="input" name="sdays" inputmode="numeric" placeholder="90" value="{{app.f.sdays}}" onInput="{{app.inp}}"></div></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveSched}}">Add schedule</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.invite}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Invite user</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="field"><label for="iv-name">Full name</label><input id="iv-name" class="input {{app.ecp.iname}}" name="iname" placeholder="Kojo Appiah" value="{{app.f.iname}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.iname}}</span></div>
+  <div class="field"><label for="iv-email">Email</label><input id="iv-email" class="input {{app.ecp.iemail}}" name="iemail" type="email" placeholder="kojo@example.com" value="{{app.f.iemail}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.iemail}}</span></div>
+  <div class="field"><label for="iv-role">Role</label><select id="iv-role" class="input" name="irole" value="{{app.f.irole}}" onChange="{{app.inp}}"><sc-for list="{{app.dx.invite.roles}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveInvite}}">Send invitation</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.veh}}" hint-placeholder-val="{{ false }}">
+  <h2 id="dlg-title">Add vehicle</h2>
+  <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+  <div class="grid g2" style="gap:12px">
+    <div class="field"><label for="vh-make">Make</label><select id="vh-make" class="input" name="vmake" value="{{app.f.vmake}}" onChange="{{app.inp}}"><sc-for list="{{app.dx.veh.makes}}" as="o" hint-placeholder-count="10"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+    <div class="field"><label for="vh-model">Model</label><input id="vh-model" class="input {{app.ecp.vmodel}}" name="vmodel" placeholder="Corolla" value="{{app.f.vmodel}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.vmodel}}</span></div>
+    <div class="field"><label for="vh-year">Year</label><input id="vh-year" class="input {{app.ecp.vyear}}" name="vyear" inputmode="numeric" placeholder="2019" value="{{app.f.vyear}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.vyear}}</span></div>
+    <div class="field"><label for="vh-plate">Number plate</label><input id="vh-plate" class="input {{app.ecp.vplate}}" name="vplate" placeholder="GR 0000-24" value="{{app.f.vplate}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.vplate}}</span></div>
+    <div class="field"><label for="vh-colour">Colour</label><input id="vh-colour" class="input" name="vcolour" placeholder="Silver" value="{{app.f.vcolour}}" onInput="{{app.inp}}"></div>
+    <div class="field"><label for="vh-km">Mileage (km)</label><input id="vh-km" class="input" name="vkm" inputmode="numeric" placeholder="84,200" value="{{app.f.vkm}}" onInput="{{app.inp}}"></div>
+  </div>
+  <div class="field"><label for="vh-vin">VIN</label><input id="vh-vin" class="input" name="vvin" placeholder="Optional" value="{{app.f.vvin}}" onInput="{{app.inp}}"></div>
+  <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.save}}" onClick="{{app.saveVehicle}}">Add vehicle</button></div>
+</sc-if>
+
+<sc-if value="{{app.dlgIs.pay}}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{app.dx.pay.ask}}" hint-placeholder-val="{{ true }}">
+    <h2 id="dlg-title">Pay invoice {{app.dx.pay.inv}}</h2>
+    <div class="banner info">You are paying GHS {{app.dx.pay.amt}}, the full balance.</div>
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+    <div class="field"><label for="py-m">Pay with</label><select id="py-m" class="input" name="pmethod" value="{{app.f.pmethod}}" onChange="{{app.inp}}"><sc-for list="{{app.dx.pay.methods}}" as="o" hint-placeholder-count="5"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+    <sc-if value="{{app.dx.pay.momo}}" hint-placeholder-val="{{ true }}"><div class="field"><label for="py-n">Mobile money number</label><input id="py-n" class="input {{app.ecp.pnum}}" name="pnum" type="tel" inputmode="tel" placeholder="024 000 0000" value="{{app.f.pnum}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.pnum}}</span><span class="hint">We send a prompt to this phone. Enter your PIN to approve. This prototype does not call a real payment provider.</span></div></sc-if>
+    <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Cancel</button><button type="button" class="btn primary {{app.bz.confirmPay}}" onClick="{{app.confirmPay}}">Pay GHS {{app.dx.pay.amt}}</button></div>
+  </sc-if>
+  <sc-if value="{{app.dx.pay.waiting}}" hint-placeholder-val="{{ false }}">
+    <h2 id="dlg-title">Approve on your phone</h2>
+    <div class="banner info" role="status"><span class="row" style="gap:10px"><span class="spin"></span><span>We sent a prompt to {{app.dx.pay.num}}. Enter your {{app.dx.pay.method}} PIN to pay GHS {{app.dx.pay.amt}}.</span></span></div>
+    <dl class="kv"><dt>Reference</dt><dd class="b">{{app.dx.pay.ref}}</dd><dt>Invoice</dt><dd>{{app.dx.pay.inv}}</dd></dl>
+    <p class="muted sm">You can close this. We will tell you when the payment arrives.</p>
+    <div class="row end"><button type="button" class="btn" onClick="{{app.closeDlg}}">Close</button></div>
+  </sc-if>
+  <sc-if value="{{app.dx.pay.paid}}" hint-placeholder-val="{{ false }}">
+    <h2 id="dlg-title">Payment received</h2>
+    <div class="banner ok" role="status">GHS {{app.dx.pay.amt}} received by {{app.dx.pay.method}}. Thank you.</div>
+    <dl class="kv"><dt>Reference</dt><dd class="b">{{app.dx.pay.ref}}</dd><dt>Invoice</dt><dd>{{app.dx.pay.inv}} is paid</dd></dl>
+    <div class="row end"><button type="button" class="btn primary" onClick="{{app.closeDlg}}">Done</button></div>
+  </sc-if>
+  <sc-if value="{{app.dx.pay.pending}}" hint-placeholder-val="{{ false }}">
+    <h2 id="dlg-title">Payment pending</h2>
+    <div class="banner ok" role="status">We have started your GHS {{app.dx.pay.amt}} payment by {{app.dx.pay.method}}.</div>
+    <dl class="kv"><dt>Reference</dt><dd class="b">{{app.dx.pay.ref}}</dd><dt>Invoice</dt><dd>{{app.dx.pay.inv}}</dd></dl>
+    <p class="muted sm">We will confirm it here and by message once it clears.</p>
+    <div class="row end"><button type="button" class="btn primary" onClick="{{app.closeDlg}}">Done</button></div>
+  </sc-if>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":520,"height":480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { app: this.props.app || { dlgIs: {}, dx: { status: {}, rec: { methods: [], invoices: [] }, svc: { cats: [] }, fleet: { vans: [] }, invite: { roles: [] }, veh: { makes: [] }, pay: {} }, f: {}, ecp: {}, ehp: {}, errs: [] } };
+  }
+}
+</script>
+</body>
+</html>

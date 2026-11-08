@@ -17,3 +17,8 @@ export * from './blog.dto';
 export * from './fleet.dto';
 export * from './analytics.dto';
 export * from './upload.dto';
+export * from './feedback.dto';
+export * from './reminder.dto';
+export * from './message.dto';
+export * from './inventory.dto';
+export * from './schedule.dto';

@@ -74,4 +74,5 @@ export interface ListJobsParams {
   vehicleId?: string;
   technicianId?: string;
   priority?: JobPriority;
+  search?: string;
 }

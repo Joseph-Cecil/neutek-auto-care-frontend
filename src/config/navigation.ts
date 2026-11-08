@@ -18,6 +18,7 @@ export const portalNavigation: NavSection[] = [
     { title: 'Dashboard', href: '/portal/dashboard', icon: 'LayoutDashboard' },
   ]},
   { title: 'My Vehicle', items: [
+    { title: 'My Bookings', href: '/portal/bookings',  icon: 'Calendar' },
     { title: 'My Jobs',     href: '/portal/jobs',      icon: 'Wrench' },
     { title: 'My Vehicles', href: '/portal/vehicles',  icon: 'Car' },
     { title: 'Quotes',      href: '/portal/quotes',    icon: 'FileText' },
@@ -36,6 +37,7 @@ export const adminNavigation: NavSection[] = [
   { title: 'Operations', items: [
     { title: 'Bookings',  href: '/admin/bookings',  icon: 'Calendar', roles: ['admin','super_admin','technician'] },
     { title: 'Jobs',      href: '/admin/jobs',      icon: 'Wrench',   roles: ['admin','super_admin','technician'] },
+    { title: 'Schedule',  href: '/admin/schedule',  icon: 'Calendar', roles: ['admin','super_admin'] },
     { title: 'Customers', href: '/admin/customers', icon: 'Users',    roles: ['admin','super_admin'] },
   ]},
   { title: 'Finance', roles: ['admin','super_admin'], items: [
@@ -46,9 +48,15 @@ export const adminNavigation: NavSection[] = [
   { title: 'Catalogue', roles: ['admin','super_admin'], items: [
     { title: 'Services', href: '/admin/services', icon: 'Package' },
     { title: 'Fleet',    href: '/admin/fleet',    icon: 'Building2' },
+    { title: 'Inventory', href: '/admin/inventory', icon: 'Box' },
   ]},
   { title: 'Content', roles: ['admin','super_admin'], items: [
     { title: 'Blog', href: '/admin/blog', icon: 'BookOpen' },
+  ]},
+  { title: 'Customer care', roles: ['admin','super_admin'], items: [
+    { title: 'Messages', href: '/admin/messages', icon: 'Chat' },
+    { title: 'Reminders', href: '/admin/reminders', icon: 'Bell' },
+    { title: 'Feedback', href: '/admin/feedback', icon: 'Star' },
   ]},
   { title: 'Insights', roles: ['admin','super_admin'], items: [
     { title: 'Analytics', href: '/admin/analytics', icon: 'BarChart3' },

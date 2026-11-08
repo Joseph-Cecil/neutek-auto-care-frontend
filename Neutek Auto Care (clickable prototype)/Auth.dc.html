@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Neutek Auto Care sign-in screens</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt authwrap" id="page-auth">
+
+<sc-if value="{{app.routeIs.signin}}" hint-placeholder-val="{{ true }}">
+<main class="authcard" id="page-signin">
+  <div class="brand"><div class="mark">NT</div><div class="t"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></div>
+  <div class="card stack s">
+    <div><h1>Sign in</h1><p class="muted" style="margin-top:6px">Track your car, approve quotes and pay invoices, or run the workshop.</p></div>
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}">
+      <div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div>
+    </sc-if>
+    <form class="stack s" onSubmit="{{app.submitSignin}}">
+      <div class="field"><label for="si-email">Email</label><input id="si-email" class="input {{app.ecp.email}}" name="email" type="email" placeholder="you@example.com" value="{{app.f.email}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.email}}</span></div>
+      <div class="field"><label for="si-pw">Password</label><input id="si-pw" class="input {{app.ecp.password}}" name="password" type="password" placeholder="Your password" value="{{app.f.password}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.password}}</span></div>
+      <div class="row sb"><button type="button" class="lnk" onClick="{{app.nav.forgot}}">Forgot password?</button><button type="submit" class="btn primary {{app.bz.submit}}">Sign in</button></div>
+    </form>
+    <div class="row sb" style="border-top:1px solid var(--border-subtle);padding-top:16px"><span class="muted sm">New here?</span><button type="button" class="lnk" onClick="{{app.nav.register}}">Create an account</button></div>
+  </div>
+  <div class="card stack s">
+    <h2>Try a sample account</h2>
+    <p class="muted sm">Any email and password works. These open a role in one click.</p>
+    <button type="button" class="btn" style="justify-content:space-between" onClick="{{app.signinAsEfua}}"><span>Efua Darko <span class="faint sm">Workshop manager</span></span><span class="pill">Admin</span></button>
+    <button type="button" class="btn" style="justify-content:space-between" onClick="{{app.signinAsKwame}}"><span>Kwame Boateng <span class="faint sm">Technician</span></span><span class="pill">Technician</span></button>
+    <button type="button" class="btn" style="justify-content:space-between" onClick="{{app.signinAsAma}}"><span>Ama Mensah <span class="faint sm">Customer</span></span><span class="pill">Customer</span></button>
+  </div>
+  <div class="row"><button type="button" class="lnk" onClick="{{app.nav.home}}">Back to the website</button></div>
+</main>
+</sc-if>
+
+<sc-if value="{{app.routeIs.register}}" hint-placeholder-val="{{ false }}">
+<main class="authcard" id="page-register">
+  <div class="brand"><div class="mark">NT</div><div class="t"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></div>
+  <div class="card stack s">
+    <div><h1>Create an account</h1><p class="muted" style="margin-top:6px">Book faster and follow every repair in one place.</p></div>
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}">
+      <div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div>
+    </sc-if>
+    <form class="stack s" onSubmit="{{app.submitRegister}}">
+      <div class="grid g2" style="gap:12px">
+        <div class="field"><label for="rg-first">First name</label><input id="rg-first" class="input {{app.ecp.first}}" name="first" placeholder="Ama" value="{{app.f.first}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.first}}</span></div>
+        <div class="field"><label for="rg-last">Last name</label><input id="rg-last" class="input {{app.ecp.last}}" name="last" placeholder="Mensah" value="{{app.f.last}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.last}}</span></div>
+      </div>
+      <div class="field"><label for="rg-email">Email</label><input id="rg-email" class="input {{app.ecp.email}}" name="email" type="email" placeholder="you@example.com" value="{{app.f.email}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.email}}</span></div>
+      <div class="field"><label for="rg-phone">Phone</label><input id="rg-phone" class="input {{app.ecp.phone}}" name="phone" type="tel" placeholder="024 000 0000" value="{{app.f.phone}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.phone}}</span></div>
+      <div class="field"><label for="rg-pw">Password</label><input id="rg-pw" class="input {{app.ecp.password}}" name="password" type="password" placeholder="At least 8 characters" value="{{app.f.password}}" onInput="{{app.inp}}"><span class="hint {{app.ecp.password}}">{{app.pwHint}}</span></div>
+      <div class="row end"><button type="button" class="btn" onClick="{{app.nav.signin}}">Back to sign in</button><button type="submit" class="btn primary {{app.bz.submit}}">Create account</button></div>
+    </form>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{app.routeIs.forgot}}" hint-placeholder-val="{{ false }}">
+<main class="authcard" id="page-forgot">
+  <div class="brand"><div class="mark">NT</div><div class="t"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></div>
+  <div class="card stack s">
+    <div><h1>Forgot password</h1><p class="muted" style="margin-top:6px">Enter your email and we will send a reset link.</p></div>
+    <sc-if value="{{app.forgotSent}}" hint-placeholder-val="{{ false }}">
+      <div class="banner ok" role="status">If an account exists, we sent a link.</div>
+      <div class="row end"><button type="button" class="btn" onClick="{{app.nav.signin}}">Back to sign in</button><button type="button" class="btn primary" onClick="{{app.nav.reset}}">Open the reset link</button></div>
+    </sc-if>
+    <sc-if value="{{app.forgotOpen}}" hint-placeholder-val="{{ true }}">
+      <form class="stack s" onSubmit="{{app.submitForgot}}">
+        <div class="field"><label for="fg-email">Email</label><input id="fg-email" class="input {{app.ecp.email}}" name="email" type="email" placeholder="you@example.com" value="{{app.f.email}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.email}}</span></div>
+        <div class="row end"><button type="button" class="btn" onClick="{{app.nav.signin}}">Back to sign in</button><button type="submit" class="btn primary {{app.bz.submit}}">Send reset link</button></div>
+      </form>
+    </sc-if>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{app.routeIs.reset}}" hint-placeholder-val="{{ false }}">
+<main class="authcard" id="page-reset">
+  <div class="brand"><div class="mark">NT</div><div class="t"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></div>
+  <div class="card stack s">
+    <div><h1>Choose a new password</h1><p class="muted" style="margin-top:6px">Use at least 8 characters.</p></div>
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}">
+      <div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div>
+    </sc-if>
+    <form class="stack s" onSubmit="{{app.submitReset}}">
+      <div class="field"><label for="rs-pw">New password</label><input id="rs-pw" class="input {{app.ecp.password}}" name="password" type="password" placeholder="At least 8 characters" value="{{app.f.password}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.password}}</span></div>
+      <div class="field"><label for="rs-pw2">Confirm new password</label><input id="rs-pw2" class="input {{app.ecp.pw2}}" name="pw2" type="password" placeholder="Type it again" value="{{app.f.pw2}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.pw2}}</span></div>
+      <div class="row end"><button type="button" class="btn" onClick="{{app.nav.signin}}">Back to sign in</button><button type="submit" class="btn primary {{app.bz.submit}}">Save new password</button></div>
+    </form>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{app.routeIs.denied}}" hint-placeholder-val="{{ false }}">
+<main class="authcard" id="page-denied">
+  <div class="brand"><div class="mark">NT</div><div class="t"><div class="b">Neutek</div><div class="faint sm">Auto Care</div></div></div>
+  <div class="card">
+    <div class="empty">
+      <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></div>
+      <h1 style="font-size:20px">You do not have access to this page</h1>
+      <p class="muted">It may need a different account, or the address is wrong.</p>
+      <div class="row" style="margin-top:8px;justify-content:center"><button type="button" class="btn" onClick="{{app.nav.home}}">Go to the website</button><button type="button" class="btn primary" onClick="{{app.nav.signin}}">Back to sign in</button></div>
+    </div>
+  </div>
+</main>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var app = this.props.app || { route: 'signin', f: {}, errs: [], ecp: {}, ehp: {}, nav: {}, routeIs: { signin: true } };
+    return { app: app };
+  }
+}
+</script>
+</body>
+</html>

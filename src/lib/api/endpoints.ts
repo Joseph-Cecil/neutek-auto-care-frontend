@@ -13,6 +13,7 @@ export const ENDPOINTS = {
     LIST:      '/users',
     ME:        '/users/me',
     ME_AVATAR: '/users/me/avatar',
+    INVITE:    '/users/invite',
     BY_ID:     (id: string) => `/users/${id}`,
   },
   CUSTOMERS: {
@@ -34,10 +35,11 @@ export const ENDPOINTS = {
     BY_ID:      (id: string) => `/services/${id}`,
   },
   BOOKINGS: {
-    LIST:   '/bookings',
-    CREATE: '/bookings',
-    BY_ID:  (id: string) => `/bookings/${id}`,
-    CANCEL: (id: string) => `/bookings/${id}/cancel`,
+    LIST:      '/bookings',
+    CREATE:    '/bookings',
+    BY_ID:     (id: string) => `/bookings/${id}`,
+    BY_NUMBER: (bookingNumber: string) => `/bookings/number/${bookingNumber}`,
+    CANCEL:    (id: string) => `/bookings/${id}/cancel`,
   },
   JOBS: {
     LIST:       '/jobs',
@@ -53,11 +55,13 @@ export const ENDPOINTS = {
     BY_ID:   (id: string) => `/quotes/${id}`,
     APPROVE: (id: string) => `/quotes/${id}/approve`,
     REJECT:  (id: string) => `/quotes/${id}/reject`,
+    SEND:    (id: string) => `/quotes/${id}/send`,
   },
   INVOICES: {
     LIST:   '/invoices',
     CREATE: '/invoices',
     BY_ID:  (id: string) => `/invoices/${id}`,
+    SEND:   (id: string) => `/invoices/${id}/send`,
   },
   PAYMENTS: {
     LIST:       '/payments',
@@ -85,6 +89,7 @@ export const ENDPOINTS = {
     CREATE:     '/blog',
     BY_SLUG:    (slug: string) => `/blog/${slug}`,
     BY_ID:      (id: string) => `/blog/${id}`,
+    BY_ID_READ: (id: string) => `/blog/id/${id}`,
   },
   FLEET: {
     LIST:     '/fleet',
@@ -98,6 +103,36 @@ export const ENDPOINTS = {
     JOBS:        '/analytics/jobs',
     SERVICES:    '/analytics/services',
     TECHNICIANS: '/analytics/technicians',
+  },
+  FEEDBACK: {
+    LIST:   '/feedback',
+    BY_JOB: (jobId: string) => `/feedback/job/${jobId}`,
+    CREATE: '/feedback',
+    BY_ID:  (id: string) => `/feedback/${id}`,
+  },
+  REMINDERS: {
+    LIST:     '/reminders',
+    CREATE:   '/reminders',
+    SEND:     (id: string) => `/reminders/${id}/send`,
+    SEND_DUE: '/reminders/send-due',
+    SETTINGS: '/reminders/settings',
+  },
+  MESSAGES: {
+    TEMPLATES: '/messages/templates',
+    TEMPLATE:  (id: string) => `/messages/templates/${id}`,
+    TEST:      (id: string) => `/messages/templates/${id}/test`,
+    LOG:       '/messages/deliveries',
+  },
+  INVENTORY: {
+    LIST:        '/inventory',
+    CREATE:      '/inventory',
+    RECEIVE:     (id: string) => `/inventory/${id}/receive`,
+    RESTOCK_LOW: '/inventory/restock-low',
+  },
+  SCHEDULE: {
+    BOARD:  '/schedule',
+    ASSIGN: '/schedule/assign',
+    BAY:    (id: string) => `/schedule/bays/${id}`,
   },
   UPLOADS: {
     PRESIGN: '/uploads/presign',

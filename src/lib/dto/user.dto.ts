@@ -28,3 +28,16 @@ export interface ListUsersParams {
   role?: UserRole;
   search?: string;
 }
+
+export interface InviteUserRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: 'technician' | 'admin';
+}
+
+export interface InviteUserResult {
+  user: UserProfile;
+  emailed: false;
+}

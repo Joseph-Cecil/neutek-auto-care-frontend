@@ -40,6 +40,20 @@ export function useCreateQuote() {
   });
 }
 
+export function useSendQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => quoteDal.send(id),
+    onSuccess: (_res, id) => {
+      toast.success('Quote sent to the customer');
+      qc.invalidateQueries({ queryKey: queryKeys.quotes.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.quotes.all });
+      qc.invalidateQueries({ queryKey: queryKeys.jobs.all });
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
 export function useApproveQuote() {
   const qc = useQueryClient();
   return useMutation({

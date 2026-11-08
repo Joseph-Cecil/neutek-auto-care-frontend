@@ -37,15 +37,20 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  /** Hides the label and shows a spinner while a submit is in flight. */
+  pending?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, pending = false, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), pending && "btn-pending")}
         ref={ref}
+        data-variant={variant ?? "default"}
+        aria-busy={pending || undefined}
+        disabled={pending || disabled}
         {...props}
       />
     )

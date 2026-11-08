@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Neutek Auto Care marketing page</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+<link rel="stylesheet" href="./nt-mk.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="mk" id="marketing">
+
+<header class="nav"><div class="in">
+  <button type="button" class="brandbtn row" style="gap:12px;flex-wrap:nowrap" aria-label="Neutek Auto Care, back to top" onClick="{{go.top}}"><span class="mark">NT</span><span><span class="b" style="display:block;line-height:1.1">Neutek</span><span class="faint sm">Auto Care</span></span></button>
+  <nav class="links" aria-label="Page"><button type="button" onClick="{{go.drivers}}">For drivers</button><button type="button" onClick="{{go.workshops}}">For the workshop</button><button type="button" onClick="{{go.how}}">How it works</button><button type="button" onClick="{{go.services}}">Services</button><button type="button" onClick="{{go.track}}">Track a car</button><button type="button" onClick="{{go.blog}}">Blog</button></nav>
+  <div class="row" style="margin-left:auto;gap:8px;flex-wrap:nowrap">
+    <sc-if value="{{signedOut}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn ghost hide" onClick="{{go.signin}}">Sign in</button></sc-if>
+    <sc-if value="{{signedIn}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn ghost hide" onClick="{{go.account}}">Open my account</button></sc-if>
+    <button type="button" class="btn primary" onClick="{{go.book}}">Book service</button>
+  </div>
+</div></header>
+
+<main id="top">
+<section class="wrap"><div class="hero-grid">
+  <div>
+    <p class="eyebrow rise">Accra's workshop you can follow</p>
+    <h1 class="hero rise d1">Know where your car is, and what it costs.</h1>
+    <p class="lede rise d2">Neutek Auto Care takes the guessing out of car repair. Book online, watch every step of the job, approve the quote from your phone and pay by mobile money, all before you collect the keys.</p>
+    <div class="row rise d3" style="gap:12px;margin-top:32px"><button type="button" class="btnL p" onClick="{{go.book}}">Book a service</button><button type="button" class="btnL" onClick="{{go.track}}">Track a car</button></div>
+    <p class="rise d3" style="margin-top:24px;color:var(--text-secondary);font-size:14px">Fixed prices on routine work. No work starts without your approval.</p>
+  </div>
+  <div style="position:relative;padding-bottom:48px">
+    <div class="ph rise d2" style="min-height:460px"><span class="cap">Photo slot: a Ghanaian driver collecting keys from a technician</span></div>
+    <div class="float" style="left:-28px;bottom:0;width:260px" role="img" aria-label="Example of live job tracking">
+      <div class="row sb"><span class="b sm">JOB-2026-088</span><span class="pill brand">Live</span></div>
+      <ul class="trk"><li><i></i>Diagnosing</li><li><i></i>Quote sent</li><li><i></i>In progress</li><li><i></i>Ready for pickup</li></ul>
+    </div>
+  </div>
+</div></section>
+
+<div class="strip" aria-label="Makes we work on"><div class="marq" aria-hidden="true"><span>Toyota</span><span>Mercedes-Benz</span><span>BMW</span><span>Honda</span><span>Nissan</span><span>Hyundai</span><span>Kia</span><span>Ford</span><span>Volkswagen</span><span>Toyota</span><span>Mercedes-Benz</span><span>BMW</span><span>Honda</span><span>Nissan</span><span>Hyundai</span><span>Kia</span><span>Ford</span><span>Volkswagen</span></div></div>
+
+<section class="s wrap" id="drivers">
+  <div class="reveal"><p class="eyebrow">For drivers</p><h2 class="sec">Your repair, without the phone calls.</h2><p class="lede">Everything you used to chase the workshop for is on your phone.</p></div>
+  <div class="grid3" style="margin-top:40px">
+    <div class="card reveal"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v16H3zM3 10h18M8 3v4M16 3v4"></path></svg></div><h3 style="margin:0 0 8px;font-size:18px">Book in two minutes</h3><p class="muted" style="margin:0;line-height:1.6">Pick your services, choose a slot and you are done. No account needed for your first visit.</p></div>
+    <div class="card reveal"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg></div><h3 style="margin:0 0 8px;font-size:18px">Follow every step</h3><p class="muted" style="margin:0;line-height:1.6">From received to ready for pickup, see exactly where your car is, with the date of each step.</p></div>
+    <div class="card reveal"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM9 13h7M9 17h7"></path></svg></div><h3 style="margin:0 0 8px;font-size:18px">Approve before we start</h3><p class="muted" style="margin:0;line-height:1.6">Every part and every hour of labour is on the quote. You say yes, or no, and give a reason.</p></div>
+    <div class="card reveal"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18v10H3zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"></path></svg></div><h3 style="margin:0 0 8px;font-size:18px">Pay the way you prefer</h3><p class="muted" style="margin:0;line-height:1.6">Mobile money, card or bank transfer. Your receipt and balance are always in your account.</p></div>
+  </div>
+</section>
+
+<section class="s wrap" style="padding-top:0">
+  <div class="split">
+    <div class="ph reveal" style="min-height:420px"><span class="cap">Photo slot: a customer reviewing a quote on her phone</span></div>
+    <div class="reveal">
+      <p class="eyebrow">The quote you can trust</p><h2 class="sec">Nothing starts until you say yes.</h2>
+      <p class="lede">When our technician finds a problem, you get a clear quote with every line priced. Approve it in one tap from wherever you are.</p>
+      <ul class="tick"><li>Line-by-line prices in cedis</li><li>A short plain-language note on what we found</li><li>Reject it with a reason and we will talk it through</li></ul>
+      <div class="quote" style="margin-top:28px;max-width:420px"><div class="row sb"><b>QT-2026-041</b><span class="pill brand">Sent</span></div><div class="ql"><span>Lower control arm bush kit</span><span>640.00</span><span>Suspension labour, 3 h</span><span>540.00</span><span>Wheel alignment</span><span>180.00</span><span>Shop consumables and levies</span><span>120.00</span><b>Total (GHS)</b><b>1,480.00</b></div><div class="row" style="gap:8px"><span class="btn sm" style="pointer-events:none">Reject</span><span class="btn primary sm" style="pointer-events:none">Approve</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="s wrap" id="workshops" style="padding-top:0">
+  <div class="split">
+    <div class="reveal">
+      <p class="eyebrow">For the workshop</p><h2 class="sec">Run the whole bay from one screen.</h2>
+      <p class="lede">Bookings, jobs, quotes, invoices and payments, with the same records your customers see. Technicians get a focused view of bookings and jobs, and managers get the rest.</p>
+      <ul class="tick"><li>Move jobs only along legal steps, with a history of who did what</li><li>Diagnostic reports with findings and photos</li><li>Record payments against open invoices and watch overdue ones</li><li>Fleet accounts with credit limits and maintenance schedules</li></ul>
+      <div style="margin-top:32px"><button type="button" class="btnL p" onClick="{{go.signin}}">Explore the workshop</button></div>
+    </div>
+    <div class="ph reveal" style="min-height:460px"><span class="cap">Photo slot: technicians at work in an Accra workshop</span>
+      <div class="float" style="right:20px;top:20px;width:250px;animation-delay:-2s"><div class="faint sm">Revenue this month (GHS)</div><div style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em">18,450.00</div><span class="pill ok">+13.9% on last month</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="s wrap" id="how" style="padding-top:0">
+  <div class="reveal" style="text-align:center;display:flex;flex-direction:column;align-items:center"><p class="eyebrow">How it works</p><h2 class="sec">Four steps, no surprises.</h2></div>
+  <div class="steps4" style="margin-top:40px">
+    <div class="card reveal"><h3 style="margin:0 0 8px;font-size:18px">Book</h3><p class="muted" style="margin:0;line-height:1.6">Choose services and a time. We confirm by phone.</p></div>
+    <div class="card reveal"><h3 style="margin:0 0 8px;font-size:18px">Drop off</h3><p class="muted" style="margin:0;line-height:1.6">We receive the car, note its condition and start diagnosing.</p></div>
+    <div class="card reveal"><h3 style="margin:0 0 8px;font-size:18px">Approve the quote</h3><p class="muted" style="margin:0;line-height:1.6">See every line and price. Approve or decline online.</p></div>
+    <div class="card reveal"><h3 style="margin:0 0 8px;font-size:18px">Collect</h3><p class="muted" style="margin:0;line-height:1.6">After a quality check we call you, and you pay and drive away.</p></div>
+  </div>
+</section>
+
+<section class="s wrap" style="padding-top:0">
+  <div class="tq">
+    <figure class="card reveal" style="margin:0"><blockquote style="margin:0 0 20px;font-size:17px;line-height:1.6">Booked at night, car back by Friday. The tracking page saved me three phone calls.</blockquote><figcaption class="row" style="gap:12px;flex-wrap:nowrap"><span class="avatar" aria-hidden="true">AM</span><span><b>Ama M.</b><span class="faint sm" style="display:block">East Legon</span></span></figcaption></figure>
+    <figure class="card reveal" style="margin:0"><blockquote style="margin:0 0 20px;font-size:17px;line-height:1.6">They showed me the worn pads and the price before starting. No surprises on the invoice.</blockquote><figcaption class="row" style="gap:12px;flex-wrap:nowrap"><span class="avatar" aria-hidden="true">KA</span><span><b>Kofi A.</b><span class="faint sm" style="display:block">Accra</span></span></figcaption></figure>
+    <figure class="card reveal" style="margin:0"><blockquote style="margin:0 0 20px;font-size:17px;line-height:1.6">Plain talk, fair prices. My C200 has never braked better.</blockquote><figcaption class="row" style="gap:12px;flex-wrap:nowrap"><span class="avatar" aria-hidden="true">AO</span><span><b>Abena O.</b><span class="faint sm" style="display:block">Osu</span></span></figcaption></figure>
+  </div>
+  <p class="faint sm" style="margin-top:16px">Sample testimonials. Replace with real customer words and permission before launch.</p>
+</section>
+
+<section class="s wrap" style="padding-top:0">
+  <div class="split">
+    <div class="ph reveal" style="min-height:360px"><span class="cap">Photo slot: a delivery van and its driver at the workshop</span></div>
+    <div class="reveal"><p class="eyebrow">Fleets</p><h2 class="sec">Keep every van on the road.</h2><p class="lede">Run vehicles on account with a credit limit, a driver for each van and service schedules that tell you when the next one is due, in plain words.</p><ul class="tick"><li>One account, many vehicles</li><li>Maintenance due by kilometres or days</li><li>Outstanding balance visible at a glance</li></ul></div>
+  </div>
+</section>
+
+<section class="s wrap" id="faq" style="padding-top:0;max-width:860px">
+  <div class="reveal"><p class="eyebrow">Questions</p><h2 class="sec">Good to know before you book.</h2></div>
+  <div class="stack s" style="margin-top:32px;gap:12px">
+    <details><summary>Do I need an account to book?</summary><p>No. Give your name and phone number and we will confirm. An account lets you track cars, approve quotes and pay online.</p></details>
+    <details><summary>Will you start work without asking me?</summary><p>Never. Routine services have fixed prices. Anything else is quoted first, and nothing starts until you approve it.</p></details>
+    <details><summary>How can I pay?</summary><p>Mobile money, card or bank transfer, online or at the workshop.</p></details>
+    <details><summary>Can I follow my car without signing in?</summary><p>Yes. Enter your job number or plate on the tracking page and you will see the status and dates.</p></details>
+    <details><summary>Do you serve company fleets?</summary><p>Yes. Fleet accounts get credit terms, driver details and scheduled maintenance reminders.</p></details>
+  </div>
+</section>
+
+<section class="wrap" style="padding-bottom:88px">
+  <div class="band reveal">
+    <h2 style="font-size:clamp(28px,4vw,44px);letter-spacing:-.025em;font-weight:800;margin:0 0 12px;max-width:18ch">Your next service, done in the open.</h2>
+    <p style="color:#E7E2DA;font-size:18px;max-width:46ch;margin:0 0 28px;line-height:1.6">Book in two minutes and follow the work from your phone.</p>
+    <div class="row" style="gap:12px"><button type="button" class="btnL p" onClick="{{go.book}}">Book a service</button><button type="button" class="btnL" onClick="{{go.signin}}">Sign in</button></div>
+  </div>
+</section>
+</main>
+
+<footer class="foot"><div class="wrap row sb" style="align-items:flex-start;gap:32px">
+  <div><div class="row" style="gap:12px;flex-wrap:nowrap"><span class="mark">NT</span><b>Neutek Auto Care</b></div><p class="muted sm" style="margin-top:12px">14 Spintex Road, Accra</p></div>
+  <div><b>Call us</b><p class="muted sm" style="margin-top:6px">030 277 4410</p></div>
+  <div><b>Hours</b><p class="muted sm" style="margin-top:6px">Mon to Fri 07:30 to 18:00<br>Sat 08:00 to 15:00</p></div>
+</div></footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1440,"height":5200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var app = this.props.app, nav = app ? app.nav : {};
+    var noop = function () { };
+    var scroll = function (id) { return function () { var el = document.getElementById(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; };
+    var go = {
+      top: function () { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { } },
+      drivers: scroll('drivers'), workshops: scroll('workshops'), how: scroll('how'),
+      services: nav.services || noop, track: nav.track || noop, blog: nav.blog || noop, signin: nav.signin || noop, book: nav.book || noop,
+      account: app ? (app.role === 'customer' ? nav.portal : (app.role === 'admin' ? nav.dashboard : nav.jobs)) : noop
+    };
+    return { go: go, signedIn: !!(app && app.signedIn), signedOut: !(app && app.signedIn) };
+  }
+}
+</script>
+</body>
+</html>

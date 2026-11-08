@@ -1,15 +1,21 @@
 import type { ReactNode } from 'react';
+import Image from 'next/image';
+import { MECHANIC_IMAGES } from '@/config/mechanic-images';
 
-interface AuthLayoutProps {
-  children: ReactNode;
-}
-
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutek-dark-blue p-4">
-      <div className="w-full max-w-md">
-        {children}
-      </div>
+    <div className="nt-ui authwrap split">
+      <aside className="authvisual" aria-hidden>
+        <Image
+          src={MECHANIC_IMAGES.bayPortrait.src}
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 960px) 0px, 55vw"
+          className="ph-img"
+        />
+      </aside>
+      <div className="authmain">{children}</div>
     </div>
   );
 }

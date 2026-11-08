@@ -8,14 +8,14 @@ import { queryKeys }   from '@/lib/api/queryKeys';
 import { APP_CONSTANTS } from '@/config/constants';
 import type { TrackingUpdate } from '@/lib/dto';
 
-export function useTrackingRest(jobNumber: string) {
+export function useTrackingRest(jobNumber: string, phoneLast4: string) {
   return useQuery({
-    queryKey: queryKeys.tracking.byNumber(jobNumber),
+    queryKey: [...queryKeys.tracking.byNumber(jobNumber), phoneLast4],
     queryFn:  async () => {
-      const res = await trackingDal.getByJobNumber(jobNumber);
+      const res = await trackingDal.getByJobNumber(jobNumber, phoneLast4);
       return res.data.data;
     },
-    enabled:   !!jobNumber && jobNumber.length > 0,
+    enabled:   !!jobNumber && phoneLast4.length === 4,
     staleTime: 30 * 1000,
     retry:     false,
   });

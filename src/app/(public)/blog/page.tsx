@@ -2,124 +2,70 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Calendar, ChevronRight } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { SectionLoader } from '@/components/shared/LoadingSpinner';
-import { ErrorAlert }    from '@/components/shared/ErrorAlert';
-import { Pagination }    from '@/components/shared/Pagination';
-import { useBlogPosts, useBlogCategories } from '@/hooks/useTracking';
+import { TopProgress } from '@/components/ui/top-progress';
+import { useBlogCategories, useBlogPosts } from '@/hooks/useTracking';
 import { formatDate } from '@/lib/utils/date';
-import { cn } from '@/lib/utils/cn';
 
 export default function BlogPage() {
-  const [search,     setSearch]     = useState('');
-  const [category,   setCategory]   = useState<string | undefined>(undefined);
-  const [page,       setPage]       = useState(1);
-  const [inputValue, setInputValue] = useState('');
-
-  const { data: categories } = useBlogCategories();
-  const { data, isLoading, error }  = useBlogPosts({ categoryId: category, search, page });
-
-  const posts      = data?.data       ?? [];
-  const totalPages = data?.totalPages ?? 1;
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearch(inputValue);
-    setPage(1);
-  };
+  const [search, setSearch] = useState('');
+  const [draft, setDraft] = useState('');
+  const [category, setCategory] = useState<string | undefined>();
+  const posts = useBlogPosts({ categoryId: category, search, page: 1 });
+  const categories = useBlogCategories();
+  const rows = posts.data?.data ?? [];
+  const failed = posts.isError && !posts.data;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
-      {/* Header */}
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold text-white lg:text-5xl">Knowledge Centre</h1>
-        <p className="mt-4 text-white/50 max-w-xl mx-auto">
-          Tips, guides, and insights on vehicle maintenance, diagnostics, and ECU repair.
-        </p>
-      </div>
-
-      {/* Search */}
-      <form onSubmit={handleSearch} className="mb-6 flex gap-2 max-w-md mx-auto">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-          <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Search articles..."
-            className="pl-9 border-white/20 bg-white/10 text-white placeholder:text-white/30 focus:border-primary" />
-        </div>
-        <Button type="submit" variant="outline" className="border-white/20 text-white hover:bg-white/10">
-          Search
-        </Button>
-      </form>
-
-      {/* Category filters */}
-      {categories && categories.length > 0 && (
-        <div className="mb-8 flex flex-wrap gap-2 justify-center">
-          <button onClick={() => { setCategory(undefined); setPage(1); }}
-            className={cn('rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
-              !category
-                ? 'border-primary bg-primary text-white'
-                : 'border-white/20 text-white/60 hover:border-primary/50 hover:text-white',
-            )}>
-            All Topics
-          </button>
-          {categories.map((cat) => (
-            <button key={cat.id} onClick={() => { setCategory(cat.id); setPage(1); }}
-              className={cn('rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
-                category === cat.id
-                  ? 'border-primary bg-primary text-white'
-                  : 'border-white/20 text-white/60 hover:border-primary/50 hover:text-white',
-              )}>
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Posts */}
-      {isLoading ? <SectionLoader /> : error ? (
-        <ErrorAlert message="Failed to load articles. Please refresh the page." className="max-w-lg mx-auto" />
-      ) : posts.length === 0 ? (
-        <div className="py-16 text-center text-white/40">No articles found</div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => (
-            <Link key={post.id} href={"/blog/" + post.slug}>
-              <article className="group h-full rounded-2xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:border-primary/30">
-                {post.cover_image_url ? (
-                  <div className="aspect-video overflow-hidden">
-                    <img src={post.cover_image_url} alt={post.title}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                  </div>
-                ) : (
-                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-blue-600/10 flex items-center justify-center">
-                    <span className="text-4xl">🔧</span>
-                  </div>
-                )}
-                <div className="p-5">
-                  <div className="flex items-center gap-2 text-xs text-white/40">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(post.published_at ?? post.created_at)}
-                  </div>
-                  <h2 className="mt-2 text-base font-semibold text-white group-hover:text-primary transition-colors line-clamp-2">
-                    {post.title}
-                  </h2>
-                  {post.excerpt && (
-                    <p className="mt-2 text-sm text-white/50 line-clamp-2">{post.excerpt}</p>
-                  )}
-                  <div className="mt-4 flex items-center gap-1 text-xs font-medium text-primary">
-                    Read more <ChevronRight className="h-3 w-3" />
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="mt-10" />
+    <div className="pubwrap" id="page-blog">
+      <TopProgress active={posts.isLoading} />
+      <section className="sec">
+        <h1 style={{ fontSize: 36 }}>From the workshop</h1>
+        <p className="muted" style={{ margin: '8px 0 24px' }}>Short, practical notes for driving in Accra.</p>
+        <form
+          className="row"
+          style={{ marginBottom: 24 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(draft.trim());
+          }}
+        >
+          <label className="sr" htmlFor="blog-q" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>Search articles</label>
+          <input id="blog-q" className="input" style={{ maxWidth: 320 }} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Search articles" />
+          <button type="submit" className="btn">Search</button>
+        </form>
+        {categories.data && categories.data.length > 0 ? (
+          <div className="row" style={{ marginBottom: 24 }}>
+            <button type="button" className={!category ? 'pill brand' : 'pill'} onClick={() => setCategory(undefined)}>All</button>
+            {categories.data.map((item) => (
+              <button key={item.id} type="button" className={category === item.id ? 'pill brand' : 'pill'} onClick={() => setCategory(item.id)}>
+                {item.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {failed ? (
+          <div className="banner" role="alert">Could not load articles.</div>
+        ) : posts.isLoading ? (
+          <p className="muted">Loading articles.</p>
+        ) : rows.length === 0 ? (
+          <div className="card"><div className="empty"><h2>No articles yet</h2><p className="muted">Nothing is published.</p></div></div>
+        ) : (
+          <div className="grid g3">
+            {rows.map((post) => {
+              const cat = categories.data?.find((item) => item.id === post.category_id)?.name;
+              return (
+                <article key={post.id} className="card stack s">
+                  {cat ? <span className="pill" style={{ alignSelf: 'flex-start' }}>{cat}</span> : null}
+                  <h2 style={{ fontSize: 20 }}>{post.title}</h2>
+                  <p className="faint sm">{formatDate(post.published_at ?? post.created_at)}</p>
+                  {post.excerpt ? <p className="muted">{post.excerpt}</p> : null}
+                  <div><Link href={`/blog/${post.slug}`} className="btn sm">Read article</Link></div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

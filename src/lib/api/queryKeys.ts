@@ -24,6 +24,8 @@ export const queryKeys = {
   },
   vehicles: {
     all:        ['vehicles'] as const,
+    list:       (p?: { search?: string; customerId?: string; page?: number }) =>
+                  ['vehicles', 'list', p] as const,
     byCustomer: (customerId: string) =>
                   ['vehicles', 'customer', customerId] as const,
     detail:     (id: string) => ['vehicles', id] as const,
@@ -41,13 +43,17 @@ export const queryKeys = {
     all:    ['bookings'] as const,
     list:   (p?: { status?: BookingStatus; customerId?: string; page?: number }) =>
               ['bookings', 'list', p] as const,
+    pendingCount: ['bookings', 'count', 'pending'] as const,
     detail: (id: string) => ['bookings', id] as const,
+    byNumber: (bookingNumber: string, phoneLast4: string) =>
+              ['bookings', 'number', bookingNumber, phoneLast4] as const,
   },
   jobs: {
     all:     ['jobs'] as const,
     list:    (p?: {
                status?: JobStatus; customerId?: string; vehicleId?: string;
                technicianId?: string; priority?: JobPriority; page?: number;
+               search?: string;
              }) => ['jobs', 'list', p] as const,
     detail:  (id: string) => ['jobs', id] as const,
     history: (id: string) => ['jobs', id, 'history'] as const,
@@ -95,6 +101,28 @@ export const queryKeys = {
     list:     (p?: { page?: number }) => ['fleet', 'list', p] as const,
     detail:   (id: string) => ['fleet', id] as const,
     vehicles: (id: string) => ['fleet', id, 'vehicles'] as const,
+  },
+  feedback: {
+    all:    ['feedback'] as const,
+    list:   (p?: { page?: number }) => ['feedback', 'list', p] as const,
+    byJob:  (jobId: string) => ['feedback', 'job', jobId] as const,
+  },
+  reminders: {
+    all:  ['reminders'] as const,
+    list: (p?: { page?: number }) => ['reminders', 'list', p] as const,
+  },
+  messages: {
+    all:        ['messages'] as const,
+    templates:  (p?: { page?: number }) => ['messages', 'templates', p] as const,
+    deliveries: (p?: { page?: number }) => ['messages', 'deliveries', p] as const,
+  },
+  inventory: {
+    all:  ['inventory'] as const,
+    list: (p?: { page?: number; filter?: 'all' | 'low'; limit?: number }) => ['inventory', 'list', p] as const,
+  },
+  schedule: {
+    all:   ['schedule'] as const,
+    board: ['schedule', 'board'] as const,
   },
   analytics: {
     dashboard:   ['analytics', 'dashboard'] as const,

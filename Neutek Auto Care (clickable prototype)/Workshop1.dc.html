@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workshop: dashboard, bookings and jobs</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./nt.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nt" id="ws1" style="min-height:0;background:transparent">
+
+<sc-if value="{{app.routeIs.dashboard}}" hint-placeholder-val="{{ true }}">
+<div id="page-dashboard">
+  <div class="pagehead"><div class="ttl"><h1>Dashboard</h1><p class="muted">How the workshop is doing today, 24 Oct 2026.</p></div></div>
+  <div class="stack">
+    <div class="card">
+      <div class="sumcard">
+        <div class="fig"><span class="l">Revenue this month (GHS)</span><span class="v">{{app.v.rev}}</span><span class="sm"><span class="pill ok">{{app.v.pct}}</span> <span class="faint">on {{app.v.prev}} last month</span></span></div>
+        <div class="fig"><span class="l">Active jobs</span><span class="v">{{app.v.active}}</span><button type="button" class="lnk sm" style="align-self:flex-start" onClick="{{app.nav.jobs}}">View jobs</button></div>
+        <div class="fig"><span class="l">Pending bookings</span><span class="v">{{app.v.pending}}</span><button type="button" class="lnk sm" style="align-self:flex-start" onClick="{{app.nav.bookings}}">View bookings</button></div>
+        <div class="fig"><span class="l">Customers</span><span class="v">128</span><span class="sm faint">6 new this month</span></div>
+      </div>
+      <div class="row" style="gap:32px;border-top:1px solid var(--border-subtle);margin-top:20px;padding-top:16px"><span class="muted sm">Jobs completed this month <b style="color:var(--text-primary)">{{app.v.done}}</b></span><span class="muted sm">Average duration <b style="color:var(--text-primary)">{{app.v.avg}}</b></span></div>
+    </div>
+    <div class="grid g2">
+      <div class="card flush"><div style="padding:20px 24px 8px"><h2>Today's bookings</h2></div>
+        <sc-if value="{{app.v.hasToday}}" hint-placeholder-val="{{ true }}"><table class="tbl"><tbody><sc-for list="{{app.v.today}}" as="r" hint-placeholder-count="1"><tr class="click" onClick="{{r.go}}"><td><div class="two"><b>{{r.who}}</b><span>{{r.id}} · {{r.veh}}</span></div></td><td>{{r.at}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td></tr></sc-for></tbody></table></sc-if>
+        <sc-if value="{{app.v.hasToday}}" hint-placeholder-val="{{ false }}"></sc-if>
+      </div>
+      <div class="card flush"><div style="padding:20px 24px 8px"><h2>Jobs that need a quote</h2></div>
+        <table class="tbl"><tbody><sc-for list="{{app.v.need}}" as="r" hint-placeholder-count="2"><tr class="click" onClick="{{r.go}}"><td><div class="two"><b>{{r.title}}</b><span>{{r.id}} · {{r.who}}</span></div></td><td><span class="{{r.pill}}">{{r.status}}</span></td></tr></sc-for></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.bookings}}" hint-placeholder-val="{{ false }}">
+<div id="page-bookings">
+  <div class="pagehead"><div class="ttl"><h1>Bookings</h1><p class="muted">Confirm what customers have asked for and keep the diary honest.</p></div></div>
+  <div class="tabs" role="tablist"><sc-for list="{{app.v.tabs}}" as="t" hint-placeholder-count="3"><button type="button" role="tab" class="tab" aria-selected="{{t.sel}}" onClick="{{t.go}}">{{t.k}}<sc-if value="{{t.hasN}}" hint-placeholder-val="{{ false }}"><span class="cnt">{{t.n}}</span></sc-if></button></sc-for></div>
+  <div class="stack">
+    <div class="card"><div class="filters">
+      <div class="field"><label for="bf-status">Status</label><select id="bf-status" class="input" name="fstatus" value="{{app.f.fstatus}}" onChange="{{app.inp}}"><option value="">All</option><sc-for list="{{app.v.statuses}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+      <div class="field"><label for="bf-from">From</label><input id="bf-from" class="input" type="date" name="ffrom" value="{{app.f.ffrom}}" onInput="{{app.inp}}"></div>
+      <div class="field"><label for="bf-to">To</label><input id="bf-to" class="input" type="date" name="fto" value="{{app.f.fto}}" onInput="{{app.inp}}"></div>
+      <div class="field"><label for="bf-q">Search</label><input id="bf-q" class="input" type="search" name="fq" placeholder="Name, plate or number" value="{{app.f.fq}}" onInput="{{app.inp}}"></div>
+      <div class="row" style="gap:8px"><button type="button" class="btn" onClick="{{app.clearFilters}}">Clear</button><button type="button" class="btn primary" onClick="{{app.v.search}}">Search</button></div>
+    </div></div>
+    <div class="card flush">
+      <sc-if value="{{app.v.skel}}" hint-placeholder-val="{{ false }}"><div style="padding:20px 24px" class="stack s" aria-busy="true"><sc-for list="{{app.v.skRows}}" as="k" hint-placeholder-count="4"><div class="skel" style="height:44px"></div></sc-for></div></sc-if>
+      <sc-if value="{{app.v.none}}" hint-placeholder-val="{{ false }}"><sc-if value="{{app.v.notSkel}}" hint-placeholder-val="{{ true }}"><div class="empty"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 5h18v16H3zM3 10h18"></path></svg></div><h2>No bookings match</h2><p class="muted">Try different filters, or clear them to see everything in this tab.</p><button type="button" class="btn" onClick="{{app.clearFilters}}">Clear filters</button></div></sc-if></sc-if>
+      <sc-if value="{{app.v.has}}" hint-placeholder-val="{{ true }}"><sc-if value="{{app.v.notSkel}}" hint-placeholder-val="{{ true }}">
+      <div class="tw"><table class="tbl"><thead><tr><th>Number</th><th>Customer</th><th>Vehicle</th><th>Services</th><th>Scheduled</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+        <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="3"><tr class="{{r.rowCls}}">
+          <td class="b">{{r.id}}</td><td><div class="two"><b>{{r.who}}</b><span>{{r.sub}}</span></div></td><td>{{r.veh}}</td><td>{{r.sv}}</td><td>{{r.at}}</td><td><span class="{{r.pill}}">{{r.status}}</span></td>
+          <td style="min-width:260px"><div class="row" style="gap:16px">
+            <sc-if value="{{r.pend}}" hint-placeholder-val="{{ false }}"><button type="button" class="lnk" onClick="{{r.confirm}}">Confirm</button><button type="button" class="lnk red" onClick="{{r.ask}}">Cancel</button></sc-if>
+            <sc-if value="{{r.asking}}" hint-placeholder-val="{{ false }}"><div class="stack s" style="gap:8px;width:100%"><span class="b">Cancel {{r.id}}?</span><label class="sr" for="bk-reason">Reason</label><input id="bk-reason" class="input {{app.ecp.reason}}" name="reason" placeholder="Reason for cancelling" value="{{app.f.reason}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.reason}}</span><div class="rowq"><button type="button" class="btn sm" onClick="{{app.cancelAsk}}">Keep booking</button><button type="button" class="btn sm danger" onClick="{{r.doCancel}}">Cancel booking</button></div></div></sc-if>
+          </div></td></tr></sc-for>
+      </tbody></table></div></sc-if></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.jobs}}" hint-placeholder-val="{{ false }}">
+<div id="page-jobs">
+  <div class="pagehead"><div class="ttl"><h1>Jobs</h1><p class="muted">Every car in the workshop, and where it has got to.</p></div><div class="row"><button type="button" class="btn primary" onClick="{{app.v.newJob}}">New job</button></div></div>
+  <div class="stack">
+    <div class="card"><div class="filters">
+      <div class="field"><label for="jf-q">Search</label><input id="jf-q" class="input" type="search" name="fq" placeholder="Job, customer or plate" value="{{app.f.fq}}" onInput="{{app.inp}}"></div>
+      <div class="field"><label for="jf-s">Status</label><select id="jf-s" class="input" name="fstatus" value="{{app.f.fstatus}}" onChange="{{app.inp}}"><option value="">All</option><sc-for list="{{app.v.statuses}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+      <div class="field"><label for="jf-p">Priority</label><select id="jf-p" class="input" name="fprio" value="{{app.f.fprio}}" onChange="{{app.inp}}"><option value="">All</option><sc-for list="{{app.v.prios}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+      <div class="field"><label for="jf-t">Technician</label><select id="jf-t" class="input" name="ftech" value="{{app.f.ftech}}" onChange="{{app.inp}}"><option value="">All</option><sc-for list="{{app.v.techs}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+      <div><button type="button" class="btn" onClick="{{app.clearFilters}}">Clear</button></div>
+    </div></div>
+    <div class="card flush">
+      <sc-if value="{{app.v.none}}" hint-placeholder-val="{{ false }}"><div class="empty"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 6a4 4 0 0 0 5 5l-9 9a2 2 0 0 1-3-3l9-9z"></path></svg></div><h2>No jobs match</h2><p class="muted">Nothing fits those filters. Clear them to see every job.</p><button type="button" class="btn" onClick="{{app.clearFilters}}">Clear filters</button></div></sc-if>
+      <sc-if value="{{app.v.has}}" hint-placeholder-val="{{ true }}"><div class="tw"><table class="tbl"><thead><tr><th>Job</th><th>Customer and vehicle</th><th>Technician</th><th>Priority</th><th>Status</th><th>Updated</th></tr></thead><tbody>
+        <sc-for list="{{app.v.rows}}" as="r" hint-placeholder-count="4"><tr class="click" onClick="{{r.go}}"><td><div class="two"><button type="button" class="lnk" style="text-align:left" onClick="{{r.go}}">{{r.id}}</button><span>{{r.title}}</span></div></td><td><div class="two"><b>{{r.who}}</b><span>{{r.veh}}</span></div></td><td>{{r.tech}}</td><td><span class="{{r.ppill}}">{{r.prio}}</span></td><td><span class="{{r.pill}}">{{r.status}}</span></td><td>{{r.upd}}</td></tr></sc-for>
+      </tbody></table></div></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.job_new}}" hint-placeholder-val="{{ false }}">
+<div id="page-job-new">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to jobs</button></div><h1 style="margin-top:8px">New job</h1><p class="muted">Receive a car and open its job card.</p></div></div>
+  <div class="card stack">
+    <sc-if value="{{app.hasErrs}}" hint-placeholder-val="{{ false }}"><div class="errsum" role="alert"><b>Fix these fields</b><ul><sc-for list="{{app.errs}}" as="e" hint-placeholder-count="1"><li>{{e.m}}</li></sc-for></ul></div></sc-if>
+    <section><h3>Customer</h3>
+      <div class="field" style="margin-bottom:12px"><label for="nj-q">Search customers</label><input id="nj-q" class="input" type="search" name="ncq" placeholder="Name or phone" value="{{app.f.ncq}}" onInput="{{app.inp}}"></div>
+      <div class="grid g3"><sc-for list="{{app.v.custs}}" as="c" hint-placeholder-count="3"><button type="button" class="{{c.cls}}" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}" style="text-align:left"><span><span class="b" style="display:block">{{c.name}}</span><span class="faint sm">{{c.sub}}</span></span></button></sc-for></div>
+      <span class="hint err">{{app.ehp.ncid}}</span></section>
+    <section><h3>Vehicle</h3><div class="field" style="max-width:420px"><label for="nj-v">Vehicle</label><select id="nj-v" class="input {{app.ecp.nvid}}" name="nvid" disabled="{{app.v.noVeh}}" value="{{app.f.nvid}}" onChange="{{app.inp}}"><option value="">Choose a vehicle</option><sc-for list="{{app.v.vehs}}" as="o" hint-placeholder-count="1"><option value="{{o.v}}">{{o.l}}</option></sc-for></select><span class="hint err">{{app.ehp.nvid}}</span><span class="hint">Choose a customer first.</span></div></section>
+    <section><h3>Services</h3><div class="grid g3"><sc-for list="{{app.v.svcs}}" as="x" hint-placeholder-count="6"><button type="button" class="{{x.cls}}" aria-pressed="{{x.pressed}}" onClick="{{x.toggle}}" style="justify-content:space-between"><span class="b">{{x.name}}</span><span class="num">{{x.price}}</span></button></sc-for></div></section>
+    <section><h3>Details</h3><div class="grid g2">
+      <div class="field"><label for="nj-t">Title</label><input id="nj-t" class="input {{app.ecp.ntitle}}" name="ntitle" placeholder="Short summary of the job" value="{{app.f.ntitle}}" onInput="{{app.inp}}"><span class="hint err">{{app.ehp.ntitle}}</span></div>
+      <div class="field"><label for="nj-p">Priority</label><select id="nj-p" class="input" name="nprio" value="{{app.f.nprio}}" onChange="{{app.inp}}"><sc-for list="{{app.v.prios}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+      <div class="field"><label for="nj-e">Estimated completion</label><input id="nj-e" class="input" type="date" name="nest" value="{{app.f.nest}}" onInput="{{app.inp}}"></div>
+    </div>
+    <div class="field" style="margin-top:16px"><label for="nj-n">Intake notes</label><textarea id="nj-n" class="input" name="nnotes" placeholder="What the customer told us" onInput="{{app.inp}}">{{app.f.nnotes}}</textarea></div></section>
+    <div class="row end" style="border-top:1px solid var(--border-subtle);padding-top:16px"><button type="button" class="btn" onClick="{{app.v.back}}">Cancel</button><button type="button" class="btn primary {{app.bz.create}}" onClick="{{app.createJob}}">Create job</button></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{app.routeIs.job}}" hint-placeholder-val="{{ false }}">
+<div id="page-job">
+  <div class="pagehead"><div class="ttl"><div class="row"><button type="button" class="btn sm" onClick="{{app.v.back}}">Back to jobs</button></div>
+    <div class="row" style="margin-top:8px"><h1>{{app.v.id}}</h1><span class="{{app.v.pill}}">{{app.v.status}}</span><span class="{{app.v.ppill}}">{{app.v.prio}}</span></div><p class="muted">{{app.v.title}}</p></div>
+    <div class="row"><button type="button" class="btn" onClick="{{app.v.inspect}}">Inspection</button>
+    <sc-if value="{{app.v.hasNext}}" hint-placeholder-val="{{ true }}"><div style="position:relative" onKeyDown="{{app.popKey}}"><button type="button" class="btn primary" aria-haspopup="menu" aria-expanded="{{app.v.statusOpen}}" onClick="{{app.v.toggleStatus}}">Update status</button>
+      <sc-if value="{{app.v.statusOpen}}" hint-placeholder-val="{{ false }}"><div class="pop" style="top:46px;right:0" role="menu"><div class="faint sm" style="padding:6px 12px">Move to</div><sc-for list="{{app.v.next}}" as="n" hint-placeholder-count="2"><button type="button" class="it" role="menuitem" onClick="{{n.pick}}"><span class="b">{{n.to}}</span></button></sc-for></div></sc-if></div></sc-if></div>
+  </div>
+  <div class="stack">
+    <div class="grid g2">
+      <div class="card"><h2 style="margin-bottom:16px">Customer and vehicle</h2><dl class="kv"><dt>Customer</dt><dd class="b">{{app.v.cust}}</dd><dt>Phone</dt><dd>{{app.v.phone}}</dd><dt>Vehicle</dt><dd>{{app.v.veh}}</dd><dt>Plate</dt><dd>{{app.v.plate}}</dd><dt>Colour</dt><dd>{{app.v.colour}}</dd><dt>Mileage</dt><dd>{{app.v.km}}</dd></dl></div>
+      <div class="card stack s"><h2>Description and intake notes</h2><div><div class="faint sm">Intake notes</div><p>{{app.v.intake}}</p></div><div><div class="faint sm">Note shown to the customer</div><p>{{app.v.note}}</p></div><div><div class="faint sm">Estimated completion</div><p>{{app.v.est}}</p></div>
+        <sc-if value="{{app.v.isAdmin}}" hint-placeholder-val="{{ true }}"><div class="field"><label for="jb-tech">Technician</label><select id="jb-tech" class="input" value="{{app.v.tech}}" onChange="{{app.assignTech}}"><option value="">Unassigned</option><sc-for list="{{app.v.techs}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}">{{o.l}}</option></sc-for></select><span class="hint">Saves as soon as you choose.</span></div></sc-if></div>
+    </div>
+    <div class="card"><div class="chd"><h2>Services and prices</h2></div>
+      <sc-if value="{{app.v.hasSv}}" hint-placeholder-val="{{ true }}"><table class="tbl"><thead><tr><th>Service</th><th class="num">Price (GHS)</th></tr></thead><tbody><sc-for list="{{app.v.sv}}" as="x" hint-placeholder-count="1"><tr><td>{{x.name}}</td><td class="num">{{x.price}}</td></tr></sc-for><tr><td class="b">Total</td><td class="num b">{{app.v.svTotal}}</td></tr></tbody></table></sc-if>
+      <sc-if value="{{app.v.noSv}}" hint-placeholder-val="{{ false }}"><p class="muted">No catalogue services on this job. Line items are on the quote.</p></sc-if></div>
+    <div class="card"><div class="chd"><h2>Diagnostic report</h2><sc-if value="{{app.v.canDx}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn sm" onClick="{{app.openDiag}}">Add diagnostic</button></sc-if></div>
+      <sc-if value="{{app.v.hasDx}}" hint-placeholder-val="{{ false }}"><dl class="kv"><dt>Summary</dt><dd>{{app.v.dx.summary}}</dd><dt>Findings</dt><dd>{{app.v.dx.findings}}</dd><dt>Recommendations</dt><dd>{{app.v.dx.recs}}</dd><dt>Photos</dt><dd>{{app.v.dx.p1}}; {{app.v.dx.p2}}</dd></dl></sc-if>
+      <sc-if value="{{app.v.noDx}}" hint-placeholder-val="{{ true }}"><p class="muted">No diagnostic report yet. It can be added while the job is in Diagnosing.</p></sc-if></div>
+    <div class="card"><h2 style="margin-bottom:12px">Quote and invoice</h2>
+      <div class="row"><sc-if value="{{app.v.hasQuote}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn" onClick="{{app.v.quote.go}}">Open quote {{app.v.quote.id}}</button></sc-if><sc-if value="{{app.v.hasInv}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn" onClick="{{app.v.inv.go}}">Open invoice {{app.v.inv.id}}</button></sc-if><sc-if value="{{app.v.noLinks}}" hint-placeholder-val="{{ false }}"><span class="muted">Nothing raised for this job yet.</span></sc-if></div></div>
+    <div class="card flush"><div style="padding:20px 24px 8px"><h2>Status history</h2></div><div class="tw"><table class="tbl"><thead><tr><th>Who</th><th>From</th><th>To</th><th>Note</th><th>When</th></tr></thead><tbody><sc-for list="{{app.v.hist}}" as="h" hint-placeholder-count="3"><tr><td class="b">{{h.who}}</td><td>{{h.from}}</td><td>{{h.to}}</td><td>{{h.note}}</td><td>{{h.at}}</td></tr></sc-for></tbody></table></div></div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"$preview":{"width":1100,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { app: this.props.app || { routeIs: {}, v: {}, f: {}, ecp: {}, ehp: {}, errs: [], nav: {} } };
+  }
+}
+</script>
+</body>
+</html>

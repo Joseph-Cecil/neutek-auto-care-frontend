@@ -1,11 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Clock } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionLoader } from '@/components/shared/LoadingSpinner';
 import { useServices } from '@/hooks/useServices';
-import { pesewasToGHS, formatDuration } from '@/lib/utils/format';
 
 export function ServicesPreview() {
   const { data, isLoading, error } = useServices({ active: true, limit: 6 });
@@ -42,17 +41,9 @@ export function ServicesPreview() {
                     {service.description}
                   </p>
                 )}
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-bold text-primary">
-                      {pesewasToGHS(service.base_price_pesewas)}
-                    </p>
-                    <p className="text-xs text-white/40">Starting price</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-white/40">
-                    <Clock className="h-3 w-3" />
-                    {formatDuration(service.estimated_duration_minutes)}
-                  </div>
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-primary">Quote after inspection</p>
+                  <p className="text-xs text-white/40">Nothing starts until you approve</p>
                 </div>
                 <Link href={"/booking?service=" + service.id} className="mt-4 block">
                   <Button size="sm" variant="outline"

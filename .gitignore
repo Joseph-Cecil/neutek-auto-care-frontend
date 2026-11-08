@@ -18,6 +18,7 @@ dist/
 
 # misc
 .DS_Store
+miscellaneous/
 *.pem
 Thumbs.db
 
