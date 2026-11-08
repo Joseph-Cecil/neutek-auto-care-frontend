@@ -32,9 +32,11 @@ export default function AdminSchedulePage() {
   const waiting = board.isPending && !data;
   const failed = board.isError && !data;
   const [dayPick, setDayPick] = useState<string | null>(null);
-  const day = data?.days.length
-    ? (dayPick && data.days.some((item) => item.date === dayPick) ? dayPick : data.days[0].date)
-    : '';
+  const days = data?.days ?? [];
+  const day =
+    dayPick && days.some((item) => item.date === dayPick)
+      ? dayPick
+      : (days[0]?.date ?? '');
 
   return (
     <>
