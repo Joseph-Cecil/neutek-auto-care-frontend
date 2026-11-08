@@ -35,7 +35,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    silentRefresh();
+    function start() {
+      // No prior session → skip refresh (avoids noisy 400 "No refresh token").
+      if (!useAuthStore.getState().isAuthenticated) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      void silentRefresh();
+    }
+
+    const persist = useAuthStore.persist;
+    if (persist.hasHydrated()) {
+      start();
+    } else {
+      persist.onFinishHydration(start);
+    }
+
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
