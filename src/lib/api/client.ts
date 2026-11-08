@@ -48,8 +48,15 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const orig = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const reqUrl = `${orig?.baseURL ?? ''}${orig?.url ?? ''}`;
 
-    if (error.response?.status === 401 && !orig._retry) {
+    // Login/register 401 means bad credentials — do not attempt cookie refresh
+    // (that replaces the real error with "No refresh token provided").
+    const isAuthCredentialRequest =
+      /\/auth\/(login|register|forgot-password|reset-password|verify-email)(?:\?|$)/.test(reqUrl) ||
+      /\/auth\/refresh(?:\?|$)/.test(reqUrl);
+
+    if (error.response?.status === 401 && !orig._retry && !isAuthCredentialRequest) {
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
