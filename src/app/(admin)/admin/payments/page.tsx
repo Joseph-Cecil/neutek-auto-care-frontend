@@ -143,45 +143,65 @@ export default function AdminPaymentsPage() {
                   <p className="muted">Money in will show here.</p>
                 </div>
               ) : (
-                <div className="tw">
-                  <table className="tbl">
-                    <thead>
-                      <tr>
-                        <th>Reference</th>
-                        <th>Invoice</th>
-                        <th className="num">Amount (GHS)</th>
-                        <th>Method</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payments.map((payment) => (
-                        <tr key={payment.id}>
-                          <td className="b">
-                            {payment.payment_reference}
-                            {payment.gateway_reference ? (
-                              <div className="faint sm">{payment.gateway_reference}</div>
-                            ) : null}
-                          </td>
-                          <td>
-                            <Link className="lnk" href={`/admin/invoices/${payment.invoice_id}`}>
-                              {payment.invoice_id}
-                            </Link>
-                          </td>
-                          <td className="num">{money(payment.amount_pesewas)}</td>
-                          <td>{statusLabel(payment.method)}</td>
-                          <td>
-                            <span className={paymentPill(payment.status)}>
-                              {statusLabel(payment.status)}
-                            </span>
-                          </td>
-                          <td>{formatDateTime(payment.created_at)}</td>
+                <>
+                  <div className="tw desk-only">
+                    <table className="tbl">
+                      <thead>
+                        <tr>
+                          <th>Reference</th>
+                          <th>Invoice</th>
+                          <th className="num">Amount (GHS)</th>
+                          <th>Method</th>
+                          <th>Status</th>
+                          <th>Date</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {payments.map((payment) => (
+                          <tr key={payment.id}>
+                            <td className="b">
+                              {payment.payment_reference}
+                              {payment.gateway_reference ? (
+                                <div className="faint sm">{payment.gateway_reference}</div>
+                              ) : null}
+                            </td>
+                            <td>
+                              <Link className="lnk" href={`/admin/invoices/${payment.invoice_id}`}>
+                                {payment.invoice_id}
+                              </Link>
+                            </td>
+                            <td className="num">{money(payment.amount_pesewas)}</td>
+                            <td>{statusLabel(payment.method)}</td>
+                            <td>
+                              <span className={paymentPill(payment.status)}>
+                                {statusLabel(payment.status)}
+                              </span>
+                            </td>
+                            <td>{formatDateTime(payment.created_at)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mlist" role="list">
+                    {payments.map((payment) => (
+                      <div key={payment.id} className="mrow" role="listitem">
+                        <div className="mrow-body">
+                          <span className="b">{payment.payment_reference}</span>
+                          <span className="muted sm">
+                            {money(payment.amount_pesewas)} · {statusLabel(payment.method)} · {formatDateTime(payment.created_at)}
+                          </span>
+                          <span className="row" style={{ marginTop: 4 }}>
+                            <span className={paymentPill(payment.status)}>{statusLabel(payment.status)}</span>
+                          </span>
+                        </div>
+                        <div className="mrow-act">
+                          <Link href={`/admin/invoices/${payment.invoice_id}`} className="btn sm">Open invoice</Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}

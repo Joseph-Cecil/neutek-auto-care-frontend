@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -22,6 +23,7 @@ function invoiceLabel(status: string): string {
 }
 
 export default function PortalInvoicesPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useInvoices({
@@ -55,7 +57,7 @@ export default function PortalInvoicesPage() {
           ) : (
             <div className="stack">
               <div className="card flush">
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -64,16 +66,32 @@ export default function PortalInvoicesPage() {
                         <th className="num">Total</th>
                         <th className="num">Balance</th>
                         <th>Status</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {invoices.map((invoice) => {
+                        const href = `/portal/invoices/${invoice.id}`;
                         const remaining = invoice.total_pesewas - invoice.amount_paid_pesewas;
                         const canPay = invoice.status === 'sent' || invoice.status === 'partially_paid' || invoice.status === 'overdue';
                         return (
-                          <tr key={invoice.id}>
+                          <tr
+                            key={invoice.id}
+                            className="click"
+                            tabIndex={0}
+                            role="link"
+                            onClick={() => router.push(href)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                router.push(href);
+                              }
+                            }}
+                          >
                             <td>
-                              <Link href={'/portal/invoices/' + invoice.id} className="b">{invoice.invoice_number}</Link>
+                              <Link href={href} className="b" onClick={(event) => event.stopPropagation()}>
+                                {invoice.invoice_number}
+                              </Link>
                             </td>
                             <td>{formatDate(invoice.due_date)}</td>
                             <td className="num">GHS {ghsAmount(invoice.total_pesewas)}</td>
@@ -84,11 +102,48 @@ export default function PortalInvoicesPage() {
                                 {canPay ? <span className="pill brand">Pay now</span> : null}
                               </span>
                             </td>
+                            <td>
+                              <Link
+                                href={href}
+                                className="btn sm"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {canPay ? 'Pay / open' : 'Open'}
+                              </Link>
+                            </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                </div>
+                <div className="mlist" role="list">
+                  {invoices.map((invoice) => {
+                    const href = `/portal/invoices/${invoice.id}`;
+                    const remaining = invoice.total_pesewas - invoice.amount_paid_pesewas;
+                    const canPay = invoice.status === 'sent' || invoice.status === 'partially_paid' || invoice.status === 'overdue';
+                    return (
+                      <div key={invoice.id} className="mrow" role="listitem">
+                        <div className="mrow-top">
+                          <div className="mrow-body">
+                            <span className="b">{invoice.invoice_number}</span>
+                            <span className="muted sm">
+                              Balance GHS {ghsAmount(remaining)} · Due {formatDate(invoice.due_date)}
+                            </span>
+                            <span className="row" style={{ marginTop: 4 }}>
+                              <span className={invoicePill(invoice.status)}>{invoiceLabel(invoice.status)}</span>
+                              {canPay ? <span className="pill brand">Pay now</span> : null}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mrow-act">
+                          <Link href={href} className="btn sm primary">
+                            {canPay ? 'Pay / open' : 'Open'}
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {totalPages > 1 ? (

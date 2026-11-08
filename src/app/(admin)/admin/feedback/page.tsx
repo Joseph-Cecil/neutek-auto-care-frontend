@@ -73,7 +73,7 @@ export default function AdminFeedbackPage() {
                 </div>
               </div>
               <div className="card flush">
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -105,35 +105,78 @@ export default function AdminFeedbackPage() {
                             </button>
                           </td>
                           <td>
-                            {replying === row.id ? (
-                              <div className="stack s">
-                                {replyError ? <div className="errsum" role="alert">{replyError}</div> : null}
-                                <label htmlFor={`reply-${row.id}`}>Reply</label>
-                                <textarea id={`reply-${row.id}`} className="input" value={draft} onChange={(event) => setDraft(event.target.value)} />
-                                <div className="row">
-                                  <button type="button" className="btn sm primary" onClick={() => saveReply(row.id)}>Send reply</button>
-                                  <button type="button" className="btn sm" onClick={() => { setReplying(''); setReplyError(''); }}>Cancel</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="stack s">
-                                {row.reply ? <p>{row.reply}</p> : null}
-                                <button
-                                  type="button"
-                                  className="btn sm"
-                                  onClick={() => { setReplying(row.id); setDraft(row.reply ?? ''); setReplyError(''); }}
-                                >
-                                  {row.reply ? 'Edit reply' : 'Reply'}
-                                </button>
-                              </div>
-                            )}
+                            <div className="stack s">
+                              {row.reply ? <p>{row.reply}</p> : null}
+                              <button
+                                type="button"
+                                className="btn sm"
+                                onClick={() => { setReplying(row.id); setDraft(row.reply ?? ''); setReplyError(''); }}
+                              >
+                                {row.reply ? 'Edit reply' : 'Reply'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                <div className="mlist" role="list">
+                  {rows.map((row) => (
+                    <div key={row.id} className="mrow" role="listitem">
+                      <div className="mrow-body">
+                        <span className="b">{fullName(row.first_name, row.last_name)}</span>
+                        <span className="muted sm" aria-label={`${row.stars} out of 5`}>{stars(row.stars)} · {formatDate(row.created_at)}</span>
+                        <span className="sm">{row.comment || 'No comment.'}</span>
+                        {row.reply ? <span className="faint sm">Reply: {row.reply}</span> : null}
+                      </div>
+                      <div className="mrow-act">
+                        <Link className="btn sm" href={`/admin/jobs/${row.job_id}`}>{row.job_number}</Link>
+                        <button
+                          type="button"
+                          className={row.featured ? 'btn sm primary' : 'btn sm'}
+                          aria-pressed={row.featured}
+                          onClick={() => update.mutate({ id: row.id, body: { featured: !row.featured } })}
+                        >
+                          {row.featured ? 'Featured' : 'Feature'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn sm"
+                          onClick={() => { setReplying(row.id); setDraft(row.reply ?? ''); setReplyError(''); }}
+                        >
+                          {row.reply ? 'Edit reply' : 'Reply'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+              {replying ? (
+                <div
+                  className="scrim"
+                  onMouseDown={() => { if (!update.isPending) { setReplying(''); setReplyError(''); } }}
+                >
+                  <div
+                    className="dlg"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="feedback-reply-title"
+                    onMouseDown={(event) => event.stopPropagation()}
+                  >
+                    <h2 id="feedback-reply-title">Reply to feedback</h2>
+                    {replyError ? <div className="errsum" role="alert">{replyError}</div> : null}
+                    <div className="dlg-body field">
+                      <label htmlFor="feedback-reply">Reply</label>
+                      <textarea id="feedback-reply" className="input" value={draft} onChange={(event) => setDraft(event.target.value)} rows={4} />
+                    </div>
+                    <div className="row end">
+                      <button type="button" className="btn" disabled={update.isPending} onClick={() => { setReplying(''); setReplyError(''); }}>Cancel</button>
+                      <button type="button" className="btn primary" disabled={update.isPending} onClick={() => saveReply(replying)}>Send reply</button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               {totalPages > 1 ? (
                 <div className="row">
                   <button type="button" className="btn sm" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button>

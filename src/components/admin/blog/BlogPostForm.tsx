@@ -145,7 +145,7 @@ export function BlogPostForm({
         {errors.content ? <span className="hint err">{errors.content.message}</span> : null}
       </div>
 
-      <div className="row end">
+      <div className="row end form-sticky-actions">
         <button
           type="submit"
           className={isPending ? 'btn primary nt-loading' : 'btn primary'}

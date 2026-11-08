@@ -225,7 +225,7 @@ export default function AdminUsersPage() {
       ) : (
         <div className="stack">
           <div className="card flush">
-            <div className="tw">
+            <div className="tw desk-only">
               <table className="tbl">
                 <thead>
                   <tr>
@@ -270,6 +270,27 @@ export default function AdminUsersPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="mlist" role="list">
+              {users.map((user) => (
+                <div key={user.id} className="mrow" role="listitem">
+                  <div className="mrow-body">
+                    <span className="b">{fullName(user.first_name, user.last_name)}</span>
+                    <span className="muted sm">{user.email}</span>
+                    <span className="row" style={{ marginTop: 4, gap: 8 }}>
+                      <span className={rolePill(user.role)}>{roleLabel(user.role)}</span>
+                      <span className={user.is_active ? 'pill ok' : 'pill'}>
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="mrow-act">
+                    <button type="button" className="btn sm danger" onClick={() => setDeleteId(user.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <Pager page={page} totalPages={totalPages} onPageChange={setPage} />

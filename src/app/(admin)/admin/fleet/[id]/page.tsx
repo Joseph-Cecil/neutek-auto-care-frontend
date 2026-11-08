@@ -190,28 +190,43 @@ export default function AdminFleetDetailPage() {
               </button>
             </div>
           ) : (
-            <div className="tw">
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th>Vehicle</th>
-                    <th>Driver</th>
-                    <th>Driver phone</th>
-                    <th>Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vehicles.map((vehicle) => (
-                    <tr key={vehicle.id}>
-                      <td className="b">{vehicle.vehicle_id}</td>
-                      <td>{vehicle.driver_name || '—'}</td>
-                      <td>{vehicle.driver_phone ? formatPhone(vehicle.driver_phone) : '—'}</td>
-                      <td>{vehicle.notes || '—'}</td>
+            <>
+              <div className="tw desk-only">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>Vehicle</th>
+                      <th>Driver</th>
+                      <th>Driver phone</th>
+                      <th>Notes</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {vehicles.map((vehicle) => (
+                      <tr key={vehicle.id}>
+                        <td className="b">{vehicle.vehicle_id}</td>
+                        <td>{vehicle.driver_name || '—'}</td>
+                        <td>{vehicle.driver_phone ? formatPhone(vehicle.driver_phone) : '—'}</td>
+                        <td>{vehicle.notes || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mlist" role="list">
+                {vehicles.map((vehicle) => (
+                  <div key={vehicle.id} className="mrow" role="listitem">
+                    <div className="mrow-body">
+                      <span className="b">{vehicle.vehicle_id}</span>
+                      <span className="muted sm">
+                        {vehicle.driver_name || 'No driver'} · {vehicle.driver_phone ? formatPhone(vehicle.driver_phone) : 'No phone'}
+                      </span>
+                      {vehicle.notes ? <span className="faint sm">{vehicle.notes}</span> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

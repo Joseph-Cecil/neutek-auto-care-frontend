@@ -108,8 +108,8 @@ export default function AdminAnalyticsPage() {
           <h1>Analytics</h1>
           <p className="muted">Revenue, workload and who is delivering.</p>
         </div>
-        <div className="row">
-          <div className="tabs" role="tablist" aria-label="Period" style={{ margin: 0 }}>
+        <div className="row action-stack" style={{ width: '100%' }}>
+          <div className="tabs" role="tablist" aria-label="Period" style={{ margin: 0, width: '100%' }}>
             {GRANULARITY_OPTIONS.map(({ label, value }) => (
               <button
                 key={value}

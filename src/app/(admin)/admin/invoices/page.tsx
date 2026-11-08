@@ -82,7 +82,22 @@ export default function AdminInvoicesPage() {
             </div>
             <Link href="/admin/invoices/create" className="btn primary">New invoice</Link>
           </div>
-          <div className="tabs" role="tablist" aria-label="Invoice status">
+          <label className="sr" htmlFor="invoice-status-select">Invoice status</label>
+          <select
+            id="invoice-status-select"
+            className="input tabs-select"
+            value={status ?? ''}
+            onChange={(event) => {
+              const next = event.target.value;
+              setStatus(next ? (next as InvoiceStatus) : undefined);
+              setPage(1);
+            }}
+          >
+            {STATUS_TABS.map(({ label, value }) => (
+              <option key={label} value={value ?? ''}>{label}</option>
+            ))}
+          </select>
+          <div className="tabs tabs-many desk-only" role="tablist" aria-label="Invoice status">
             {STATUS_TABS.map(({ label, value }) => (
               <button
                 key={label}
@@ -112,50 +127,74 @@ export default function AdminInvoicesPage() {
                   <p className="muted">Nothing matches this tab.</p>
                 </div>
               ) : (
-                <div className="tw">
-                  <table className="tbl">
-                    <thead>
-                      <tr>
-                        <th>Number</th>
-                        <th>Due</th>
-                        <th className="num">Total (GHS)</th>
-                        <th className="num">Paid (GHS)</th>
-                        <th className="num">Balance (GHS)</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoices.map((invoice) => {
-                        const balance = Math.max(
-                          0,
-                          invoice.total_pesewas - invoice.amount_paid_pesewas,
-                        );
-                        return (
-                          <tr
-                            key={invoice.id}
-                            className="click"
-                            onClick={() => router.push(`/admin/invoices/${invoice.id}`)}
-                          >
-                            <td>
-                              <Link className="lnk" href={`/admin/invoices/${invoice.id}`}>
-                                {invoice.invoice_number}
-                              </Link>
-                            </td>
-                            <td>{formatDate(invoice.due_date)}</td>
-                            <td className="num">{money(invoice.total_pesewas)}</td>
-                            <td className="num">{money(invoice.amount_paid_pesewas)}</td>
-                            <td className="num b">{money(balance)}</td>
-                            <td>
-                              <span className={invoicePill(invoice.status)}>
-                                {statusLabel(invoice.status)}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  <div className="tw desk-only">
+                    <table className="tbl">
+                      <thead>
+                        <tr>
+                          <th>Number</th>
+                          <th>Due</th>
+                          <th className="num">Total (GHS)</th>
+                          <th className="num">Paid (GHS)</th>
+                          <th className="num">Balance (GHS)</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoices.map((invoice) => {
+                          const balance = Math.max(
+                            0,
+                            invoice.total_pesewas - invoice.amount_paid_pesewas,
+                          );
+                          return (
+                            <tr
+                              key={invoice.id}
+                              className="click"
+                              onClick={() => router.push(`/admin/invoices/${invoice.id}`)}
+                            >
+                              <td>
+                                <Link className="lnk" href={`/admin/invoices/${invoice.id}`}>
+                                  {invoice.invoice_number}
+                                </Link>
+                              </td>
+                              <td>{formatDate(invoice.due_date)}</td>
+                              <td className="num">{money(invoice.total_pesewas)}</td>
+                              <td className="num">{money(invoice.amount_paid_pesewas)}</td>
+                              <td className="num b">{money(balance)}</td>
+                              <td>
+                                <span className={invoicePill(invoice.status)}>
+                                  {statusLabel(invoice.status)}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mlist" role="list">
+                    {invoices.map((invoice) => {
+                      const balance = Math.max(0, invoice.total_pesewas - invoice.amount_paid_pesewas);
+                      const href = `/admin/invoices/${invoice.id}`;
+                      return (
+                        <div key={invoice.id} className="mrow" role="listitem">
+                          <div className="mrow-body">
+                            <span className="b">{invoice.invoice_number}</span>
+                            <span className="muted sm">
+                              Balance {money(balance)} · Due {formatDate(invoice.due_date)}
+                            </span>
+                            <span className="row" style={{ marginTop: 4 }}>
+                              <span className={invoicePill(invoice.status)}>{statusLabel(invoice.status)}</span>
+                            </span>
+                          </div>
+                          <div className="mrow-act">
+                            <Link href={href} className="btn sm primary">Open</Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
           )}

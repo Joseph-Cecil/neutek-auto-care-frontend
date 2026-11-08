@@ -63,12 +63,14 @@ export const queryKeys = {
     all:    ['quotes'] as const,
     list:   (p?: { status?: QuoteStatus; jobId?: string; customerId?: string; page?: number }) =>
               ['quotes', 'list', p] as const,
+    actionCount: (status: QuoteStatus) => ['quotes', 'count', status] as const,
     detail: (id: string) => ['quotes', id] as const,
   },
   invoices: {
     all:    ['invoices'] as const,
     list:   (p?: { status?: InvoiceStatus; customerId?: string; jobId?: string; page?: number }) =>
               ['invoices', 'list', p] as const,
+    actionCount: (status: InvoiceStatus) => ['invoices', 'count', status] as const,
     detail: (id: string) => ['invoices', id] as const,
   },
   payments: {

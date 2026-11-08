@@ -138,7 +138,7 @@ export default function AdminRemindersPage() {
                 </div>
               ) : (
                 <div className="card flush">
-                  <div className="tw">
+                  <div className="tw desk-only">
                     <table className="tbl">
                       <thead>
                         <tr>
@@ -184,6 +184,29 @@ export default function AdminRemindersPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                  <div className="mlist" role="list">
+                    {rows.map((row) => (
+                      <div key={row.id} className="mrow" role="listitem">
+                        <div className="mrow-body">
+                          <span className="b">{fullName(row.first_name, row.last_name)}</span>
+                          <span className="muted sm">
+                            {row.year} {row.make} {row.model} · {row.license_plate}
+                          </span>
+                          <span className="muted sm">{row.service_name} · Due {dueLabel(row.due_on)}</span>
+                          <span className="row" style={{ marginTop: 4 }}>
+                            <span className={statusPill(row.display_status)}>{STATUS_LABEL[row.display_status]}</span>
+                          </span>
+                        </div>
+                        <div className="mrow-act">
+                          {canSend(row.display_status) ? (
+                            <button type="button" className="btn sm primary" onClick={() => sendOne.mutate(row.id)}>Send reminder</button>
+                          ) : (
+                            <span className="faint sm">{row.display_status === 'booked' ? 'Already booked' : 'Sent'}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

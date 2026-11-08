@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { TopProgress } from '@/components/ui/top-progress';
 import { useQuotes } from '@/hooks/useQuotes';
@@ -22,6 +23,7 @@ function quoteLabel(status: QuoteStatus): string {
 }
 
 export default function PortalQuotesPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useQuotes({
@@ -55,7 +57,7 @@ export default function PortalQuotesPage() {
           ) : (
             <div className="stack">
               <div className="card flush">
-                <div className="tw">
+                <div className="tw desk-only">
                   <table className="tbl">
                     <thead>
                       <tr>
@@ -64,29 +66,87 @@ export default function PortalQuotesPage() {
                         <th className="num">Total</th>
                         <th>Valid until</th>
                         <th>Status</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {quotes.map((quote) => (
-                        <tr key={quote.id}>
-                          <td>
-                            <Link href={'/portal/quotes/' + quote.id} className="b">{quote.quote_number}</Link>
-                          </td>
-                          <td>
-                            <Link href={'/portal/jobs/' + quote.job_id} className="b">View job</Link>
-                          </td>
-                          <td className="num">GHS {ghsAmount(quote.total_pesewas)}</td>
-                          <td>{formatDate(quote.valid_until)}</td>
-                          <td>
-                            <span className="row">
+                      {quotes.map((quote) => {
+                        const href = `/portal/quotes/${quote.id}`;
+                        return (
+                          <tr
+                            key={quote.id}
+                            className="click"
+                            tabIndex={0}
+                            role="link"
+                            onClick={() => router.push(href)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                router.push(href);
+                              }
+                            }}
+                          >
+                            <td>
+                              <Link href={href} className="b" onClick={(event) => event.stopPropagation()}>
+                                {quote.quote_number}
+                              </Link>
+                            </td>
+                            <td>
+                              <Link
+                                href={`/portal/jobs/${quote.job_id}`}
+                                className="b"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                View job
+                              </Link>
+                            </td>
+                            <td className="num">GHS {ghsAmount(quote.total_pesewas)}</td>
+                            <td>{formatDate(quote.valid_until)}</td>
+                            <td>
+                              <span className="row">
+                                <span className={quotePill(quote.status)}>{quoteLabel(quote.status)}</span>
+                                {quote.status === 'sent' ? <span className="pill brand">Action required</span> : null}
+                              </span>
+                            </td>
+                            <td>
+                              <Link
+                                href={href}
+                                className="btn sm"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {quote.status === 'sent' ? 'Review' : 'Open'}
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mlist" role="list">
+                  {quotes.map((quote) => {
+                    const href = `/portal/quotes/${quote.id}`;
+                    return (
+                      <div key={quote.id} className="mrow" role="listitem">
+                        <div className="mrow-top">
+                          <div className="mrow-body">
+                            <span className="b">{quote.quote_number}</span>
+                            <span className="muted sm">GHS {ghsAmount(quote.total_pesewas)} · Valid {formatDate(quote.valid_until)}</span>
+                            <span className="row" style={{ marginTop: 4 }}>
                               <span className={quotePill(quote.status)}>{quoteLabel(quote.status)}</span>
                               {quote.status === 'sent' ? <span className="pill brand">Action required</span> : null}
                             </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                        <div className="mrow-act">
+                          <Link href={href} className="btn sm primary">
+                            {quote.status === 'sent' ? 'Review' : 'Open'}
+                          </Link>
+                          <Link href={`/portal/jobs/${quote.job_id}`} className="btn sm ghost">View job</Link>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {totalPages > 1 ? (

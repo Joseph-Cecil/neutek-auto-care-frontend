@@ -121,7 +121,7 @@ export default function AdminInvoiceDetailPage() {
           </div>
           <p className="muted">{subtitle}</p>
         </div>
-        <div className="row">
+        <div className="row action-stack">
           {invoice.status === 'draft' ? (
             <button
               type="button"
@@ -149,7 +149,7 @@ export default function AdminInvoiceDetailPage() {
         ) : null}
 
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -209,10 +209,32 @@ export default function AdminInvoiceDetailPage() {
               </tbody>
             </table>
           </div>
+          <div className="mlist" role="list">
+            {lines.map((line) => (
+              <div key={line.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">{line.description}</span>
+                  <span className="muted sm">Qty {line.quantity} · {money(line.unit_price_pesewas)} each</span>
+                  <span className="b">{money(line.total_pesewas)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="mrow" role="listitem">
+              <div className="mrow-body">
+                <span className="muted sm">Subtotal {money(invoice.subtotal_pesewas)}</span>
+                <span className="muted sm">Tax {money(invoice.tax_pesewas)}</span>
+                {invoice.discount_pesewas > 0 ? (
+                  <span className="muted sm">Discount {money(invoice.discount_pesewas)}</span>
+                ) : null}
+                <span className="muted sm">Paid {money(invoice.amount_paid_pesewas)}</span>
+                <span className="b">Balance {money(balance)}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {invoice.job_id ? (
-          <div className="card row sb">
+          <div className="card row sb m-stack">
             <span className="muted">Job</span>
             <Link className="btn" href={`/admin/jobs/${invoice.job_id}`}>
               {job.data?.job_number ? `Open ${job.data.job_number}` : 'Open job'}

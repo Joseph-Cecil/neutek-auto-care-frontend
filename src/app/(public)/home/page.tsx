@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { NeutekLogo } from '@/components/brand/NeutekLogo';
@@ -37,6 +38,11 @@ export default function HomePage() {
   const user = useAuthStore((s) => s.user);
   const signedIn = useAuthStore((s) => s.isAuthenticated);
   const account = user ? homeForRole(user.role) : '/login';
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  function closeMenu() {
+    setMenuOpen(false);
+  }
 
   return (
     <div className="mk">
@@ -59,7 +65,30 @@ export default function HomePage() {
               <Link href="/login" className="btn ghost hide">Sign in</Link>
             )}
             <Link href="/booking" className="btn primary">Book service</Link>
+            <button
+              type="button"
+              className="btn ghost mkmenu"
+              aria-label="Menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((value) => !value)}
+            >
+              Menu
+            </button>
           </div>
+          <nav className={menuOpen ? 'mknav open' : 'mknav'} aria-label="Mobile">
+            <a href="#drivers" onClick={closeMenu}>For drivers</a>
+            <a href="#workshops" onClick={closeMenu}>For the workshop</a>
+            <a href="#how" onClick={closeMenu}>How it works</a>
+            <Link href="/services" onClick={closeMenu}>Services</Link>
+            <Link href="/booking/status" onClick={closeMenu}>Check booking</Link>
+            <Link href="/tracking" onClick={closeMenu}>Track job</Link>
+            <Link href="/blog" onClick={closeMenu}>Blog</Link>
+            {signedIn ? (
+              <Link href={account} onClick={closeMenu}>Open my account</Link>
+            ) : (
+              <Link href="/login" onClick={closeMenu}>Sign in</Link>
+            )}
+          </nav>
         </div>
       </header>
       <main id="top">
@@ -71,7 +100,7 @@ export default function HomePage() {
               <p className="lede rise d2">
                 Neutek Auto Care takes the guessing out of car repair. Book online, watch every step of the job, approve the quote from your phone and pay by mobile money, all before you collect the keys.
               </p>
-              <div className="row rise d3" style={{ gap: 12, marginTop: 32 }}>
+              <div className="row rise d3 hero-ctas" style={{ gap: 12, marginTop: 32 }}>
                 <Link href="/booking" className="btnL p">Book a service</Link>
                 <Link href="/tracking" className="btnL">Track a car</Link>
               </div>

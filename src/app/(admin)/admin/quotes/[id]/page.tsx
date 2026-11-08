@@ -113,7 +113,7 @@ export default function AdminQuoteDetailPage() {
           {subtitle ? <p className="muted">{subtitle}</p> : null}
         </div>
         {quote.status === 'draft' ? (
-          <div className="row">
+          <div className="row action-stack">
             <button
               type="button"
               className={sending ? 'btn primary nt-loading' : 'btn primary'}
@@ -145,7 +145,7 @@ export default function AdminQuoteDetailPage() {
         ) : null}
 
         <div className="card flush">
-          <div className="tw">
+          <div className="tw desk-only">
             <table className="tbl">
               <thead>
                 <tr>
@@ -190,6 +190,25 @@ export default function AdminQuoteDetailPage() {
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div className="mlist" role="list">
+            {lines.map((line) => (
+              <div key={line.id} className="mrow" role="listitem">
+                <div className="mrow-body">
+                  <span className="b">{line.description}</span>
+                  <span className="muted sm">Qty {line.quantity} · {money(line.unit_price_pesewas)} each</span>
+                  <span className="b">{money(line.total_pesewas)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="mrow" role="listitem">
+              <div className="mrow-body">
+                <span className="muted sm">Subtotal {money(quote.subtotal_pesewas)}</span>
+                <span className="muted sm">Tax {money(quote.tax_pesewas)}</span>
+                <span className="muted sm">Discount {money(quote.discount_pesewas)}</span>
+                <span className="b">Total {money(quote.total_pesewas)}</span>
+              </div>
+            </div>
           </div>
         </div>
 

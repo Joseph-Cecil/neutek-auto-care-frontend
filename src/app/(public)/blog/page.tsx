@@ -22,7 +22,7 @@ export default function BlogPage() {
         <h1 style={{ fontSize: 36 }}>From the workshop</h1>
         <p className="muted" style={{ margin: '8px 0 24px' }}>Short, practical notes for driving in Accra.</p>
         <form
-          className="row"
+          className="row search-row"
           style={{ marginBottom: 24 }}
           onSubmit={(event) => {
             event.preventDefault();
@@ -30,7 +30,7 @@ export default function BlogPage() {
           }}
         >
           <label className="sr" htmlFor="blog-q" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>Search articles</label>
-          <input id="blog-q" className="input" style={{ maxWidth: 320 }} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Search articles" />
+          <input id="blog-q" className="input" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Search articles" />
           <button type="submit" className="btn">Search</button>
         </form>
         {categories.data && categories.data.length > 0 ? (

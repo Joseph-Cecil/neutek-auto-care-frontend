@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { bookingDal } from '@/lib/dal/booking.dal';
 import { customerDal } from '@/lib/dal/customer.dal';
+import { invoiceDal } from '@/lib/dal/invoice.dal';
 import { jobDal } from '@/lib/dal/job.dal';
+import { quoteDal } from '@/lib/dal/quote.dal';
 import { vehicleDal } from '@/lib/dal/vehicle.dal';
 import { queryKeys } from '@/lib/api/queryKeys';
 import type { Customer, Job, Notification, UserRole, Vehicle } from '@/lib/dto';
@@ -169,6 +171,9 @@ export function AppShell({
   const [pop, setPop] = useState<'' | 'search' | 'bell' | 'acct'>('');
   const [q, setQ] = useState('');
   const [debounced, setDebounced] = useState('');
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchSheetInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(q.trim()), 250);
@@ -183,10 +188,38 @@ export function AppShell({
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (target.closest('.popwrap')) return;
+      if (target.closest('.searchsheet')) return;
+      if (target.closest('.searchbtn')) return;
       setPop('');
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [pop]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
+        menuBtnRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (pop !== 'search') return;
+    const id = window.requestAnimationFrame(() => {
+      const mobile = window.matchMedia('(max-width: 900px)').matches;
+      (mobile ? searchSheetInputRef.current : searchInputRef.current)?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
   }, [pop]);
 
   const ready = debounced.length > 1 && pop === 'search';
@@ -211,6 +244,26 @@ export function AppShell({
     queryKey: queryKeys.bookings.pendingCount,
     queryFn: async () => (await bookingDal.list({ status: 'pending', limit: 1, page: 1 })).data,
     enabled: area === 'workshop',
+  });
+  const quotesNeedingAction = useQuery({
+    queryKey: queryKeys.quotes.actionCount(area === 'customer' ? 'sent' : 'draft'),
+    queryFn: async () => (
+      await quoteDal.list({ status: area === 'customer' ? 'sent' : 'draft', limit: 1, page: 1 })
+    ).data,
+  });
+  const invoicesSent = useQuery({
+    queryKey: queryKeys.invoices.actionCount('sent'),
+    queryFn: async () => (await invoiceDal.list({ status: 'sent', limit: 1, page: 1 })).data,
+    enabled: area === 'customer',
+  });
+  const invoicesPartial = useQuery({
+    queryKey: queryKeys.invoices.actionCount('partially_paid'),
+    queryFn: async () => (await invoiceDal.list({ status: 'partially_paid', limit: 1, page: 1 })).data,
+    enabled: area === 'customer',
+  });
+  const invoicesOverdue = useQuery({
+    queryKey: queryKeys.invoices.actionCount('overdue'),
+    queryFn: async () => (await invoiceDal.list({ status: 'overdue', limit: 1, page: 1 })).data,
   });
   const notes = useNotifications({ isRead: false, limit: 8, page: 1 });
 
@@ -247,13 +300,33 @@ export function AppShell({
   const searchFailed = searchQueries.every((item) => item.isError);
 
   const unread = notes.data?.data ?? [];
+  const unreadTotal = notes.data?.total ?? unread.length;
   const pendingCount = pendingBookings.data?.total ?? 0;
+  const quoteActionCount = quotesNeedingAction.data?.total ?? 0;
+  const invoiceActionCount = area === 'customer'
+    ? (invoicesSent.data?.total ?? 0)
+      + (invoicesPartial.data?.total ?? 0)
+      + (invoicesOverdue.data?.total ?? 0)
+    : (invoicesOverdue.data?.total ?? 0);
   const name = fullName(user?.firstName, user?.lastName);
   const crumbs = crumbsFor(pathname, area, home);
   const sideClass = `sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' open' : ''}`;
 
+  function navBadgeCount(href: string): number {
+    if (href === '/admin/bookings') return pendingCount;
+    if (href === '/admin/quotes' || href === '/portal/quotes') return quoteActionCount;
+    if (href === '/admin/invoices' || href === '/portal/invoices') return invoiceActionCount;
+    if (href === '/portal/notifications') return unreadTotal;
+    return 0;
+  }
+
   function closePop() {
     setPop('');
+  }
+
+  function closeMenu() {
+    setMobileOpen(false);
+    menuBtnRef.current?.focus();
   }
 
   function go(href: string) {
@@ -267,6 +340,25 @@ export function AppShell({
     writeCollapsed(!collapsed);
   }
 
+  function renderSearchHits() {
+    return (
+      <>
+        {shown.map((hit) => (
+          <button key={hit.key} type="button" className="it" onClick={() => go(hit.href)}>
+            <span className="b">{hit.title}</span>
+            <span className="faint sm">{hit.subtitle}</span>
+          </button>
+        ))}
+        {shown.length === 0 && searchPending ? <div className="muted sm pad">Searching…</div> : null}
+        {shown.length === 0 && !searchPending && searchFailed ? <div className="muted sm pad">Could not search.</div> : null}
+        {shown.length === 0 && !searchPending && !searchFailed ? <div className="muted sm pad">Nothing matches that.</div> : null}
+      </>
+    );
+  }
+
+  const lastCrumb = crumbs[crumbs.length - 1];
+  const parentCrumb = crumbs.length > 1 ? crumbs[crumbs.length - 2] : null;
+
   return (
     <div className="nt-shell">
       <a className="skip" href="#main-content">Skip to content</a>
@@ -279,19 +371,19 @@ export function AppShell({
                 <div className="mgrp">{section.title}</div>
                 {section.items.map((item) => {
                   const current = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                  const count = item.href === '/admin/bookings' ? pendingCount : 0;
+                  const count = navBadgeCount(item.href);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={`mi${count > 0 ? ' has' : ''}`}
                       aria-current={current ? 'page' : undefined}
-                      title={item.title}
+                      title={count > 0 ? `${item.title} (${count})` : item.title}
                       onClick={() => setMobileOpen(false)}
                     >
                       <Icon name={item.icon} />
                       <span className="lbl">{item.title}</span>
-                      {count > 0 ? <span className="cnt">{count}</span> : null}
+                      {count > 0 ? <span className="cnt">{count > 99 ? '99+' : count}</span> : null}
                     </Link>
                   );
                 })}
@@ -312,36 +404,64 @@ export function AppShell({
           </div>
         </nav>
         {mobileOpen ? (
-          <button type="button" className="scrim navscrim" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
+          <button type="button" className="scrim navscrim" aria-label="Close menu" onClick={closeMenu} />
         ) : null}
         <div className="main">
           <header className="topbar" onKeyDown={(event) => { if (event.key === 'Escape') closePop(); }}>
             <div className="row nowrap">
-              <button type="button" className="btn ghost icbtn menubtn" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
+              <button
+                ref={menuBtnRef}
+                type="button"
+                className="btn ghost icbtn menubtn"
+                aria-label="Open menu"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen(true)}
+              >
                 <IconPath d="M4 7h16M4 12h16M4 17h16" />
               </button>
               <nav aria-label="Breadcrumb" className="crumbs">
-                {crumbs.map((crumb, index) => {
-                  const last = index === crumbs.length - 1;
-                  return (
-                    <span key={`${crumb.label}-${index}`} className="crumb">
-                      {last || !crumb.href ? (
-                        <b aria-current="page">{crumb.label}</b>
-                      ) : (
-                        <>
-                          <Link href={crumb.href}>{crumb.label}</Link>
-                          <span aria-hidden="true">/</span>
-                        </>
-                      )}
-                    </span>
-                  );
-                })}
+                <span className="crumb-full">
+                  {crumbs.map((crumb, index) => {
+                    const last = index === crumbs.length - 1;
+                    return (
+                      <span key={`${crumb.label}-${index}`} className="crumb">
+                        {last || !crumb.href ? (
+                          <b aria-current="page">{crumb.label}</b>
+                        ) : (
+                          <>
+                            <Link href={crumb.href}>{crumb.label}</Link>
+                            <span aria-hidden="true">/</span>
+                          </>
+                        )}
+                      </span>
+                    );
+                  })}
+                </span>
+                <span className="crumb-short">
+                  {parentCrumb?.href ? (
+                    <>
+                      <Link href={parentCrumb.href}>{parentCrumb.label}</Link>
+                      <span aria-hidden="true">/</span>
+                    </>
+                  ) : null}
+                  <b aria-current="page">{lastCrumb?.label}</b>
+                </span>
               </nav>
             </div>
             <div className="row nowrap">
+              <button
+                type="button"
+                className="btn ghost icbtn searchbtn"
+                aria-label="Search"
+                aria-expanded={pop === 'search'}
+                onClick={() => setPop((value) => value === 'search' ? '' : 'search')}
+              >
+                <IconPath d="M11 5a6 6 0 1 0 3.7 10.7L21 21" />
+              </button>
               <div className="popwrap search">
                 <label className="sr" htmlFor="tb-search">Search</label>
                 <input
+                  ref={searchInputRef}
                   id="tb-search"
                   className="input"
                   type="search"
@@ -353,15 +473,7 @@ export function AppShell({
                 />
                 {ready ? (
                   <div className="pop searchpop" aria-label="Search results">
-                    {shown.map((hit) => (
-                      <button key={hit.key} type="button" className="it" onClick={() => go(hit.href)}>
-                        <span className="b">{hit.title}</span>
-                        <span className="faint sm">{hit.subtitle}</span>
-                      </button>
-                    ))}
-                    {shown.length === 0 && searchPending ? <div className="muted sm pad">Searching…</div> : null}
-                    {shown.length === 0 && !searchPending && searchFailed ? <div className="muted sm pad">Could not search.</div> : null}
-                    {shown.length === 0 && !searchPending && !searchFailed ? <div className="muted sm pad">Nothing matches that.</div> : null}
+                    {renderSearchHits()}
                   </div>
                 ) : null}
               </div>
@@ -430,6 +542,33 @@ export function AppShell({
               </div>
             </div>
           </header>
+          {pop === 'search' ? (
+            <div className="searchsheet" role="search">
+              <div className="row nowrap">
+                <label className="sr" htmlFor="tb-search-sheet">Search</label>
+                <input
+                  ref={searchSheetInputRef}
+                  id="tb-search-sheet"
+                  className="input"
+                  type="search"
+                  placeholder="Search plates, jobs, people"
+                  value={q}
+                  autoComplete="off"
+                  onChange={(event) => setQ(event.target.value)}
+                />
+                <button type="button" className="btn ghost icbtn" aria-label="Close search" onClick={closePop}>
+                  <IconPath d="M6 6l12 12M18 6L6 18" />
+                </button>
+              </div>
+              {ready ? (
+                <div className="pop searchpop" aria-label="Search results">
+                  {renderSearchHits()}
+                </div>
+              ) : (
+                <div className="muted sm pad">Type at least 2 characters.</div>
+              )}
+            </div>
+          ) : null}
           <main className="page nt-ui" id="main-content" tabIndex={-1}>
             {blocked ? (
               <div className="denied">

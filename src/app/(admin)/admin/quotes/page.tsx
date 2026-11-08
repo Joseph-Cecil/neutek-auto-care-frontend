@@ -116,42 +116,62 @@ export default function AdminQuotesPage() {
                   <p className="muted">Quotes will show here as they move through.</p>
                 </div>
               ) : (
-                <div className="tw">
-                  <table className="tbl">
-                    <thead>
-                      <tr>
-                        <th>Number</th>
-                        <th className="num">Total (GHS)</th>
-                        <th>Valid until</th>
-                        <th>Created</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {quotes.map((quote) => (
-                        <tr
-                          key={quote.id}
-                          className="click"
-                          onClick={() => router.push(`/admin/quotes/${quote.id}`)}
-                        >
-                          <td>
-                            <Link className="lnk" href={`/admin/quotes/${quote.id}`}>
-                              {quote.quote_number}
-                            </Link>
-                          </td>
-                          <td className="num">{money(quote.total_pesewas)}</td>
-                          <td>{formatDate(quote.valid_until)}</td>
-                          <td>{formatDate(quote.created_at)}</td>
-                          <td>
-                            <span className={quotePill(quote.status)}>
-                              {statusLabel(quote.status)}
-                            </span>
-                          </td>
+                <>
+                  <div className="tw desk-only">
+                    <table className="tbl">
+                      <thead>
+                        <tr>
+                          <th>Number</th>
+                          <th className="num">Total (GHS)</th>
+                          <th>Valid until</th>
+                          <th>Created</th>
+                          <th>Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {quotes.map((quote) => (
+                          <tr
+                            key={quote.id}
+                            className="click"
+                            onClick={() => router.push(`/admin/quotes/${quote.id}`)}
+                          >
+                            <td>
+                              <Link className="lnk" href={`/admin/quotes/${quote.id}`}>
+                                {quote.quote_number}
+                              </Link>
+                            </td>
+                            <td className="num">{money(quote.total_pesewas)}</td>
+                            <td>{formatDate(quote.valid_until)}</td>
+                            <td>{formatDate(quote.created_at)}</td>
+                            <td>
+                              <span className={quotePill(quote.status)}>
+                                {statusLabel(quote.status)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mlist" role="list">
+                    {quotes.map((quote) => (
+                      <div key={quote.id} className="mrow" role="listitem">
+                        <div className="mrow-body">
+                          <span className="b">{quote.quote_number}</span>
+                          <span className="muted sm">
+                            {money(quote.total_pesewas)} · Valid {formatDate(quote.valid_until)}
+                          </span>
+                          <span className="row" style={{ marginTop: 4 }}>
+                            <span className={quotePill(quote.status)}>{statusLabel(quote.status)}</span>
+                          </span>
+                        </div>
+                        <div className="mrow-act">
+                          <Link href={`/admin/quotes/${quote.id}`} className="btn sm primary">Open</Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}

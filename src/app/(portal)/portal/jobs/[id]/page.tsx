@@ -59,8 +59,8 @@ export default function PortalJobDetailPage() {
               </div>
               <p className="muted">{job.title} · Priority {job.priority}</p>
             </div>
-            <div className="row">
-              <Link href={'/tracking/' + job.job_number} className="btn sm">Live tracking</Link>
+            <div className="row action-stack">
+              <Link href={'/tracking/' + job.job_number} className="btn sm primary">Live tracking</Link>
             </div>
           </div>
           <div className="stack">
@@ -85,7 +85,7 @@ export default function PortalJobDetailPage() {
                   const active = job.status === status;
                   const when = whenFor(status);
                   return (
-                    <div key={status} className="row sb">
+                    <div key={status} className="row sb m-stack">
                       <span className="row">
                         <span className={active ? 'pill brand' : done ? 'pill ok' : 'pill'}>{meta.label}</span>
                         {active ? <span className="pill brand">Current</span> : null}
